@@ -13,29 +13,39 @@ func act(action: String, args: Dictionary = {}) -> Dictionary:
 			if (s.cooldowns.get("stoke", 0.0) as float) > 0.0:
 				return { "ok": false, "error": "cooldown" }
 			if s.fire <= 0:
+				# @pacing kind=cost id=light_fire_wood value=5 phase=room_dark
 				if s.wood_initialized and int(s.stores.wood) < 5:
 					s.push_note(Loc.t("not enough wood to get the fire going"), "room")
 				else:
 					if s.wood_initialized:
+						# @pacing kind=consume id=light_fire_wood value=5 phase=room_dark
 						s.add_item("wood", -5)
 					s.fire = 3
+					# @pacing kind=cooldown id=stoke value=10s phase=room_fire
 					s.cooldowns["stoke"] = 10.0
+					# @pacing kind=interval id=fire_cool value=300s phase=room_fire
 					s.flags["fire_cool_at"] = s.game_time_sec + 300
 			else:
 				if s.wood_initialized and int(s.stores.wood) <= 0:
 					s.push_note(Loc.t("the wood has run out"), "room")
 				else:
 					if s.wood_initialized:
+						# @pacing kind=consume id=stoke_wood value=1 phase=room_fire
 						s.add_item("wood", -1)
 					s.fire = mini(4, s.fire + 1)
+					# @pacing kind=cooldown id=stoke value=10s phase=room_fire
 					s.cooldowns["stoke"] = 10.0
+					# @pacing kind=interval id=fire_cool value=300s phase=room_fire
 					s.flags["fire_cool_at"] = s.game_time_sec + 300
 		"gather_wood":
 			if not s.unlocked.outside:
 				return { "ok": false }
 			if (s.cooldowns.get("gather", 0.0) as float) > 0.0:
 				return { "ok": false }
+			# @pacing kind=income id=gather_cart value=50 phase=forest note=per gather with cart
+			# @pacing kind=income id=gather_wood value=10/60s phase=forest
 			s.add_item("wood", 50 if int(s.buildings.cart) > 0 else 10)
+			# @pacing kind=cooldown id=gather value=60s phase=forest
 			s.cooldowns["gather"] = 60.0
 			s.push_note(Loc.t("dry brush and dead branches litter the forest floor"), "outside")
 		"check_traps":
@@ -59,6 +69,7 @@ func act(action: String, args: Dictionary = {}) -> Dictionary:
 					s.add_item("charm", 1)
 			if bait:
 				s.add_item("bait", -bait)
+			# @pacing kind=cooldown id=traps value=90s phase=forest
 			s.cooldowns["traps"] = 90.0
 			s.push_note(Loc.t("the traps contain ") + "猎物", "outside")
 		"build":
@@ -70,10 +81,15 @@ func act(action: String, args: Dictionary = {}) -> Dictionary:
 			var kind := str(args.get("kind", ""))
 			var cost_wood := 0
 			if kind == "trap":
+				# @pacing kind=cost id=trap_base value=10 phase=forest
+				# @pacing kind=cost id=trap_step value=10 phase=forest
 				cost_wood = 10 + int(s.buildings.trap) * 10
 			elif kind == "cart":
+				# @pacing kind=cost id=cart value=30 phase=forest
 				cost_wood = 30
 			elif kind == "hut":
+				# @pacing kind=cost id=hut_base value=100 phase=forest min=240s max=900s note=first hut vs gather+builder income
+				# @pacing kind=cost id=hut_step value=50 phase=forest
 				cost_wood = 100 + int(s.buildings.hut) * 50
 			else:
 				return { "ok": false }
@@ -82,6 +98,8 @@ func act(action: String, args: Dictionary = {}) -> Dictionary:
 			s.add_item("wood", -cost_wood)
 			s.buildings[kind] = int(s.buildings[kind]) + 1
 			if kind == "hut" and s.pop_timer == null:
+				# @pacing kind=interval id=pop_timer_min value=30s phase=village
+				# @pacing kind=interval id=pop_timer_span value=150s phase=village
 				s.pop_timer = s.game_time_sec + 30 + randf() * 150
 		"travel":
 			var area := str(args.get("area", "room"))
@@ -135,22 +153,27 @@ func tick(dt_real: float) -> void:
 		s.cooldowns[k] = max(0.0, float(s.cooldowns[k]) - dt)
 	if s.flags.get("fire_cool_at") != null and s.game_time_sec >= float(s.flags.fire_cool_at) and s.fire > 0:
 		if s.builder_level > 3 and s.fire <= 2 and int(s.stores.wood) > 0:
+			# @pacing kind=consume id=builder_stoke_wood value=1 phase=forest
 			s.add_item("wood", -1)
 			s.fire = mini(4, s.fire + 1)
 			s.push_note(Loc.t("builder stokes the fire"), "room")
 		else:
 			s.fire = maxi(0, s.fire - 1)
+		# @pacing kind=interval id=fire_cool value=300s phase=room_fire
 		s.flags.fire_cool_at = s.game_time_sec + 300 if s.fire > 0 else null
 	if not s.flags.has("next_temp_at"):
+		# @pacing kind=interval id=temp_tick value=30s phase=room_fire
 		s.flags.next_temp_at = s.game_time_sec + 30
 	if s.game_time_sec >= float(s.flags.next_temp_at):
 		if s.temperature > s.fire:
 			s.temperature -= 1
 		elif s.temperature < s.fire:
 			s.temperature += 1
+		# @pacing kind=interval id=temp_tick value=30s phase=room_fire
 		s.flags.next_temp_at = s.game_time_sec + 30
 	if s.builder_level >= 4:
 		s.income_acc.builder = float(s.income_acc.builder) + dt
+		# @pacing kind=income id=builder_wood value=2/10s phase=forest
 		if s.income_acc.builder >= 10:
 			var n := int(s.income_acc.builder / 10.0)
 			s.income_acc.builder = float(s.income_acc.builder) - n * 10
@@ -173,10 +196,12 @@ func tick(dt_real: float) -> void:
 			s.population += maxi(1, int(space / 2.0))
 			s.workers.gatherer = s.population
 			s.push_note(Loc.t("a stranger arrives in the night"), "outside")
+		# @pacing kind=interval id=pop_timer_repeat value=60s phase=village
 		s.pop_timer = s.game_time_sec + 60 if cap > s.population else null
 	s.phase = s.derive_phase()
 	Analytics.tick_checks()
 	s.notify_changed()
+	# @pacing-ignore note=autosave interval, not game pacing
 	if s.game_time_sec - _last_save_at >= 3.0:
 		s.save_game()
 		_last_save_at = s.game_time_sec

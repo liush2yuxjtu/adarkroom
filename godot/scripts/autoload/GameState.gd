@@ -29,6 +29,7 @@ var world: Dictionary = {}
 var slice_complete: bool = false
 var income_acc: Dictionary = { "builder": 0.0, "gatherer": 0.0 }
 var pop_timer: Variant = null
+# @pacing kind=interval id=time_scale value=1 phase=room_dark note=default 1x
 var time_scale: float = 1.0
 var events_catalog: Dictionary = {}
 var config: Dictionary = {}
@@ -63,6 +64,7 @@ func _load_jsons() -> void:
 		var parsed2: Variant = JSON.parse_string(c.get_as_text())
 		if typeof(parsed2) == TYPE_DICTIONARY:
 			config = parsed2
+			# @pacing kind=interval id=time_scale value=1 phase=room_dark
 			time_scale = float(config.get("time_scale", 1))
 
 func reset() -> void:

@@ -1,0 +1,50 @@
+# Daily (and manual) pacing report.
+# The analyzing job is code-only — no agent.
+#
+# Required repository secrets (add them yourself in GitHub → Settings → Secrets;
+# this workflow does not create or commit any secrets):
+#   SUPABASE_URL                 e.g. https://<ref>.supabase.co
+#   SUPABASE_SERVICE_ROLE_KEY    service role, or another key that can SELECT playtest_events
+# Optional:
+#   SUPABASE_READ_KEY            accepted by the script as an alias of the read key
+#   PACING_WEBHOOK_URL           generic JSON POST destination for the report
+#
+# Anon RLS on playtest_events is INSERT-only. Do not use SUPABASE_ANON_KEY for this job.
+
+name: pacing
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Unit tests
+        run: python3 -m unittest discover -s tools -p "test_*.py"
+
+      - name: Run analyzer
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_READ_KEY: ${{ secrets.SUPABASE_READ_KEY }}
+          PACING_WEBHOOK_URL: ${{ secrets.PACING_WEBHOOK_URL }}
+        run: python3 tools/pacing_analyzer.py --out-dir reports
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pacing-report
+          path: reports/pacing-*
+          if-no-files-found: warn

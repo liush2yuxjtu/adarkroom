@@ -15,6 +15,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_acc += delta * GameState.time_scale
+	# @pacing kind=interval id=director_think value=1s
 	if _acc >= 1.0:
 		_acc = 0.0
 		_think()

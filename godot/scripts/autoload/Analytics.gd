@@ -5,7 +5,9 @@ var buffer: Array = []
 var http_endpoint: String = ""
 var http_enabled: bool = false
 var extra_headers: Dictionary = {}
+# @pacing kind=interval id=stuck value=3min
 var stuck_minutes: float = 3.0
+# @pacing kind=interval id=resource_snapshot value=30s
 var snapshot_every: float = 30.0
 var last_progress: Dictionary = { "stores": 0, "flags": 0, "unlocks": 0, "at": 0.0 }
 var phase_entered: float = 0.0
@@ -21,7 +23,9 @@ func _ready() -> void:
 func configure(cfg: Dictionary) -> void:
 	http_endpoint = str(cfg.get("analytics_endpoint", ""))
 	http_enabled = bool(cfg.get("analytics_http_enabled", false))
+	# @pacing kind=interval id=stuck value=3min
 	stuck_minutes = float(cfg.get("stuck_minutes", 3))
+	# @pacing kind=interval id=resource_snapshot value=30s
 	snapshot_every = float(cfg.get("snapshot_interval_sec", 30))
 	extra_headers = cfg.get("analytics_headers", {})
 
