@@ -127,8 +127,14 @@ Standard checklist, run **on demand before each PR merge**. Not a surface. Pick 
 | 4 Telemetry write | `playtest_events` / new event / sink | New row for this session via service/read key; anon is insert-only |
 | 5 Mapping | every pre-merge diff | File types → steps → surfaces (below) |
 | 6 Playwright multi-viewport UI audit | UI / layout / CSS / responsive / visual-style diff | **1280×800, 1024×768, 390×844, 1920×1080**: layout, spacing, WCAG 4.5:1 contrast, tap targets ≥44px, alignment, no `x<0` clip, no horizontal scroll; classify `realFailures` vs paired `ERR_ABORTED`+2xx (not every `requestfailed` is a drop); confirm the verify-script URL; numbered issues + screenshots, then P0–P5; **stop rounds when no new issues** |
+| 7 CDP layout metrics | UI / overlap / clip / overflow (always with 6 on layout diffs) | Playwright CDPSession only (`Page.getLayoutMetrics`, `DOMSnapshot.captureSnapshot`, `DOM.getBoxModel`). Toolbar incl. `#btn-style` vs notes/scene/stores. `node tools/verify/run.mjs --only cdp` |
+| 8 Screenshot diff | UI / visual-style | Widths **360, 390, 768, 1024, 1280, 1440, 1920** × pixel/text vs `tools/verify/baselines/`. `--update` rewrites baselines |
+| 9 Accessibility | UI controls / color / tap | axe-core; contrast 4.5:1 (3:1 large); tap 44px mobile / 24px desktop incl. `#btn-style`; names; Tab focus visible |
+| 10 Extreme cases | save / stores / notifications / robustness | Long text, resources 0, 1e9, corrupt saves (invalid JSON, missing fields, wrong types). `save_corrupt` + `save_recover` |
 
-**Mapping (how steps feed surfaces).** A font change → step 1 **plus** `aesthetic-community-consensus`. A telemetry change → step 4 **plus** `pr-telemetry-required`. A UI/layout change → step 6 **plus** `verification-scope-mismatch`. For `verification-scope-mismatch`, run the matching step on the code that **actually runs live**. Pacing analyzer files have no checklist step; `game-pacing-intent` auto-calls the tool and then `art-style-boredom-mitigation`. Game work opened against `dot-pi` → `wrong-repo-pr`. Any UI/art/interaction proposal → `original-intent-check` first.
+**Mapping (how steps feed surfaces).** A font change → step 1 **plus** `aesthetic-community-consensus`. A telemetry change → step 4 **plus** `pr-telemetry-required`. A UI/layout change → steps **6 + 7 + 8 + 9** **plus** `verification-scope-mismatch`. Save/corrupt/extremes → **2 + 10**. For `verification-scope-mismatch`, run the matching step on the code that **actually runs live**. Pacing analyzer files have no checklist step; `game-pacing-intent` auto-calls the tool and then `art-style-boredom-mitigation`. Game work opened against `dot-pi` → `wrong-repo-pr`. Any UI/art/interaction proposal → `original-intent-check` first.
+
+Runnable scripts live in [`tools/verify/`](../../../tools/verify/README.md). `node tools/verify/run.mjs --url <live>` is the machine-readable gate (exit 1 on FAIL).
 
 **Worked example (commit `5e3b891`).** Live export `godot/build/web`: font weight 500 loaded; cooldown overlay 39px tall at about 93% width; button opacity 1; save restored after reload.
 

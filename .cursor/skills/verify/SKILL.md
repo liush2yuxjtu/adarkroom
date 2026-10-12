@@ -67,7 +67,7 @@ Keep these layers separate. Do not merge a step into a surface or a surface into
 
 The eight judgment-layer surfaces are `aesthetic-community-consensus`, `pr-telemetry-required`, `behavior-timeline-vs-mechanics`, `verification-scope-mismatch`, `game-pacing-intent`, `art-style-boredom-mitigation`, `wrong-repo-pr`, and `original-intent-check`.
 
-Before merge, map changed file types to steps, run those steps, then feed the artifacts into the matching surfaces. Examples: a font change runs step 1 (computed family/weight, `document.fonts`, tofu, screenshot) **plus** `aesthetic-community-consensus`. A telemetry change runs step 4 (unique session + service/read-key SELECT) **plus** `pr-telemetry-required`. A UI layout change runs step 6 (Playwright multi-viewport audit) **plus** `verification-scope-mismatch`. A UI/art/interaction **proposal** runs `original-intent-check` first. For `verification-scope-mismatch`, run the step on the code that **actually runs live**.
+Before merge, map changed file types to steps, run those steps, then feed the artifacts into the matching surfaces. Examples: a font change runs step 1 (computed family/weight, `document.fonts`, tofu, screenshot) **plus** `aesthetic-community-consensus`. A telemetry change runs step 4 (unique session + service/read-key SELECT) **plus** `pr-telemetry-required`. A UI layout change runs steps 6–9 (`node tools/verify/run.mjs`) **plus** `verification-scope-mismatch`. A UI/art/interaction **proposal** runs `original-intent-check` first. For `verification-scope-mismatch`, run the step on the code that **actually runs live**.
 
 ## Get a handle
 
@@ -265,6 +265,12 @@ Run only the steps the mapping table selects for the diff. Each step has a trigg
 4. **Telemetry write** — unique session, then SELECT `playtest_events` with the service/read key (anon is insert-only).
 5. **Mapping** — file types → steps → surfaces. Font → step 1 + `aesthetic-community-consensus`. Telemetry → step 4 + `pr-telemetry-required`. `verification-scope-mismatch` → measure the live path. Game docs/skills in the wrong GitHub repo → `wrong-repo-pr`. UI/art/interaction proposal → `original-intent-check` **before** proposing the change. Pacing analyzer / `early_phase_slow` → `game-pacing-intent` **plus** `art-style-boredom-mitigation`.
 6. **Playwright multi-viewport UI audit** — 1280×800, **1024×768**, 390×844, 1920×1080; layout, spacing, contrast (WCAG 4.5:1), tap targets ≥44px, alignment, overlap/clipping (`x<0`), horizontal scroll; classify `realFailures` vs paired `ERR_ABORTED`+2xx; confirm the verify-script URL; numbered issues + screenshots, then P0–P5 triage; stop rounds when no new issues. Worked example: 2026-10-12 12-issue audit (PR #7 / `2361374`).
+7. **CDP layout metrics** — `node tools/verify/run.mjs --only cdp`. Playwright CDPSession: `Page.getLayoutMetrics`, `DOMSnapshot.captureSnapshot` (font-size, color, background-color, z-index, display, visibility), `DOM.getBoxModel`. No page-JS DOM queries. Detect toolbar (incl. `#btn-style`) vs notes/scene/stores, overflow, clip, below-the-fold.
+8. **Screenshot diff** — widths 360, 390, 768, 1024, 1280, 1440, 1920 × pixel/text vs `tools/verify/baselines/`. `node tools/verify/screenshot-diff.mjs --update` rewrites baselines.
+9. **Accessibility** — inject axe-core; WCAG 4.5:1 / 3:1; tap ≥44px mobile / ≥24px desktop (incl. `#btn-style`); names; Tab focus visible.
+10. **Extremes** — long text, stores 0, 1e9, corrupt saves (invalid JSON, missing fields, wrong types). No uncaught errors, no overflow, no clipped text, `save_corrupt` + `save_recover`.
+
+The suite `node tools/verify/run.mjs --url <live>` prints JSON `{ pass, exitCode, failures }` and exits non-zero on failure.
 
 Worked example (this repo, commit `5e3b891`, live export `godot/build/web`): font 500 loaded; overlay 39px tall at about 93% width; opacity 1; save restored after reload.
 

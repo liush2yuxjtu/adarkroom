@@ -4,7 +4,7 @@ This is `liush2yuxjtu/adarkroom`, the A Dark Room Chinese remake. Live playable 
 
 ## Verify on every merge or task completion
 
-On every PR merge or task completion, run the verify skill on demand (`.cursor/skills/verify/`). Choose the relevant judgment surfaces plus the matching concrete steps in `.cursor/skills/verify/references/concrete-verification-steps.md`. Operational live-deploy recipes (READY, real-mouse `生火`, classic, sink read-back) live in `.cursor/skills/verify-adarkroom/`.
+On every PR merge or task completion, run the verify skill on demand (`.cursor/skills/verify/`). Choose the relevant judgment surfaces plus the matching concrete steps in `.cursor/skills/verify/references/concrete-verification-steps.md`. Layout/UI diffs also run the committed suite `node tools/verify/run.mjs --url <live>` (CDP layout, screenshot diff, a11y, extremes; JSON pass/fail, exit 1 on FAIL). Operational live-deploy recipes (READY, real-mouse `生火`, classic, sink read-back) live in `.cursor/skills/verify-adarkroom/`.
 
 The pacing analyzer runs automatically via `python -m tools.pacing_analyzer --json` if `tools/pacing_analyzer.py` is present. Offline fixture: `--input tools/testdata/playtest_events_sample.json`. This is not a GitHub Action, cron, or manual substitute. Read `early_phase_slow` / `ratio`. A slow early phase is an intent question (「这个慢节奏是有意设计的吗？」), never a bug.
 

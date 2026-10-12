@@ -241,12 +241,13 @@ Select every matching row. A file can require more than one step and more than o
 | `tools/pacing_analyzer.py` / `@pacing` / early-phase timing | no checklist step — verify **auto-calls** the analyzer | `game-pacing-intent` **plus** `art-style-boredom-mitigation` (same `early_phase_slow` wait; style decides Rajan vs pixel mitigations) |
 | `?style=` / `assets/pixel/` / art-style boredom | no extra Playwright step | `art-style-boredom-mitigation`: text → PASS; pixel → **NEEDS ALTERNATIVE** |
 | unusual click frequency / cooldown-cap question (no UI CSS change) | no extra step beyond the session query the surface names | `behavior-timeline-vs-mechanics` |
-| UI / render / interaction issue spanning Godot vs web, CSS vs canvas, or export targets | the step that matches the visible claim (**1**, **2**, **3**, or **6**), executed on the live path | `verification-scope-mismatch` first: identify the live path, then run the step there |
-| UI / layout / CSS / responsive / visual-style / overlap / clipping | **6** Playwright multi-viewport UI audit | `verification-scope-mismatch` (measure the live `godot/build/web` path), `aesthetic-community-consensus` when the claim is a style choice, and `original-intent-check` **before** proposing the change |
+| UI / render / interaction issue spanning Godot vs web, CSS vs canvas, or export targets | the step that matches the visible claim (**1**, **2**, **3**, **6**, **7**, **8**, or **9**), executed on the live path | `verification-scope-mismatch` first: identify the live path, then run the step there |
+| UI / layout / CSS / responsive / visual-style / overlap / clipping | **6** plus **7** CDP layout, **8** screenshot diff, **9** a11y | `verification-scope-mismatch` (measure the live `godot/build/web` path), `aesthetic-community-consensus` when the claim is a style choice, and `original-intent-check` **before** proposing the change |
+| save / load / `localStorage` / corrupt / wrong types / huge numbers / long notifications | **2** and **10** extremes | `pr-telemetry-required` when the PR is a save bug-fix (`save_corrupt`, `save_recover`) |
 | UI / art / sprite / canvas / interaction proposal | no extra checklist step before the proposal is written | `original-intent-check`: original `file:line` + intent; conflict = art-direction choice, not a fix |
 | game files / verify recipes / `tools/pacing_analyzer.py` opened against `dot-pi` or another non-game repo | no extra Playwright step | `wrong-repo-pr`: migrate to `liush2yuxjtu/adarkroom` and comment on the original PR |
 
-**Rule.** A font change triggers step 1 **plus** `aesthetic-community-consensus`. A telemetry change triggers step 4 **plus** `pr-telemetry-required`. A UI/layout change triggers step 6 **plus** `verification-scope-mismatch`. For `verification-scope-mismatch`, verify the code that actually runs live.
+**Rule.** A font change triggers step 1 **plus** `aesthetic-community-consensus`. A telemetry change triggers step 4 **plus** `pr-telemetry-required`. A UI/layout change triggers steps **6 + 7 + 8 + 9** **plus** `verification-scope-mismatch`. Save/corrupt/extremes trigger **2 + 10**. For `verification-scope-mismatch`, verify the code that actually runs live.
 
 Skip a step only when its trigger does not match the diff. Record the skip. Do not invent measurements.
 
@@ -361,6 +362,79 @@ Check on each viewport:
 **Pass.** Numbered issue list written (empty list is allowed). One screenshot per viewport saved, **including 1024**. Issues triaged **P0–P5**. No untriaged finding. Console/`requestfailed` entries are classified (`realFailures` vs `abortedWithSuccess`) and either listed or explicitly waived with evidence. The verify script's URL was confirmed. No extra round after a clean (no-new-issues) pass.
 
 **Failure handling.** **FAIL** if a viewport (including 1024) was skipped, screenshots are missing, issues are unnumbered, or severity is missing. **FAIL** if every `requestfailed` is treated as a product bug without pairing `ERR_ABORTED`+2xx. Keep the issue list and screenshots. Then run surface `verification-scope-mismatch` on the live path (`godot/build/web`, not a Godot scene script the deploy does not serve).
+
+## Step 7 — CDP layout metrics (no page-JS DOM queries)
+
+**Trigger.** Same as step 6, plus any overlap / clip / overflow / below-the-fold report. Always include `#btn-style` in the toolbar.
+
+**How to execute.** Drive the live URL (or local `godot/build/web`) at widths **360, 390, 768, 1024, 1280, 1440, 1920**, both `?style=pixel` and `?style=text`. Measure with Playwright **CDPSession** only:
+
+- `Page.getLayoutMetrics` — viewport, content size, scroll range
+- `DOMSnapshot.captureSnapshot` with computed styles `font-size`, `color`, `background-color`, `z-index`, `display`, `visibility`
+- `DOM.getBoxModel` / `DOM.querySelector` / `DOM.performSearch` — element boxes
+
+Do **not** use `page.evaluate` / `getBoundingClientRect` for these numbers. Real-mouse click `生火` first so notes, scene, and stores exist.
+
+```bash
+node tools/verify/run.mjs --url <live> --only cdp
+# or
+node tools/verify/cdp-layout.mjs --url <live>
+```
+
+**Pass.** JSON `pass: true`. No horizontal overflow (`contentSize.width ≤ viewport`). No `#menu` (including `#btn-style`) overlapping notification cards, `.px-scene`, or `#stores`. No scene `x < 0`. `#app` width ≤ viewport. Pixel note cards show a full-text box (not a 72px clip of one glyph). `#notifications` is not below the fold. `'消息'` legend aligns with the card row. Toolbar at 360 does not leave `#btn-classic` alone on a wrap row. Exit 0.
+
+**Failure handling.** **FAIL** (exit 1) on any occlusion/overflow/clip. Keep the JSON (`kind`, boxes, width, style). Then run `verification-scope-mismatch` on live `godot/build/web`.
+
+## Step 8 — Screenshot diff (fixed widths, pixel vs text)
+
+**Trigger.** UI / layout / CSS / visual-style diff, or a claim that a viewport looks right.
+
+**How to execute.** Capture viewport PNGs at the seven widths × both styles. Diff against committed files in `tools/verify/baselines/{style}-{width}.png` with pixelmatch (`threshold` 0.12, max mismatched ratio 1.5%).
+
+```bash
+node tools/verify/run.mjs --url <live> --only screenshots
+node tools/verify/screenshot-diff.mjs --update --url <live>   # rewrite baselines
+```
+
+**Pass.** Every width/style matches its baseline within the threshold. Missing baselines **FAIL** until `--update` is committed.
+
+**Failure handling.** Write `artifacts/diffs/{style}-{width}.png`. Do not pass by eyeballing. Update baselines only after an intentional visual change.
+
+## Step 9 — Accessibility (axe, contrast, tap, names, focus)
+
+**Trigger.** UI controls, color, tap targets, or any a11y report.
+
+**How to execute.** Inject axe-core. Compute WCAG contrast from CDP computed styles (**4.5:1** normal text, **3:1** large). Tap targets via `DOM.getBoxModel`: **≥44px** on widths ≤768, **≥24px** desktop — **always include `#btn-style`**. Flag missing accessible names. Tab through controls and require a visible focus ring (`outline` or `box-shadow`).
+
+```bash
+node tools/verify/run.mjs --url <live> --only a11y
+```
+
+**Pass.** No serious/critical axe violations. `#director-label` must not put `aria-label` on a generic span (needs an allowed `role`, or visible text only). `main` landmark and one `h1` present. `#director-label` contrast ≥ 4.5:1 (pixel 「规则」 must not be `#1c1612` on `#1c1612`). Text-style `添柴` height ≥ 44px on mobile.
+
+**Failure handling.** **FAIL** with the axe rule id / contrast ratio / box. Skip `font-size:0` / `color:transparent` nodes (pixel icon chrome); still measure `.px-caption`, `.cd-sec`, `.px-note-text`, `#director-label`.
+
+## Step 10 — Extreme cases (long text, zero, 1e9, corrupt saves)
+
+**Trigger.** Save/load, notifications, stores, or any robustness claim.
+
+**How to execute.** Load fixtures from `tools/verify/fixtures/saves/` (and generated blobs): very long CJK notification; all resources `0`; stores `1e9`; invalid JSON; missing `state`; wrong types (`stores` string, `notifications` object, `fire` string). Assert no uncaught errors, no horizontal overflow, no clipped text, graceful recovery.
+
+```bash
+node tools/verify/run.mjs --url <live> --only extremes
+```
+
+**Pass.** Game boots. `stores` stays an object, `notifications` an array, `fire` a number. 1e9 does **not** paint a thousand-pixel icon column; a numeric count is visible and icon stacks are capped. Corrupt saves emit `save_corrupt` **and** `save_recover` (not silent accept). Long pixel notes show the full sentence, not one category glyph.
+
+**Failure handling.** **FAIL** (exit 1) if a wrong-type save is accepted with no `save_corrupt`, if notes vanish, or if 1e9 overflows. Keep the JSON and a screenshot under `tools/verify/artifacts/`.
+
+The whole suite:
+
+```bash
+node tools/verify/run.mjs --url <live>
+```
+
+prints one JSON object `{ pass, exitCode, failures, suites, perWidth }` and exits **non-zero** on any failure.
 
 ## Worked example: 2026-10-12 12-issue audit
 
