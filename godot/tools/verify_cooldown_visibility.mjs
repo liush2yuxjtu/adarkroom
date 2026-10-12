@@ -64,32 +64,72 @@ const after = await page.evaluate(() => {
   const g = window.__ADR_GAME;
   const el = document.querySelector('button.adr[data-key="fire"]');
   const left = g.cooldownLeft ? g.cooldownLeft("stoke") : (g.state.cooldowns.stoke || 0);
-  const tel = JSON.parse(localStorage.getItem("adr.telemetry") || "[]");
+  const buf = (g.analytics && g.analytics.buffer) || [];
+  const adr = (typeof ADRTelemetry !== "undefined" && ADRTelemetry.buffer) || [];
+  const evs = buf.concat(adr).filter((e) => e.event_name === "cooldown_set" || e.event_name === "cooldown_visibility");
+  const seen = {};
+  const events = evs.filter((e) => {
+    const k = e.event_name + JSON.stringify(e.payload || {});
+    if (seen[k]) return false;
+    seen[k] = true;
+    return true;
+  }).map((e) => ({ name: e.event_name, payload: e.payload }));
   return {
     remaining: left,
     countdown: (el.querySelector(".cd-sec") || {}).textContent || null,
     ends_at: g.state.cooldown_ends_at && g.state.cooldown_ends_at.stoke,
     label: el.innerText.trim(),
     disabled: el.disabled,
-    events: tel.filter((e) => e.event_name === "cooldown_set" || e.event_name === "cooldown_visibility")
-      .map((e) => ({ name: e.event_name, payload: e.payload }))
+    events: events
   };
 });
 await btn.screenshot({ path: path.join(outDir, `${label}_after.png`) });
 
+await page.evaluate(() => {
+  const g = window.__ADR_GAME;
+  g.state.cooldown_ends_at.stoke = Date.now() + 1200;
+  g.syncCooldowns();
+  window.__adrRAF = window.requestAnimationFrame;
+  window.requestAnimationFrame = function () { return 0; };
+});
+await page.waitForTimeout(1800);
+await page.evaluate(() => {
+  if (window.__adrRAF) window.requestAnimationFrame = window.__adrRAF;
+  document.dispatchEvent(new Event("visibilitychange"));
+});
+await page.waitForTimeout(250);
+const finished = await page.evaluate(() => {
+  const g = window.__ADR_GAME;
+  const el = document.querySelector('button.adr[data-key="fire"]');
+  return {
+    remaining: g.cooldownLeft ? g.cooldownLeft("stoke") : (g.state.cooldowns.stoke || 0),
+    countdown: (el.querySelector(".cd-sec") || {}).textContent || "",
+    disabled: el.disabled
+  };
+});
+await btn.screenshot({ path: path.join(outDir, `${label}_finished.png`) });
+
 const expected = hideN >= 10 ? 0 : Math.max(0, (before.remaining || 10) - hideN);
 const continued = slackOk(after.remaining || 0, expected, 1.2);
 const reset = slackOk(after.remaining || 0, 10, 1.0) && hideN >= 2;
+const finishedOk = (finished.remaining || 0) <= 0.05 && finished.disabled === false;
+const hasSet = after.events.some((e) => e.name === "cooldown_set");
+const hasVis = after.events.some((e) => e.name === "cooldown_visibility");
 const report = {
   url,
   label,
   hideN,
   before,
   after,
+  finished,
   expected,
   continued,
   reset_to_full: reset,
-  PASS: continued && !reset && (hideN >= 10 ? after.disabled === false : after.disabled === true)
+  finishedOk,
+  hasSet,
+  hasVis,
+  PASS: continued && !reset && finishedOk && hasSet && hasVis &&
+    (hideN >= 10 ? after.disabled === false : after.disabled === true)
 };
 
 const out = path.join(outDir, `report_${label}.json`);
