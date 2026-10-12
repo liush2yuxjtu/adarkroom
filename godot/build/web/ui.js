@@ -622,7 +622,10 @@
       if (isPixel()) return (n.dataset.cue || "") + (n.dataset.count || "") + "|" + (n.getAttribute("title") || "");
       return n.textContent;
     });
-    if (want.join("\n") === have.join("\n")) return;
+    if (want.join("\n") === have.join("\n")) {
+      syncScrollable(box, "游戏消息");
+      return;
+    }
     box.innerHTML = "";
     if (isPixel()) {
       var legend = document.createElement("div");
@@ -665,6 +668,7 @@
       }
       box.appendChild(d);
     });
+    syncScrollable(box, "游戏消息");
   }
 
   function renderStores() {
@@ -679,18 +683,18 @@
     box.style.display = "block";
     var html;
     if (isPixel()) {
-      html = '<div class="legend px-icon px-stores" aria-label="' + ADR.t("stores") + '" title="' + ADR.t("stores") + '"></div><span class="px-caption px-stores-caption">' + ADR.t("stores") + "</span>";
+      html = '<div class="legend px-icon px-stores" role="img" aria-label="' + ADR.t("stores") + '" title="' + ADR.t("stores") + '"></div><span class="px-caption px-stores-caption">' + ADR.t("stores") + "</span>";
       ADR.ITEMS.forEach(function (k) {
         var n = game.state.stores[k] || 0;
         if (n <= 0 && k !== "wood") return;
         if (k === "wood" && !game.state.wood_initialized) return;
         var icon = k === "cured_meat" ? "cured_meat" : k;
-        html += '<div class="store-row" aria-label="' + (ADR.ITEM_CN[k] || k) + " " + n + '">';
+        html += '<div class="store-row" role="group" aria-label="' + (ADR.ITEM_CN[k] || k) + " " + n + '">';
         html += '<span class="px-icon px-' + icon + '" aria-hidden="true"></span>';
         html += '<span class="px-caption px-store-n">' + formatStoreN(n) + "</span></div>";
       });
       if (game.state.buildings.hut > 0 || game.state.population > 0) {
-        html += '<div class="store-row" aria-label="pop ' + game.state.population + '">';
+        html += '<div class="store-row" role="group" aria-label="pop ' + game.state.population + '">';
         html += '<span class="px-icon px-pop" aria-hidden="true"></span>';
         html += '<span class="px-caption px-store-n">' + formatStoreN(game.state.population) + "</span></div>";
       }
@@ -716,6 +720,25 @@
           icon_cap: 1
         });
       }
+    }
+    syncScrollable(box, ADR.t("stores"));
+  }
+
+  function syncScrollable(el, label) {
+    if (!el) return;
+    var canScroll = false;
+    try {
+      var cs = getComputedStyle(el);
+      var oy = cs.overflowY;
+      canScroll = (oy === "auto" || oy === "scroll") && el.scrollHeight > el.clientHeight + 1;
+    } catch (e) {
+      canScroll = el.scrollHeight > el.clientHeight + 1;
+    }
+    if (canScroll || el.id === "notifications") {
+      el.setAttribute("tabindex", "0");
+      if (label && !el.getAttribute("aria-label")) el.setAttribute("aria-label", label);
+    } else if (el.getAttribute("tabindex") === "0" && el.id !== "notifications") {
+      el.removeAttribute("tabindex");
     }
   }
 

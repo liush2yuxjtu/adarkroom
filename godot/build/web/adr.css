@@ -460,12 +460,16 @@ body.style-pixel #notifications {
   top: auto;
   width: 100%;
   max-width: 100%;
-  max-height: none;
+  max-height: calc(100vh - var(--adr-menu-h, 96px) - 24px);
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 16px;
-  overflow: visible;
+  margin-bottom: 8px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  color: transparent;
+  font-size: 0;
 }
 
 body.style-pixel #notifications .note {
@@ -530,6 +534,8 @@ body.style-pixel #stores {
   padding: 12px 10px 8px;
   background: #f3f1ea url("assets/pixel/paper-tile.png") repeat;
   background-size: 64px 64px;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 body.style-pixel #stores .legend {
@@ -597,6 +603,15 @@ body.style-pixel #director-label .px-caption {
   max-width: 72px;
   overflow: hidden;
   white-space: nowrap;
+}
+
+body.style-pixel .px-caption.px-store-n,
+body.style-pixel .px-store-n {
+  max-width: none !important;
+  overflow: visible !important;
+  white-space: nowrap !important;
+  font-size: calc(16px * var(--px-ui-scale, 1)) !important;
+  color: #1c1612 !important;
 }
 
 body.style-pixel #director-label {
@@ -1009,8 +1024,11 @@ body.style-pixel .px-animal {
     max-width: 100%;
     min-width: 0;
     margin-top: 16px;
+    margin-bottom: 12px;
     padding-top: 16px;
-    overflow: visible;
+    max-height: min(36vh, calc(100vh - var(--adr-menu-h, 108px) - 24px));
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   #stores .legend {
@@ -1072,6 +1090,23 @@ body.style-pixel .px-animal {
   body.style-pixel #header {
     height: auto;
     min-height: 64px;
+    order: 1;
+  }
+
+  body.style-pixel #notifications {
+    order: 2;
+    margin-top: 8px;
+    max-height: 22vh;
+  }
+
+  body.style-pixel #stores {
+    order: 3;
+    margin-top: 8px;
+    max-height: min(28vh, calc(100vh - var(--adr-menu-h, 108px) - 24px));
+  }
+
+  body.style-pixel .panel {
+    order: 4;
   }
 
   body.style-pixel .px-scene-host {
@@ -1080,12 +1115,13 @@ body.style-pixel .px-animal {
 }
 
 @media (min-width: 1024px) {
-  body.style-pixel.px-wide #wrapper {
+  body.style-pixel #wrapper {
     display: grid;
     grid-template-columns: minmax(160px, 240px) minmax(0, auto);
     grid-template-areas:
       "header header"
       "notes main";
+    grid-template-rows: auto minmax(0, 1fr);
     justify-content: stretch;
     justify-items: stretch;
     column-gap: 16px;
@@ -1095,38 +1131,40 @@ body.style-pixel .px-animal {
     overflow: visible;
   }
 
-  body.style-pixel.px-wide.px-has-stores #wrapper {
+  body.style-pixel.px-has-stores #wrapper {
     grid-template-columns: minmax(160px, 240px) minmax(0, auto) minmax(120px, 200px);
     grid-template-areas:
       "header header header"
       "notes main side";
+    grid-template-rows: auto minmax(0, 1fr);
   }
 
-  body.style-pixel.px-wide #header {
+  body.style-pixel #header {
     grid-area: header;
     justify-self: stretch;
     width: 100%;
   }
 
-  body.style-pixel.px-wide .panel {
+  body.style-pixel .panel {
     grid-area: main;
     justify-self: center;
     min-width: 0;
     max-width: 100%;
   }
 
-  body.style-pixel.px-wide #stores {
+  body.style-pixel #stores {
     grid-area: side;
     margin-top: 0;
     align-self: start;
     justify-self: stretch;
   }
 
-  body.style-pixel.px-wide #notifications {
+  body.style-pixel #notifications {
     grid-area: notes;
     width: 100%;
     margin-top: 0;
-    max-height: calc(100vh - var(--adr-menu-h, 96px) - 88px);
+    max-height: calc(100vh - var(--adr-menu-h, 96px) - 16px);
+    min-height: 0;
     overflow-x: hidden;
     overflow-y: auto;
     display: flex;
@@ -1135,30 +1173,31 @@ body.style-pixel .px-animal {
     align-items: stretch;
   }
 
-  body.style-pixel.px-wide #notifications .note {
+  body.style-pixel #notifications .note {
     flex: 0 0 auto;
     width: 100%;
     max-width: 100%;
   }
 
-  body.style-pixel.px-wide .panel.active {
+  body.style-pixel .panel.active {
     display: flex;
     flex-direction: row;
     align-items: flex-start;
     gap: 16px;
   }
 
-  body.style-pixel.px-wide .btn-col {
+  body.style-pixel .btn-col {
     padding-top: 8px;
   }
 }
 
 @media (max-width: 400px) {
-  #menu {
+  #menu,
+  body.style-pixel #menu {
     left: 4px;
     right: 4px;
     bottom: 6px;
-    flex-wrap: nowrap;
+    flex-wrap: nowrap !important;
     gap: 4px;
     overflow-x: auto;
     justify-content: space-between;
