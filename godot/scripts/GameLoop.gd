@@ -83,6 +83,12 @@ func act(action: String, args: Dictionary = {}) -> Dictionary:
 			s.buildings[kind] = int(s.buildings[kind]) + 1
 			if kind == "hut" and s.pop_timer == null:
 				s.pop_timer = s.game_time_sec + 30 + randf() * 150
+			Analytics.log_event("build", {
+				"kind": kind,
+				"cost": { "wood": cost_wood },
+				"have": int(s.buildings[kind]),
+				"buildings": s.buildings.duplicate()
+			})
 		"travel":
 			var area := str(args.get("area", "room"))
 			if area != "room" and not s.unlocked.get(area, false):
@@ -109,16 +115,36 @@ func act(action: String, args: Dictionary = {}) -> Dictionary:
 			if nx == 5 and ny == 5:
 				_go_home(true)
 		"event_choice":
+			var ev_id: Variant = null
+			if s.active_event != null and typeof(s.active_event) == TYPE_DICTIONARY:
+				ev_id = (s.active_event as Dictionary).get("id")
+			Analytics.log_event("dialogue_choice", {
+				"event_id": ev_id,
+				"button": args.get("button")
+			})
 			s.active_event = null
 		"restart":
+			var recent: Array = Analytics.recent_actions.duplicate()
+			var last_phase := s.phase
+			var last_play := s.game_time_sec
 			Analytics.log_event("session_end", { "reason": "restart" })
 			s.clear_save()
 			s.reset()
 			Analytics.log_event("session_start", { "director": DirectorHost.director_name, "restart": true })
+			Analytics.log_event("new_game_start", {
+				"overwritten": true,
+				"previous_phase": last_phase,
+				"previous_play_time_sec": last_play,
+				"recent_actions": recent,
+				"last_phase": last_phase
+			})
+			Analytics.recent_actions = []
 			s.save_game()
 		_:
 			return { "ok": false, "error": "unknown" }
 	Analytics.log_event("player_action", { "action": action, "args": args })
+	if action in ["light_fire", "stoke_fire", "gather_wood", "build"]:
+		Analytics.log_audio(action, { "src": "godot" })
 	s.notify_changed()
 	if action != "restart":
 		s.save_game()

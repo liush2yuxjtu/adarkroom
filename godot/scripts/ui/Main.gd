@@ -74,6 +74,7 @@ func _link(text: String, cb: Callable) -> Button:
 	b.text = text
 	b.flat = true
 	b.pressed.connect(cb)
+	_wire_btn(b, text)
 	return b
 
 func _btn(text: String, cb: Callable, disabled: bool = false) -> Button:
@@ -82,7 +83,29 @@ func _btn(text: String, cb: Callable, disabled: bool = false) -> Button:
 	b.disabled = disabled
 	b.custom_minimum_size = Vector2(140, 32)
 	b.pressed.connect(cb)
+	_wire_btn(b, text)
 	return b
+
+func _wire_btn(b: Button, id: String) -> void:
+	var entered := [0.0]
+	b.mouse_entered.connect(func():
+		entered[0] = Time.get_ticks_msec() / 1000.0
+		Analytics.log_event("button_hover_enter", { "element_id": id, "label": b.text })
+	)
+	b.mouse_exited.connect(func():
+		var dur := Time.get_ticks_msec() / 1000.0 - entered[0]
+		Analytics.log_event("button_hover_exit", { "element_id": id, "label": b.text, "duration_ms": int(dur * 1000.0) })
+	)
+	b.pressed.connect(func():
+		var vp := get_viewport().get_visible_rect().size
+		var p := get_viewport().get_mouse_position()
+		Analytics.log_event("click_heat", {
+			"x": p.x, "y": p.y,
+			"nx": snapped(p.x / max(vp.x, 1.0), 0.0001),
+			"ny": snapped(p.y / max(vp.y, 1.0), 0.0001),
+			"element_id": id, "label": b.text
+		})
+	)
 
 func _label(text: String, size: int = 16) -> Label:
 	var l := Label.new()

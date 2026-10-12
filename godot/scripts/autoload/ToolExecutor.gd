@@ -100,4 +100,13 @@ func apply_calls(calls: Array, origin: String) -> void:
 			"error": result.get("error", null),
 			"origin": origin
 		})
+		if result.ok:
+			var tool := str(call.get("tool"))
+			var a: Dictionary = call.get("args", {})
+			if tool == "change_npc_mood":
+				Analytics.log_event("npc_interact", { "npc": a.get("npc"), "mood": a.get("mood"), "origin": origin, "moods": GameState.npc_moods.duplicate() })
+			elif tool == "narrate" or tool == "spawn_event":
+				Analytics.log_event("dialogue", { "tool": tool, "event_id": a.get("event_id", null), "text": str(a.get("text", "")).substr(0, 160), "origin": origin })
+			elif tool == "unlock_area":
+				Analytics.log_event("unlock", { "area": a.get("area"), "origin": origin, "unlocked": GameState.unlocked.duplicate() })
 	GameState.notify_changed()

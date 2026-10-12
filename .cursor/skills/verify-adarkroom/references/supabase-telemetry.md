@@ -10,7 +10,7 @@ Backend: Supabase project `adarkroom-telemetry` (ref `ywwguestvujaoimlqznq`), ta
 
 1. Open the LIVE URL in headless Playwright and record `session_id` from `JSON.parse(localStorage['adr.telemetry'])[0].session_id`. This is the unique marker for the run. Confirm the deployed build has a non-empty `self.ADR_TELEMETRY` (`telemetry-config.js`) and a `POST …/rest/v1/playtest_events` request answering `201`.
 2. Click `生火` with the real mouse, plus 2–3 other buttons (e.g. `添柴`, `加速.`, `设置.`).
-3. Wait about 15 s for the batch flush.
+3. Wait about 4 s for the 3-second batch flush (or hide the tab / reload to force `pagehide`).
 4. Supabase MCP `execute_sql` (project `ywwguestvujaoimlqznq`):
    ```sql
    select event_name, count(*), min(occurred_at), max(occurred_at),

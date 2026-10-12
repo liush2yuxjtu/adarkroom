@@ -539,8 +539,15 @@
     });
     window.addEventListener("beforeunload", function () {
       persistNow();
-      game.act("quit");
-      if (game.analytics.flushHttp) game.analytics.flushHttp();
+      if (!game) return;
+      game.analytics.log(game.state, "quit", {});
+      game.analytics.log(game.state, "session_end", { reason: "quit" });
+      if (window.ADRTelemetry) {
+        ADRTelemetry.pageUnload("beforeunload");
+        ADRTelemetry.flush("beforeunload");
+      } else if (game.analytics.flushHttp) {
+        game.analytics.flushHttp("unload");
+      }
     });
     window.ADRSave = {
       key: ADR.SAVE_KEY,
@@ -586,6 +593,7 @@
       cfg.analytics_http_enabled = true;
     }
     if (q.get("fast") === "1" || q.get("fast") === "true") cfg.time_scale = 10;
+    if (q.get("telemetry_debug") === "1" || q.get("telemetry_debug") === "true") cfg.telemetry_debug = true;
     try {
       var saved = JSON.parse(localStorage.getItem("adr.config") || "null");
       if (saved && !q.get("director")) {
@@ -612,10 +620,13 @@
       }
       game = new ADR.Game(config, events);
       window.__ADR_GAME = game;
+      if (window.ADRTelemetry) ADRTelemetry.bindGame(game);
+      if (window.ADRSaveTelemetry && ADRSaveTelemetry.hookGame) ADRSaveTelemetry.hookGame(game);
       game.on(renderAll);
       game.hud = paintCooldowns;
       bindMenu();
       renderAll();
+      if (window.ADRTelemetry) ADRTelemetry.markFirstFrame();
       requestAnimationFrame(loop);
     });
   }

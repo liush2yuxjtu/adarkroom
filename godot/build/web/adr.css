@@ -57,6 +57,8 @@ button, input, select, textarea {
   left: -210px;
   top: 48px;
   width: 200px;
+  max-height: 70vh;
+  overflow-y: auto;
   color: #333;
   font-size: 14px;
   line-height: 1.35;
