@@ -117,8 +117,112 @@
   "snarling_beast": {
     "title": "咆哮的野兽",
     "notification": "一只野兽从灌木丛里蹿了出来",
+    "when": { "max_dist": 10, "terrain": "forest" },
     "text": ["一只野兽从灌木丛里蹿了出来。"],
-    "combat": { "hp": 4, "dmg": 1, "name": "咆哮的野兽", "reward": { "fur": 1, "meat": 1 } }
+    "combat": {
+      "hp": 5, "dmg": 1, "hit": 0.8, "name": "咆哮的野兽", "death": "野兽倒下了",
+      "loot": { "fur": { "min": 1, "max": 3, "chance": 1 }, "meat": { "min": 1, "max": 3, "chance": 1 }, "teeth": { "min": 1, "max": 3, "chance": 0.8 } }
+    }
+  },
+  "gaunt_man": {
+    "title": "憔悴的男子",
+    "notification": "一名憔悴的男子靠了过来，眼底流露出疯狂",
+    "when": { "max_dist": 10, "terrain": "barrens" },
+    "text": ["一名憔悴的男子靠了过来，眼底流露出疯狂。"],
+    "combat": {
+      "hp": 6, "dmg": 2, "hit": 0.8, "name": "憔悴的男子", "death": "憔悴的男子倒下了",
+      "loot": { "cloth": { "min": 1, "max": 3, "chance": 0.8 }, "teeth": { "min": 1, "max": 2, "chance": 0.8 }, "leather": { "min": 1, "max": 2, "chance": 0.5 } }
+    }
+  },
+  "strange_bird": {
+    "title": "怪鸟",
+    "notification": "一只模样古怪的鸟快速掠过平原",
+    "when": { "max_dist": 10, "terrain": "field" },
+    "text": ["一只模样古怪的鸟快速掠过平原。"],
+    "combat": {
+      "hp": 4, "dmg": 3, "hit": 0.8, "name": "怪鸟", "death": "怪鸟倒下了",
+      "loot": { "scales": { "min": 1, "max": 3, "chance": 0.8 }, "teeth": { "min": 1, "max": 2, "chance": 0.5 }, "meat": { "min": 1, "max": 3, "chance": 0.8 } }
+    }
+  },
+  "two_headed_creature": {
+    "title": "双头怪物",
+    "notification": "一只双头怪物出现了，较小的那颗头在发抖",
+    "when": { "max_dist": 10, "terrain": "field" },
+    "text": ["一只双头怪物出现了，较小的那颗头在发抖。"],
+    "combat": {
+      "hp": 10, "dmg": 2, "hit": 0.5, "name": "双头怪物", "death": "那两个生物倒下了",
+      "loot": { "fur": { "min": 2, "max": 4, "chance": 1 }, "teeth": { "min": 2, "max": 3, "chance": 0.8 }, "meat": { "min": 2, "max": 3, "chance": 0.8 } }
+    }
+  },
+  "shivering_man": {
+    "title": "颤抖的男子",
+    "notification": "一名颤抖的男子靠了过来，以令人吃惊的力量发起袭击",
+    "when": { "min_dist": 10, "max_dist": 20, "terrain": "barrens" },
+    "text": ["一名颤抖的男子靠了过来，以令人吃惊的力量发起袭击。"],
+    "combat": {
+      "hp": 20, "dmg": 5, "hit": 0.5, "name": "颤抖的男子", "death": "颤抖的男子倒下了",
+      "loot": { "cloth": { "min": 1, "max": 1, "chance": 0.2 }, "teeth": { "min": 1, "max": 2, "chance": 0.8 }, "leather": { "min": 1, "max": 1, "chance": 0.2 }, "medicine": { "min": 1, "max": 3, "chance": 0.7 } }
+    }
+  },
+  "man_eater": {
+    "title": "食人怪",
+    "notification": "一只巨大的生物袭来，爪子上鲜血淋漓",
+    "when": { "min_dist": 10, "max_dist": 20, "terrain": "forest" },
+    "text": ["一只巨大的生物袭来，爪子上鲜血淋漓。"],
+    "combat": {
+      "hp": 25, "dmg": 3, "hit": 0.8, "name": "食人怪", "death": "食人怪倒下了",
+      "loot": { "fur": { "min": 5, "max": 10, "chance": 1 }, "meat": { "min": 5, "max": 10, "chance": 1 }, "teeth": { "min": 5, "max": 10, "chance": 0.8 } }
+    }
+  },
+  "scavenger": {
+    "title": "拾荒者",
+    "notification": "一名拾荒者贴了过来，想要发起偷袭",
+    "when": { "min_dist": 10, "max_dist": 20, "terrain": "barrens" },
+    "text": ["一名拾荒者贴了过来，想要发起偷袭。"],
+    "combat": {
+      "hp": 30, "dmg": 4, "hit": 0.8, "name": "拾荒者", "death": "拾荒者被消灭了",
+      "loot": { "cloth": { "min": 5, "max": 10, "chance": 0.8 }, "leather": { "min": 5, "max": 10, "chance": 0.8 }, "iron": { "min": 1, "max": 5, "chance": 0.5 }, "medicine": { "min": 1, "max": 2, "chance": 0.1 } }
+    }
+  },
+  "huge_lizard": {
+    "title": "巨蜥",
+    "notification": "草丛疯摇，一只巨蜥扑了出来",
+    "when": { "min_dist": 10, "max_dist": 20, "terrain": "field" },
+    "text": ["草丛疯摇，一只巨蜥扑了出来。"],
+    "combat": {
+      "hp": 20, "dmg": 5, "hit": 0.8, "name": "巨蜥", "death": "巨蜥倒下了",
+      "loot": { "scales": { "min": 5, "max": 10, "chance": 0.8 }, "teeth": { "min": 5, "max": 10, "chance": 0.5 }, "meat": { "min": 5, "max": 10, "chance": 0.8 } }
+    }
+  },
+  "feral_terror": {
+    "title": "凶怪",
+    "notification": "一只凶怪以超乎想象的狂野从林中扑出",
+    "when": { "min_dist": 20, "terrain": "forest" },
+    "text": ["一只凶怪以超乎想象的狂野从林中扑出。"],
+    "combat": {
+      "hp": 45, "dmg": 6, "hit": 0.8, "name": "凶怪", "death": "凶怪倒下了",
+      "loot": { "fur": { "min": 5, "max": 10, "chance": 1 }, "meat": { "min": 5, "max": 10, "chance": 1 }, "teeth": { "min": 5, "max": 10, "chance": 0.8 } }
+    }
+  },
+  "soldier": {
+    "title": "士兵",
+    "notification": "一名士兵从沙漠那边开火",
+    "when": { "min_dist": 20, "terrain": "barrens" },
+    "text": ["一名士兵从沙漠那边开火。"],
+    "combat": {
+      "hp": 50, "dmg": 8, "hit": 0.8, "name": "士兵", "death": "士兵倒下了",
+      "loot": { "cloth": { "min": 5, "max": 10, "chance": 0.8 }, "bullets": { "min": 1, "max": 5, "chance": 0.5 }, "rifle": { "min": 1, "max": 1, "chance": 0.2 }, "medicine": { "min": 1, "max": 2, "chance": 0.1 } }
+    }
+  },
+  "sniper": {
+    "title": "狙击手",
+    "notification": "深草丛的某处射出了一发子弹",
+    "when": { "min_dist": 20, "terrain": "field" },
+    "text": ["深草丛的某处射出了一发子弹。"],
+    "combat": {
+      "hp": 30, "dmg": 15, "hit": 0.8, "name": "狙击手", "death": "狙击手被灭",
+      "loot": { "cloth": { "min": 5, "max": 10, "chance": 0.8 }, "bullets": { "min": 1, "max": 5, "chance": 0.5 }, "rifle": { "min": 1, "max": 1, "chance": 0.2 }, "medicine": { "min": 1, "max": 2, "chance": 0.1 } }
+    }
   },
   "beggar": {
     "title": "乞丐",

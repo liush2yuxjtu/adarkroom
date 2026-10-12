@@ -8,7 +8,7 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
 
-  var ITEMS = ["wood", "fur", "meat", "scales", "teeth", "cloth", "bait", "charm", "compass", "cured_meat", "leather", "iron", "coal", "steel", "sulphur", "bullets", "torch", "waterskin", "cask", "water_tank", "bone_spear", "rucksack", "wagon", "convoy", "l_armour", "i_armour", "s_armour", "iron_sword", "steel_sword", "rifle", "medicine", "energy_cell", "bolas", "grenade", "bayonet", "alien_alloy"];
+  var ITEMS = ["wood", "fur", "meat", "scales", "teeth", "cloth", "bait", "charm", "compass", "cured_meat", "leather", "iron", "coal", "steel", "sulphur", "bullets", "torch", "waterskin", "cask", "water_tank", "bone_spear", "rucksack", "wagon", "convoy", "l_armour", "i_armour", "s_armour", "iron_sword", "steel_sword", "rifle", "medicine", "energy_cell", "bolas", "grenade", "bayonet", "alien_alloy", "laser_rifle", "plasma_rifle", "energy_blade", "disruptor"];
   var AREAS = ["room", "outside", "path", "world"];
   var NPCS = ["builder", "nomad", "villagers"];
   var MOODS = ["unknown", "collapsed", "shivering", "sleeping", "helping", "neutral", "wary", "grateful"];
@@ -22,7 +22,8 @@
     rucksack: "双肩包", wagon: "篷车", convoy: "车队", l_armour: "皮甲", i_armour: "铁甲",
     s_armour: "钢甲", iron_sword: "铁剑", steel_sword: "钢剑", rifle: "步枪",
     medicine: "药剂", energy_cell: "能量元件", bolas: "套索", grenade: "手雷",
-    bayonet: "刺刀", alien_alloy: "外星合金"
+    bayonet: "刺刀", alien_alloy: "外星合金",
+    laser_rifle: "激光步枪", plasma_rifle: "等离子步枪", energy_blade: "能量刃", disruptor: "扰乱器"
   };
   var BUILDING_CN = {
     trap: "陷阱", cart: "货车", hut: "小屋", lodge: "狩猎小屋", trading_post: "贸易站",
@@ -108,6 +109,60 @@
     compass: { type: "special", max: 1, cost: { fur: 400, scales: 20, teeth: 10 } }
   };
   var TRADE_KEYS = Object.keys(TRADEABLE);
+  /* Faithful copy of script/world.js constants (batch 5). */
+  var RADIUS = 30;
+  var STICKINESS = 0.5;
+  var LIGHT_RADIUS = 2;
+  var BASE_WATER = 10;
+  var MOVES_PER_FOOD = 2;
+  var MOVES_PER_WATER = 1;
+  var DEATH_COOLDOWN = 120;
+  var FIGHT_CHANCE = 0.20;
+  var BASE_HEALTH = 10;
+  var BASE_HIT_CHANCE = 0.8;
+  var MEAT_HEAL = 8;
+  var MEDS_HEAL = 20;
+  var HYPO_HEAL = 30;
+  var FIGHT_DELAY = 3;
+  var WORLD_SIZE = RADIUS * 2 + 1;
+  var VILLAGE_X = RADIUS;
+  var VILLAGE_Y = RADIUS;
+  /* Faithful copy of script/world.js Weapons. */
+  var WEAPONS = {
+    fists: { verb: "punch", type: "unarmed", damage: 1, cooldown: 2 },
+    bone_spear: { verb: "stab", type: "melee", damage: 2, cooldown: 2 },
+    iron_sword: { verb: "swing", type: "melee", damage: 4, cooldown: 2 },
+    steel_sword: { verb: "slash", type: "melee", damage: 6, cooldown: 2 },
+    bayonet: { verb: "thrust", type: "melee", damage: 8, cooldown: 2 },
+    rifle: { verb: "shoot", type: "ranged", damage: 5, cooldown: 1, cost: { bullets: 1 } },
+    laser_rifle: { verb: "blast", type: "ranged", damage: 8, cooldown: 1, cost: { energy_cell: 1 } },
+    grenade: { verb: "lob", type: "ranged", damage: 15, cooldown: 5, cost: { grenade: 1 } },
+    bolas: { verb: "tangle", type: "ranged", damage: "stun", cooldown: 15, cost: { bolas: 1 } },
+    plasma_rifle: { verb: "disintegrate", type: "ranged", damage: 12, cooldown: 1, cost: { energy_cell: 1 } },
+    energy_blade: { verb: "slice", type: "melee", damage: 10, cooldown: 2 },
+    disruptor: { verb: "stun", type: "ranged", damage: "stun", cooldown: 15 }
+  };
+  /* Faithful copy of script/engine.js Perks (name / desc / notify). */
+  var PERKS = {
+    boxer: { name: "boxer", desc: "punches do more damage", notify: "learned to throw punches with purpose" },
+    martial_artist: { name: "martial artist", desc: "punches do even more damage.", notify: "learned to fight quite effectively without weapons" },
+    unarmed_master: { name: "unarmed master", desc: "punch twice as fast, and with even more force", notify: "learned to strike faster without weapons" },
+    barbarian: { name: "barbarian", desc: "melee weapons deal more damage", notify: "learned to swing weapons with force" },
+    slow_metabolism: { name: "slow metabolism", desc: "go twice as far without eating", notify: "learned how to ignore the hunger" },
+    desert_rat: { name: "desert rat", desc: "go twice as far without drinking", notify: "learned to love the dry air" },
+    evasive: { name: "evasive", desc: "dodge attacks more effectively", notify: "learned to be where they're not" },
+    precise: { name: "precise", desc: "land blows more often", notify: "learned to predict their movement" },
+    scout: { name: "scout", desc: "see farther", notify: "learned to look ahead" },
+    stealthy: { name: "stealthy", desc: "better avoid conflict in the wild", notify: "learned how not to be seen" },
+    gastronome: { name: "gastronome", desc: "restore more health when eating", notify: "learned to make the most of food" }
+  };
+  var PERK_KEYS = Object.keys(PERKS);
+
+  function emptyPerks() {
+    var p = {};
+    PERK_KEYS.forEach(function (k) { p[k] = false; });
+    return p;
+  }
   var TOOL_NAMES = ["spawn_event", "give_item", "change_npc_mood", "narrate", "unlock_area", "set_flag"];
 
   var STRINGS = {
@@ -242,7 +297,48 @@
     "coal miner": "煤矿工人",
     "sulphur miner": "硫磺矿工",
     "steelworker": "炼钢工人",
-    "armourer": "军械工人"
+    "armourer": "军械工人",
+    "boxer": "拳击手",
+    "punches do more damage": "徒手伤害翻倍",
+    "learned to throw punches with purpose": "学会了有意识地出拳",
+    "martial artist": "武斗家",
+    "punches do even more damage.": "徒手造成更多的伤害",
+    "learned to fight quite effectively without weapons": "学会了高效率的徒手搏击",
+    "unarmed master": "徒手宗师",
+    "punch twice as fast, and with even more force": "出拳速度翻倍，力道也更大",
+    "learned to strike faster without weapons": "学会了如何更快速地出拳",
+    "barbarian": "野蛮人",
+    "melee weapons deal more damage": "近战武器造成更高伤害",
+    "learned to swing weapons with force": "学会了如何发挥劲力，挥舞武器",
+    "slow metabolism": "减缓代谢",
+    "go twice as far without eating": "不吃东西能坚持走的距离翻倍",
+    "learned how to ignore the hunger": "学会如何忍饥挨饿",
+    "desert rat": "荒漠跳鼠",
+    "go twice as far without drinking": "不喝水能坚持走的距离翻倍",
+    "learned to love the dry air": "无畏干燥",
+    "evasive": "避实就虚",
+    "dodge attacks more effectively": "更有效的闪避攻击",
+    "learned to be where they're not": "学会了闪避攻击",
+    "precise": "精密",
+    "land blows more often": "命中率提高",
+    "learned to predict their movement": "学会预判他人的动作",
+    "scout": "侦查术",
+    "see farther": "看得更远",
+    "learned to look ahead": "强化视野",
+    "stealthy": "潜行",
+    "better avoid conflict in the wild": "更好地回避荒野中的冲突",
+    "learned how not to be seen": "学会了隐匿身形",
+    "gastronome": "美食家",
+    "restore more health when eating": "进食恢复更多生命",
+    "learned to make the most of food": "学会充分消化食物",
+    "laser rifle": "激光步枪",
+    "plasma rifle": "等离子步枪",
+    "energy blade": "能量刃",
+    "disruptor": "扰乱器",
+    "A Two-Headed Creature": "双头怪物",
+    "two-headed creature": "双头怪物",
+    "the two creatures are dead": "那两个生物倒下了",
+    "a two-headed creature appears, the smaller head trembling": "一只双头怪物出现了，较小的那颗头在发抖"
   };
 
   function t(key) {
@@ -295,18 +391,22 @@
       scheduled: [],
       active_event: null,
       combat: null,
+      perks: emptyPerks(),
+      punches: 0,
       outfit: { meat: 0, cured_meat: 0 },
       world: {
         on_expedition: false,
-        size: 11,
-        x: 5,
-        y: 5,
-        water: 10,
-        hp: 10,
-        max_hp: 10,
+        size: WORLD_SIZE,
+        x: VILLAGE_X,
+        y: VILLAGE_Y,
+        water: BASE_WATER,
+        hp: BASE_HEALTH,
+        max_hp: BASE_HEALTH,
         food_moves: 0,
+        water_moves: 0,
+        fight_moves: 0,
         visited: {},
-        landmarks: { "8,3": "old_house" },
+        landmarks: { "33,28": "old_house" },
         seen_danger: false
       },
       slice_complete: false
@@ -315,9 +415,9 @@
 
   var SAVE_KEY = "adr.save.v1";
   var SAVE_VERSION = 1;
-  var OBJECT_KEYS = ["stores", "buildings", "unlocked", "npc_moods", "workers", "outfit", "income_acc", "world", "flags", "cooldowns", "cooldown_ends_at", "seen"];
+  var OBJECT_KEYS = ["stores", "buildings", "unlocked", "npc_moods", "workers", "outfit", "income_acc", "world", "flags", "cooldowns", "cooldown_ends_at", "seen", "perks"];
   var ARRAY_KEYS = ["notifications", "scheduled"];
-  var NUMBER_KEYS = ["fire", "temperature", "game_time_sec", "builder_level", "population"];
+  var NUMBER_KEYS = ["fire", "temperature", "game_time_sec", "builder_level", "population", "punches"];
 
   function isPlainObject(v) {
     return !!v && typeof v === "object" && !Array.isArray(v);
@@ -503,6 +603,41 @@
     Object.keys(INCOME).forEach(function (k) {
       if (typeof state.income_acc[k] !== "number") state.income_acc[k] = 0;
     });
+    if (!isPlainObject(state.perks)) state.perks = emptyPerks();
+    PERK_KEYS.forEach(function (k) {
+      if (typeof state.perks[k] !== "boolean") state.perks[k] = !!state.perks[k];
+    });
+    ["evasive", "precise", "barbarian", "scout", "stealthy"].forEach(function (k) {
+      if (state.flags["learned_" + k]) state.perks[k] = true;
+    });
+    if (typeof state.punches !== "number") state.punches = 0;
+    if (!isPlainObject(state.world)) state.world = {};
+    if ((state.world.size || 11) !== WORLD_SIZE) {
+      var oldSize = state.world.size || 11;
+      var oldCx = Math.floor(oldSize / 2);
+      var shiftX = VILLAGE_X - oldCx;
+      var shiftY = VILLAGE_Y - oldCx;
+      state.world.x = (typeof state.world.x === "number" ? state.world.x : oldCx) + shiftX;
+      state.world.y = (typeof state.world.y === "number" ? state.world.y : oldCx) + shiftY;
+      var visited = {};
+      Object.keys(state.world.visited || {}).forEach(function (k) {
+        var p = k.split(",");
+        visited[(Number(p[0]) + shiftX) + "," + (Number(p[1]) + shiftY)] = true;
+      });
+      state.world.visited = visited;
+      var lms = {};
+      Object.keys(state.world.landmarks || {}).forEach(function (k) {
+        var p = k.split(",");
+        lms[(Number(p[0]) + shiftX) + "," + (Number(p[1]) + shiftY)] = state.world.landmarks[k];
+      });
+      state.world.landmarks = lms;
+      state.world.size = WORLD_SIZE;
+    }
+    if (!isPlainObject(state.world.landmarks)) state.world.landmarks = {};
+    var houseKey = (VILLAGE_X + 3) + "," + (VILLAGE_Y - 2);
+    if (!state.world.landmarks[houseKey]) state.world.landmarks[houseKey] = "old_house";
+    if (typeof state.world.fight_moves !== "number") state.world.fight_moves = 0;
+    if (typeof state.world.water_moves !== "number") state.world.water_moves = 0;
     unlockWorkersForBuildings(state);
     syncGatherers(state);
     return state;
@@ -788,6 +923,7 @@
         };
         if (spec.notification) pushNote(state, spec.notification, state.location);
         applySceneEffects(state, spec);
+        if (spec.combat) beginCombat(state, spec);
         break;
     }
     return { ok: true };
@@ -881,7 +1017,9 @@
     if (item === "bone_spear") return 2;
     if (item === "iron_sword") return 3;
     if (item === "steel_sword") return 5;
-    if (item === "rifle") return 5;
+    if (item === "rifle" || item === "laser_rifle" || item === "plasma_rifle") return 5;
+    if (item === "energy_blade") return 2;
+    if (item === "disruptor") return 2;
     if (item === "bullets") return 0.1;
     if (item === "energy_cell") return 0.2;
     if (item === "bolas") return 0.5;
@@ -934,17 +1072,17 @@
   }
 
   function getMaxWater(state) {
-    if ((state.stores.water_tank || 0) > 0) return 60;
-    if ((state.stores.cask || 0) > 0) return 30;
-    if ((state.stores.waterskin || 0) > 0) return 20;
-    return 10;
+    if ((state.stores.water_tank || 0) > 0) return BASE_WATER + 50;
+    if ((state.stores.cask || 0) > 0) return BASE_WATER + 20;
+    if ((state.stores.waterskin || 0) > 0) return BASE_WATER + 10;
+    return BASE_WATER;
   }
 
   function getMaxHealth(state) {
-    if ((state.stores.s_armour || 0) > 0) return 45;
-    if ((state.stores.i_armour || 0) > 0) return 25;
-    if ((state.stores.l_armour || 0) > 0) return 15;
-    return 10;
+    if ((state.stores.s_armour || 0) > 0) return BASE_HEALTH + 35;
+    if ((state.stores.i_armour || 0) > 0) return BASE_HEALTH + 15;
+    if ((state.stores.l_armour || 0) > 0) return BASE_HEALTH + 5;
+    return BASE_HEALTH;
   }
 
   function assignedWorkers(state) {
@@ -1092,6 +1230,9 @@
   function eventAvailable(state, spec) {
     var w = spec && spec.when;
     if (!w) return false;
+    // World encounters live in Events.Encounters and are rolled on world_move.
+    // The village scheduler must not pick them (original EventPool is room/outside only).
+    if (spec.combat || w.terrain || w.min_dist != null || w.max_dist != null) return false;
     if (w.location) {
       var locs = Array.isArray(w.location) ? w.location : [w.location];
       if (locs.indexOf(state.location) < 0) return false;
@@ -1168,7 +1309,7 @@
       grant(state, state.flags.stolen || {});
       state.flags.stolen = {};
     }
-    if (fx.learn) state.flags["learned_" + fx.learn] = true;
+    if (fx.learn) addPerk(state, fx.learn);
     if (fx.delay_give && Math.random() < (fx.delay_give.chance == null ? 1 : fx.delay_give.chance)) {
       var after = fx.delay_give.after || 60;
       var stores = fx.delay_give.stores || {};
@@ -1319,13 +1460,110 @@
   }
 
   function terrainAt(x, y, size) {
-    var dx = x - Math.floor(size / 2);
-    var dy = y - Math.floor(size / 2);
+    var cx = Math.floor((size || WORLD_SIZE) / 2);
+    var dx = x - cx;
+    var dy = y - cx;
     var d = Math.sqrt(dx * dx + dy * dy);
     if (d < 1.2) return "village";
-    if (d < 3) return "forest";
-    if (d < 4.5) return "grass";
-    return "dust";
+    var h = Math.abs(Math.sin((x + 1) * 12.9898 + (y + 1) * 78.233) * 43758.5453) % 1;
+    var roll = h * (1 - STICKINESS) + ((x + y) % 3) / 3 * STICKINESS;
+    if (d < 10) return roll < 0.55 ? "forest" : (roll < 0.85 ? "grass" : "dust");
+    if (d < 20) return roll < 0.25 ? "forest" : (roll < 0.70 ? "grass" : "dust");
+    return roll < 0.15 ? "forest" : (roll < 0.50 ? "grass" : "dust");
+  }
+
+  function worldDistance(state) {
+    return Math.abs(state.world.x - VILLAGE_X) + Math.abs(state.world.y - VILLAGE_Y);
+  }
+
+  function terrainKind(state) {
+    var ter = terrainAt(state.world.x, state.world.y, state.world.size);
+    if (ter === "grass") return "field";
+    if (ter === "dust") return "barrens";
+    return ter;
+  }
+
+  function hasPerk(state, id) {
+    return !!(state.perks && state.perks[id]);
+  }
+
+  function addPerk(state, id) {
+    if (!PERKS[id]) return;
+    if (!state.perks) state.perks = emptyPerks();
+    if (state.perks[id]) return;
+    state.perks[id] = true;
+    state.flags["learned_" + id] = true;
+    if (PERKS[id].notify) pushNote(state, t(PERKS[id].notify), state.location);
+  }
+
+  function meatHeal(state) {
+    return MEAT_HEAL * (hasPerk(state, "gastronome") ? 2 : 1);
+  }
+
+  function getHitChance(state) {
+    return BASE_HIT_CHANCE + (hasPerk(state, "precise") ? 0.1 : 0);
+  }
+
+  function lightRadius(state) {
+    return LIGHT_RADIUS * (hasPerk(state, "scout") ? 2 : 1);
+  }
+
+  function movesPerFood(state) {
+    return MOVES_PER_FOOD * (hasPerk(state, "slow_metabolism") ? 2 : 1);
+  }
+
+  function movesPerWater(state) {
+    return MOVES_PER_WATER * (hasPerk(state, "desert_rat") ? 2 : 1);
+  }
+
+  function fightChance(state) {
+    return FIGHT_CHANCE * (hasPerk(state, "stealthy") ? 0.5 : 1);
+  }
+
+  function rollLoot(loot) {
+    var out = {};
+    if (!loot) return out;
+    Object.keys(loot).forEach(function (k) {
+      var spec = loot[k];
+      if (!spec || Math.random() > (spec.chance == null ? 1 : spec.chance)) return;
+      var lo = spec.min || 1;
+      var hi = spec.max == null ? lo : spec.max;
+      out[k] = Math.floor(Math.random() * (hi - lo + 1)) + lo;
+    });
+    return out;
+  }
+
+  function pickWorldEncounter(state, catalog) {
+    var d = worldDistance(state);
+    var ter = terrainKind(state);
+    var pool = [];
+    Object.keys(catalog || {}).forEach(function (id) {
+      var spec = catalog[id];
+      if (!spec || !spec.combat || !spec.when) return;
+      var w = spec.when;
+      if (w.terrain && w.terrain !== ter) return;
+      if (w.max_dist != null && d > w.max_dist) return;
+      if (w.min_dist != null && d <= w.min_dist) return;
+      pool.push(id);
+    });
+    if (!pool.length) return null;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  function beginCombat(state, spec, catalog) {
+    var ev = spec || {};
+    var c = ev.combat || {};
+    state.combat = {
+      id: ev.id || (state.active_event && state.active_event.id) || "fight",
+      hp: c.hp || 4,
+      dmg: c.dmg || 1,
+      hit: c.hit == null ? BASE_HIT_CHANCE : c.hit,
+      name: c.name || ev.title || "敌人",
+      death: c.death || "",
+      reward: c.reward || null,
+      loot: c.loot || null,
+      stunned: false
+    };
   }
 
   function RuleDirector() {
@@ -1453,7 +1691,7 @@
       var pool = [];
       Object.keys(catalog || {}).forEach(function (id) {
         var spec = catalog[id];
-        if (spec && spec.when && eventAvailable(state, spec)) pool.push(id);
+        if (spec && spec.when && spec.when.location && eventAvailable(state, spec)) pool.push(id);
       });
       if (pool.length) {
         var pick = pool[Math.floor(Math.random() * pool.length)];
@@ -1733,7 +1971,7 @@
     this._llmBusy = false;
     this._saveDirty = false;
     this._lastSaveAt = 0;
-    this.state = createState();
+    this.state = migrateState(createState());
     var boot = parseBootQuery();
     var restored = false;
     if (boot.fresh) {
@@ -2145,15 +2383,20 @@
       case "embark":
         if (!s.unlocked.path) return { ok: false, error: "locked" };
         if ((s.outfit.meat || 0) + (s.outfit.cured_meat || 0) <= 0) return { ok: false, error: "no_food" };
+        if (s.flags.world_death_until != null && s.game_time_sec < s.flags.world_death_until) {
+          return { ok: false, error: "death_cooldown" };
+        }
         s.world.on_expedition = true;
-        s.world.x = 5;
-        s.world.y = 5;
+        s.world.x = VILLAGE_X;
+        s.world.y = VILLAGE_Y;
         s.world.water = getMaxWater(s);
         s.world.hp = getMaxHealth(s);
         s.world.max_hp = getMaxHealth(s);
         s.world.food_moves = 0;
+        s.world.water_moves = 0;
+        s.world.fight_moves = 0;
         s.location = "world";
-        s.world.visited["5,5"] = true;
+        s.world.visited[VILLAGE_X + "," + VILLAGE_Y] = true;
         pushNote(s, t("A Barren World"), "world");
         break;
       case "world_move":
@@ -2164,10 +2407,14 @@
         s.world.x = nx;
         s.world.y = ny;
         s.world.visited[nx + "," + ny] = true;
-        s.world.water -= 1;
+        s.world.water_moves += 1;
+        if (s.world.water_moves >= movesPerWater(s)) {
+          s.world.water_moves = 0;
+          s.world.water -= 1;
+        }
         s.world.food_moves += 1;
         // @pacing kind=consume id=world_food_moves value=2 phase=world
-        if (s.world.food_moves >= 2) {
+        if (s.world.food_moves >= movesPerFood(s)) {
           s.world.food_moves = 0;
           if ((s.outfit.cured_meat || 0) > 0) s.outfit.cured_meat -= 1;
           else if ((s.outfit.meat || 0) > 0) s.outfit.meat -= 1;
@@ -2182,28 +2429,32 @@
           pushNote(s, t("the thirst becomes unbearable"), "world");
           s.world.hp -= 2;
         }
-        if (nx === 5 && ny === 5) {
+        if (nx === VILLAGE_X && ny === VILLAGE_Y) {
           this._goHome(true);
           break;
         }
-        var d = Math.abs(nx - 5) + Math.abs(ny - 5);
-        if (d >= 4 && !s.world.seen_danger) {
+        var d = worldDistance(s);
+        if (d >= 8 && !s.world.seen_danger && (s.stores.i_armour || 0) <= 0 && (s.stores.s_armour || 0) <= 0) {
           s.world.seen_danger = true;
           pushNote(s, t("dangerous to be this far from the village without proper protection"), "world");
         }
         var lm = s.world.landmarks[nx + "," + ny];
         if (lm && !s.active_event) {
           executeTool(s, { tool: "spawn_event", args: { event_id: lm } }, { events: this.events });
-        } else if (d > 0 && Math.random() < 0.18 && !s.active_event) {
-          executeTool(s, { tool: "spawn_event", args: { event_id: "snarling_beast" }, delay_sec: 0 }, { events: this.events });
-          var ev = this.events.snarling_beast;
-          if (ev && ev.combat) {
-            s.combat = { hp: ev.combat.hp, dmg: ev.combat.dmg, name: ev.combat.name, reward: ev.combat.reward };
+        } else if (d > 0 && !s.active_event && !s.combat) {
+          s.world.fight_moves = (s.world.fight_moves || 0) + 1;
+          if (s.world.fight_moves > FIGHT_DELAY && Math.random() < fightChance(s)) {
+            s.world.fight_moves = 0;
+            var fightId = pickWorldEncounter(s, this.events) || "snarling_beast";
+            executeTool(s, { tool: "spawn_event", args: { event_id: fightId } }, { events: this.events });
+            var ev = this.events[fightId];
+            if (ev && ev.combat) beginCombat(s, ev);
           }
         }
         if (s.world.hp <= 0) {
           this.analytics.log(s, "death", { where: "world" });
           pushNote(s, t("the world fades"), "world");
+          s.flags.world_death_until = s.game_time_sec + DEATH_COOLDOWN;
           this._goHome(false);
         }
         break;
@@ -2246,7 +2497,7 @@
         }
         clearSave();
         if (typeof ADRTelemetry !== "undefined" && ADRTelemetry.rotateSession) ADRTelemetry.rotateSession();
-        this.state = createState();
+        this.state = migrateState(createState());
         this.rule = new RuleDirector();
         if (typeof ADRTelemetry !== "undefined" && ADRTelemetry.bindGame) ADRTelemetry.bindGame(this);
         this.analytics.syncPhase(this.state);
@@ -2318,7 +2569,7 @@
       s.population = Math.max(0, s.population - btn.lose_pop);
       syncGatherers(s);
     }
-    if (btn.learn) s.flags["learned_" + btn.learn] = true;
+    if (btn.learn) addPerk(s, btn.learn);
     if (btn.map_piece) s.flags.map_pieces = (s.flags.map_pieces || 0) + 1;
     if (btn.set_flag) s.flags[btn.set_flag] = true;
     if (btn.random_next) {
@@ -2347,26 +2598,82 @@
   Game.prototype._combat = function (move) {
     var s = this.state;
     if (!s.combat) return;
-    if (move === "punch") {
-      s.combat.hp -= 1 + (Math.random() < 0.3 ? 1 : 0);
-      if (Math.random() < 0.55) s.world.hp -= s.combat.dmg;
-      if (s.combat.hp <= 0) {
-        grant(s, s.combat.reward);
-        pushNote(s, "咆哮的野兽倒下了。", "world");
-        s.combat = null;
-        s.active_event = null;
-      }
-    } else if (move === "flee") {
+    if (move === "eat") {
+      var food = (s.outfit.cured_meat || 0) > 0 ? "cured_meat" : ((s.outfit.meat || 0) > 0 ? "meat" : null);
+      if (!food) return;
+      s.outfit[food] -= 1;
+      s.world.hp = Math.min(s.world.max_hp, s.world.hp + meatHeal(s));
+      return;
+    }
+    if (move === "meds") {
+      if ((s.outfit.medicine || 0) <= 0 && (s.stores.medicine || 0) <= 0) return;
+      if ((s.outfit.medicine || 0) > 0) s.outfit.medicine -= 1;
+      else addItem(s, "medicine", -1);
+      s.world.hp = Math.min(s.world.max_hp, s.world.hp + MEDS_HEAL);
+      return;
+    }
+    if (move === "flee") {
       if (Math.random() < 0.5) {
         s.world.hp -= 1;
         pushNote(s, "逃脱时挨了一下。", "world");
       }
       s.combat = null;
       s.active_event = null;
+    } else {
+      var weaponId = move === "punch" ? "fists" : move;
+      var weapon = WEAPONS[weaponId];
+      if (!weapon) return;
+      if (weaponId !== "fists") {
+        var have = (s.outfit[weaponId] || 0) + (s.stores[weaponId] || 0);
+        if (have <= 0 && weaponId !== "fists") return;
+      }
+      if (weapon.cost) {
+        var ck;
+        for (ck in weapon.cost) {
+          var need = weapon.cost[ck];
+          if ((s.outfit[ck] || 0) >= need) s.outfit[ck] -= need;
+          else if ((s.stores[ck] || 0) >= need) addItem(s, ck, -need);
+          else return;
+        }
+      }
+      if (weaponId === "fists") {
+        s.punches = (s.punches || 0) + 1;
+        if (s.punches >= 50) addPerk(s, "boxer");
+        if (s.punches >= 150) addPerk(s, "martial_artist");
+        if (s.punches >= 300) addPerk(s, "unarmed_master");
+      }
+      if (Math.random() <= getHitChance(s)) {
+        var dmg = weapon.damage;
+        if (dmg === "stun") {
+          s.combat.stunned = true;
+        } else if (typeof dmg === "number") {
+          if (weapon.type === "unarmed" && hasPerk(s, "boxer")) dmg *= 2;
+          if (weapon.type === "unarmed" && hasPerk(s, "martial_artist")) dmg *= 3;
+          if (weapon.type === "unarmed" && hasPerk(s, "unarmed_master")) dmg *= 2;
+          if (weapon.type === "melee" && hasPerk(s, "barbarian")) dmg = Math.floor(dmg * 1.5);
+          s.combat.hp -= dmg;
+        }
+      }
+      if (s.combat.hp > 0) {
+        if (s.combat.stunned) {
+          s.combat.stunned = false;
+        } else {
+          var enemyHit = (s.combat.hit == null ? BASE_HIT_CHANCE : s.combat.hit) * (hasPerk(s, "evasive") ? 0.8 : 1);
+          if (Math.random() < enemyHit) s.world.hp -= s.combat.dmg;
+        }
+      }
+      if (s.combat.hp <= 0) {
+        if (s.combat.reward) grant(s, s.combat.reward);
+        grant(s, rollLoot(s.combat.loot));
+        pushNote(s, s.combat.death || "倒下了。", "world");
+        s.combat = null;
+        s.active_event = null;
+      }
     }
     if (s.world.hp <= 0) {
       this.analytics.log(s, "death", { where: "combat" });
       pushNote(s, t("the world fades"), "world");
+      s.flags.world_death_until = s.game_time_sec + DEATH_COOLDOWN;
       this._goHome(false);
     }
   };
@@ -2578,6 +2885,25 @@
     buyVisible: buyVisible,
     eventAvailable: eventAvailable,
     buttonAvailable: buttonAvailable,
+    WEAPONS: WEAPONS,
+    PERKS: PERKS,
+    RADIUS: RADIUS,
+    STICKINESS: STICKINESS,
+    LIGHT_RADIUS: LIGHT_RADIUS,
+    BASE_WATER: BASE_WATER,
+    MOVES_PER_FOOD: MOVES_PER_FOOD,
+    MOVES_PER_WATER: MOVES_PER_WATER,
+    DEATH_COOLDOWN: DEATH_COOLDOWN,
+    FIGHT_CHANCE: FIGHT_CHANCE,
+    BASE_HEALTH: BASE_HEALTH,
+    BASE_HIT_CHANCE: BASE_HIT_CHANCE,
+    MEAT_HEAL: MEAT_HEAL,
+    MEDS_HEAL: MEDS_HEAL,
+    HYPO_HEAL: HYPO_HEAL,
+    FIGHT_DELAY: FIGHT_DELAY,
+    hasPerk: hasPerk,
+    addPerk: addPerk,
+    worldDistance: worldDistance,
     applyWorkerIncome: applyWorkerIncome,
     visibleJobs: visibleJobs,
     workerUnlocked: workerUnlocked,

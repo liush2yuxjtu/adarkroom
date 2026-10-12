@@ -1088,35 +1088,45 @@
         map.id = "world-map";
         $("path-status").insertAdjacentElement("afterend", map);
       }
+      var view = 11;
+      var half = Math.floor(view / 2);
+      var x0 = s.x - half;
+      var y0 = s.y - half;
       if (isPixel()) {
         var tiles = [];
         var y;
-        for (y = 0; y < s.size; y++) {
+        for (y = 0; y < view; y++) {
           var x;
-          for (x = 0; x < s.size; x++) {
+          for (x = 0; x < view; x++) {
+            var wx = x0 + x;
+            var wy = y0 + y;
             var cls = "t-void";
-            if (x === s.x && y === s.y) cls = "t-player";
-            else if (s.landmarks[x + "," + y]) cls = "t-house";
-            else if (s.visited[x + "," + y]) {
-              var ter = ADR.terrainAt(x, y, s.size);
+            if (wx < 0 || wy < 0 || wx >= s.size || wy >= s.size) cls = "t-void";
+            else if (wx === s.x && wy === s.y) cls = "t-player";
+            else if (s.landmarks[wx + "," + wy]) cls = "t-house";
+            else if (s.visited[wx + "," + wy]) {
+              var ter = ADR.terrainAt(wx, wy, s.size);
               cls = ter === "village" ? "t-village" : ter === "forest" ? "t-forest" : ter === "grass" ? "t-grass" : "t-sand";
             }
             tiles.push('<span class="px-tile ' + cls + '"></span>');
           }
         }
-        map.style.gridTemplateColumns = "repeat(" + s.size + ", 16px)";
+        map.style.gridTemplateColumns = "repeat(" + view + ", 16px)";
         map.innerHTML = tiles.join("");
       } else {
         var lines = [];
-        for (var y = 0; y < s.size; y++) {
+        for (var y = 0; y < view; y++) {
           var row = "";
-          for (var x = 0; x < s.size; x++) {
-            if (x === s.x && y === s.y) row += "@";
-            else if (s.landmarks[x + "," + y]) row += "H";
-            else if (!s.visited[x + "," + y]) row += " ";
+          for (var x = 0; x < view; x++) {
+            var wx2 = x0 + x;
+            var wy2 = y0 + y;
+            if (wx2 < 0 || wy2 < 0 || wx2 >= s.size || wy2 >= s.size) row += " ";
+            else if (wx2 === s.x && wy2 === s.y) row += "@";
+            else if (s.landmarks[wx2 + "," + wy2]) row += "H";
+            else if (!s.visited[wx2 + "," + wy2]) row += " ";
             else {
-              var ter = ADR.terrainAt(x, y, s.size);
-              row += ter === "village" ? "A" : ter === "forest" ? "#" : ter === "grass" ? "," : ".";
+              var ter2 = ADR.terrainAt(wx2, wy2, s.size);
+              row += ter2 === "village" ? "A" : ter2 === "forest" ? "#" : ter2 === "grass" ? "," : ".";
             }
           }
           lines.push(row);
@@ -1264,11 +1274,30 @@
         modal.appendChild(pxIconEl("beast"));
         modal.lastChild.classList.add("px-event-icon");
       } else {
-        modal.innerHTML = "<h2>" + combat.name + "</h2><div class='body'><p>一只野兽从灌木丛里蹿了出来。</p><p>野兽生命 " + combat.hp + " · 你 " + game.state.world.hp + "</p></div>";
+        modal.innerHTML = "<h2>" + combat.name + "</h2><div class='body'><p>" + (combat.death ? combat.name : "") + "</p><p>生命 " + combat.hp + " · 你 " + game.state.world.hp + "</p></div>";
       }
       var actsC = document.createElement("div");
       actsC.className = "modal-actions";
       upsertButton(actsC, "punch", { label: "挥拳", icon: "punch", onClick: function () { game.act("combat", { move: "punch" }); } });
+      if (ADR.WEAPONS) {
+        Object.keys(ADR.WEAPONS).forEach(function (wid) {
+          if (wid === "fists") return;
+          var have = (game.state.outfit[wid] || 0) + (game.state.stores[wid] || 0);
+          if (have <= 0) return;
+          var w = ADR.WEAPONS[wid];
+          upsertButton(actsC, "w-" + wid, {
+            label: (ADR.ITEM_CN && ADR.ITEM_CN[wid]) || wid,
+            icon: "punch",
+            onClick: function () { game.act("combat", { move: wid }); }
+          });
+        });
+      }
+      if ((game.state.outfit.cured_meat || 0) + (game.state.outfit.meat || 0) > 0) {
+        upsertButton(actsC, "eat", { label: "吃肉", icon: "ok", onClick: function () { game.act("combat", { move: "eat" }); } });
+      }
+      if ((game.state.outfit.medicine || 0) + (game.state.stores.medicine || 0) > 0) {
+        upsertButton(actsC, "meds", { label: "用药", icon: "ok", onClick: function () { game.act("combat", { move: "meds" }); } });
+      }
       upsertButton(actsC, "flee", { label: "逃跑", icon: "flee", onClick: function () { game.act("combat", { move: "flee" }); } });
       modal.appendChild(actsC);
       ov.appendChild(modal);

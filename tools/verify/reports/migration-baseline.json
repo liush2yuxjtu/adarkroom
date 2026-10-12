@@ -1,16 +1,16 @@
 {
   "pass": false,
   "gate": {
-    "missing": 153,
-    "no_producer": 0,
-    "numeric_mismatch": 1,
+    "missing": 74,
+    "no_producer": 4,
+    "numeric_mismatch": 0,
     "allowlist": 0
   },
   "counts": {
-    "present": 146,
-    "missing": 153,
-    "no_producer": 0,
-    "mismatch": 1,
+    "present": 221,
+    "missing": 74,
+    "no_producer": 4,
+    "mismatch": 0,
     "no_zh": 0,
     "no_save": 0
   },
@@ -24,8 +24,8 @@
     },
     "tool/weapon/upgrade": {
       "present": 14,
-      "missing": 1,
-      "no_producer": 0,
+      "missing": 0,
+      "no_producer": 1,
       "mismatch": 0,
       "total": 15
     },
@@ -79,8 +79,8 @@
       "total": 1
     },
     "event:encounters": {
-      "present": 1,
-      "missing": 10,
+      "present": 11,
+      "missing": 0,
       "no_producer": 0,
       "mismatch": 0,
       "total": 11
@@ -101,8 +101,8 @@
     },
     "fabricator": {
       "present": 0,
-      "missing": 9,
-      "no_producer": 0,
+      "missing": 6,
+      "no_producer": 3,
       "mismatch": 0,
       "total": 9
     },
@@ -121,15 +121,15 @@
       "total": 5
     },
     "perk": {
-      "present": 0,
-      "missing": 11,
+      "present": 11,
+      "missing": 0,
       "no_producer": 0,
       "mismatch": 0,
       "total": 11
     },
     "weapon": {
-      "present": 7,
-      "missing": 4,
+      "present": 11,
+      "missing": 0,
       "no_producer": 0,
       "mismatch": 0,
       "total": 11
@@ -142,10 +142,10 @@
       "total": 5
     },
     "world mechanic": {
-      "present": 0,
-      "missing": 14,
+      "present": 14,
+      "missing": 0,
       "no_producer": 0,
-      "mismatch": 1,
+      "mismatch": 0,
       "total": 14
     },
     "ship": {
@@ -177,8 +177,8 @@
       "total": 1
     },
     "notification": {
-      "present": 59,
-      "missing": 52,
+      "present": 95,
+      "missing": 16,
       "no_producer": 0,
       "mismatch": 0,
       "total": 111
@@ -214,10 +214,10 @@
       "total": 12
     },
     "5": {
-      "present": 12,
-      "missing": 72,
+      "present": 84,
+      "missing": 0,
       "no_producer": 0,
-      "mismatch": 1,
+      "mismatch": 0,
       "total": 84
     },
     "6": {
@@ -235,9 +235,9 @@
       "total": 11
     },
     "8": {
-      "present": 0,
-      "missing": 36,
-      "no_producer": 0,
+      "present": 3,
+      "missing": 29,
+      "no_producer": 4,
       "mismatch": 0,
       "total": 36
     },
@@ -288,9 +288,9 @@
     {
       "batch": 5,
       "title": "World combat: encounters, weapons, perks, map rules",
-      "pass": false,
+      "pass": true,
       "kind": "story",
-      "detail": "batch incomplete: 72 of 84 not present"
+      "detail": "world RADIUS 30 + weapons/perks/encounters + persist"
     },
     {
       "batch": 6,
@@ -311,7 +311,7 @@
       "title": "Fabricator and blueprints",
       "pass": false,
       "kind": "story",
-      "detail": "batch incomplete: 36 of 36 not present"
+      "detail": "batch incomplete: 33 of 36 not present"
     },
     {
       "batch": 9,
@@ -331,10 +331,10 @@
   "gaps": [
     {
       "id": "tool/weapon/upgrade:laser rifle",
-      "status": "missing",
+      "status": "no_producer",
       "batch": 8,
       "numeric": "skip",
-      "note": "missing"
+      "note": "in ITEMS, nothing yields it"
     },
     {
       "id": "item/resource:disruptor blueprint",
@@ -382,76 +382,6 @@
       "id": "item/resource:stim blueprint",
       "status": "missing",
       "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "event:encounters:A Gaunt Man",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "event:encounters:A Strange Bird",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "event:encounters:A Two-Headed Creature",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "event:encounters:A Shivering Man",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "event:encounters:A Man-Eater",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "event:encounters:A Scavenger",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "event:encounters:A Huge Lizard",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "event:encounters:A Feral Terror",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "event:encounters:A Soldier",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "event:encounters:A Sniper",
-      "status": "missing",
-      "batch": 5,
       "numeric": "skip",
       "note": "missing"
     },
@@ -632,10 +562,10 @@
     },
     {
       "id": "fabricator:energy blade",
-      "status": "missing",
+      "status": "no_producer",
       "batch": 8,
       "numeric": "skip",
-      "note": "missing"
+      "note": "in ITEMS, nothing yields it"
     },
     {
       "id": "fabricator:fluid recycler",
@@ -660,10 +590,10 @@
     },
     {
       "id": "fabricator:disruptor",
-      "status": "missing",
+      "status": "no_producer",
       "batch": 8,
       "numeric": "skip",
-      "note": "missing"
+      "note": "in ITEMS, nothing yields it"
     },
     {
       "id": "fabricator:hypo",
@@ -681,10 +611,10 @@
     },
     {
       "id": "fabricator:plasma rifle",
-      "status": "missing",
+      "status": "no_producer",
       "batch": 8,
       "numeric": "skip",
-      "note": "missing"
+      "note": "in ITEMS, nothing yields it"
     },
     {
       "id": "fabricator:glowstone",
@@ -755,209 +685,6 @@
       "batch": 9,
       "numeric": "skip",
       "note": "missing"
-    },
-    {
-      "id": "perk:boxer",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "perk:martial artist",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "perk:unarmed master",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "perk:barbarian",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "perk:slow metabolism",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "perk:desert rat",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "perk:evasive",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "perk:precise",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "perk:scout",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "perk:stealthy",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "perk:gastronome",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "weapon:laser rifle",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "not present"
-    },
-    {
-      "id": "weapon:plasma rifle",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "not present"
-    },
-    {
-      "id": "weapon:energy blade",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "not present"
-    },
-    {
-      "id": "weapon:disruptor",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "not present"
-    },
-    {
-      "id": "world mechanic:RADIUS",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "mismatch",
-      "note": "original RADIUS=30 remake world.size=11"
-    },
-    {
-      "id": "world mechanic:STICKINESS",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "0.5"
-    },
-    {
-      "id": "world mechanic:LIGHT_RADIUS",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "2"
-    },
-    {
-      "id": "world mechanic:BASE_WATER",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "match",
-      "note": "10"
-    },
-    {
-      "id": "world mechanic:MOVES_PER_FOOD",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "2"
-    },
-    {
-      "id": "world mechanic:MOVES_PER_WATER",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "1"
-    },
-    {
-      "id": "world mechanic:DEATH_COOLDOWN",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "120"
-    },
-    {
-      "id": "world mechanic:FIGHT_CHANCE",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "0.2"
-    },
-    {
-      "id": "world mechanic:BASE_HEALTH",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "match",
-      "note": "10"
-    },
-    {
-      "id": "world mechanic:BASE_HIT_CHANCE",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "0.8"
-    },
-    {
-      "id": "world mechanic:MEAT_HEAL",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "8"
-    },
-    {
-      "id": "world mechanic:MEDS_HEAL",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "20"
-    },
-    {
-      "id": "world mechanic:HYPO_HEAL",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "30"
-    },
-    {
-      "id": "world mechanic:FIGHT_DELAY",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "3"
     },
     {
       "id": "ship:LIFTOFF_COOLDOWN",
@@ -1044,244 +771,6 @@
       "note": "missing"
     },
     {
-      "id": "notification:perk:boxer: boxer",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:boxer: punches do more damage",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:boxer: learned to throw punches with purpose",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:martial artist: martial artist",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:martial artist: punches do even more damage.",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:martial artist: learned to fight quite effectively without weapo",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:unarmed master: unarmed master",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:unarmed master: punch twice as fast, and with even more force",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:unarmed master: learned to strike faster without weapons",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:barbarian: barbarian",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:barbarian: melee weapons deal more damage",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:barbarian: learned to swing weapons with force",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:slow metabolism: slow metabolism",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:slow metabolism: go twice as far without eating",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:slow metabolism: learned how to ignore the hunger",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:desert rat: desert rat",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:desert rat: go twice as far without drinking",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:desert rat: learned to love the dry air",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:evasive: evasive",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:evasive: dodge attacks more effectively",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:evasive: learned to be where they're not",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:precise: precise",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:precise: land blows more often",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:precise: learned to predict their movement",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:scout: scout",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:scout: see farther",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:scout: learned to look ahead",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:stealthy: stealthy",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:stealthy: better avoid conflict in the wild",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:stealthy: learned how not to be seen",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:gastronome: gastronome",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:gastronome: restore more health when eating",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:perk:gastronome: learned to make the most of food",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:fabricator:energy blade: energy blade",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
       "id": "notification:fabricator:energy blade: the blade hums, charged particles sparking and f",
       "status": "missing",
       "batch": 8,
@@ -1331,13 +820,6 @@
       "note": "missing"
     },
     {
-      "id": "notification:fabricator:disruptor: disruptor",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
       "id": "notification:fabricator:disruptor: somtimes it is best not to fight.",
       "status": "missing",
       "batch": 8,
@@ -1367,13 +849,6 @@
     },
     {
       "id": "notification:fabricator:stim: sometimes it is best to fight without restraint.",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:fabricator:plasma rifle: plasma rifle",
       "status": "missing",
       "batch": 8,
       "numeric": "skip",
