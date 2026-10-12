@@ -90,7 +90,7 @@
     document.querySelectorAll(".px-scene-host").forEach(function (el) {
       if (el.parentNode) el.parentNode.removeChild(el);
     });
-    ["panel-room", "panel-outside", "panel-path"].forEach(function (id) {
+    ["panel-room", "panel-outside", "panel-path", "panel-ship", "panel-space"].forEach(function (id) {
       var p = $(id);
       if (!p) return;
       delete p.dataset.ready;
@@ -376,7 +376,11 @@
     fitPixelScene();
     var loc = game.state.location;
     var kind = loc === "outside" ? "outside" : loc === "world" ? "world" : loc;
-    var panel = loc === "outside" ? $("panel-outside") : loc === "path" || loc === "world" ? $("panel-path") : $("panel-room");
+    var panel = loc === "outside" ? $("panel-outside")
+      : loc === "path" || loc === "world" ? $("panel-path")
+      : loc === "ship" ? $("panel-ship")
+      : loc === "space" ? $("panel-space")
+      : $("panel-room");
     if (!panel) return;
     var sc = panel.querySelector(".px-scene");
     if (!sc) return;
@@ -487,7 +491,7 @@
     }
     if (barEl) {
       barEl.style.width = (ratio * 100) + "%";
-      var max = { stoke: 10, gather: 60, traps: 90 }[cdId] || 1;
+      var max = { stoke: 10, gather: 60, traps: 90, liftoff: 120 }[cdId] || 1;
       barEl.style.animationDelay = left > 0 ? (-(max - left)) + "s" : "0s";
     }
   }
@@ -584,6 +588,9 @@
       { id: "outside", label: game.state.unlocked.outside ? ADR.hutTitle(game.state.buildings.hut) : ADR.t("Outside") },
       { id: "path", label: ADR.t("A Dusty Path") }
     ];
+    if (game.state.unlocked.ship) {
+      tabs.push({ id: "ship", label: ADR.t("An Old Starship") });
+    }
     tabs.forEach(function (tab) {
       var b = h.querySelector('[data-tab="' + tab.id + '"]');
       if (!b) {
@@ -610,7 +617,9 @@
       }
       var locked = !game.state.unlocked[tab.id] && tab.id !== "room";
       b.disabled = locked;
-      var active = game.state.location === tab.id || (tab.id === "path" && game.state.location === "world");
+      var active = game.state.location === tab.id
+        || (tab.id === "path" && game.state.location === "world")
+        || (tab.id === "ship" && game.state.location === "space");
       b.className = (active ? "active" : "") + (isPixel() ? " px-tab" : "");
     });
   }
@@ -1245,6 +1254,87 @@
     $("path-hint").textContent = isPixel() ? "" : "带上肉再出发。向东北走，能看见一座旧房子。回到村子格子即可回家。";
   }
 
+  function renderShip() {
+    ensureScaffold("panel-ship", "ship-title", "ship-status", "ship-btns", "ship-hint");
+    var ship = game.state.spaceShip || { hull: 0, thrusters: 1 };
+    if (isPixel()) {
+      $("ship-title").textContent = "";
+      $("ship-title").setAttribute("aria-label", ADR.t("An Old Starship"));
+      $("ship-status").textContent = "";
+    } else {
+      $("ship-title").textContent = ADR.t("An Old Starship");
+      $("ship-status").innerHTML = ADR.t("hull:") + " " + ship.hull + "<br>" + ADR.t("engine:") + " " + ship.thrusters;
+    }
+    var alloy = game.state.stores.alien_alloy || 0;
+    upsertButton($("ship-btns"), "reinforce_hull", {
+      label: ADR.t("reinforce hull") + " (" + (ADR.ITEM_CN.alien_alloy || "外星合金") + (ADR.ALLOY_PER_HULL || 1) + ")",
+      icon: "spark",
+      disabled: alloy < (ADR.ALLOY_PER_HULL || 1),
+      onClick: function () { game.act("reinforce_hull"); }
+    });
+    upsertButton($("ship-btns"), "upgrade_engine", {
+      label: ADR.t("upgrade engine") + " (" + (ADR.ITEM_CN.alien_alloy || "外星合金") + (ADR.ALLOY_PER_THRUSTER || 1) + ")",
+      icon: "spark",
+      disabled: alloy < (ADR.ALLOY_PER_THRUSTER || 1),
+      onClick: function () { game.act("upgrade_engine"); }
+    });
+    upsertButton($("ship-btns"), "lift_off", {
+      label: ADR.t("lift off"),
+      icon: "embark",
+      cdId: "liftoff",
+      disabled: ship.hull <= 0,
+      onClick: function () { game.act("lift_off"); }
+    });
+    keepButtons($("ship-btns"), ["reinforce_hull", "upgrade_engine", "lift_off"]);
+    $("ship-hint").textContent = isPixel() ? "" : "用外星合金加固船身、升级引擎，然后点火起飞。";
+  }
+
+  function spaceFieldText(sp) {
+    var cols = 35;
+    var rows = 16;
+    var grid = [];
+    var r;
+    var c;
+    for (r = 0; r < rows; r++) {
+      var line = [];
+      for (c = 0; c < cols; c++) line.push(" ");
+      grid.push(line);
+    }
+    var toC = function (x) { return Math.max(0, Math.min(cols - 1, Math.round(x / 700 * (cols - 1)))); };
+    var toR = function (y) { return Math.max(0, Math.min(rows - 1, Math.round(y / 700 * (rows - 1)))); };
+    (sp.asteroids || []).forEach(function (a) {
+      grid[toR(a.y)][toC(a.x)] = a.glyph || "#";
+    });
+    grid[toR(sp.shipY)][toC(sp.shipX)] = "@";
+    return grid.map(function (line) { return line.join(""); }).join("\n");
+  }
+
+  function renderSpace() {
+    ensureScaffold("panel-space", "space-title", "space-status", "space-btns", "space-hint");
+    var sp = game.state.space || { altitude: 0, hull: 0, maxHull: 0, asteroids: [], shipX: 350, shipY: 350 };
+    var title = ADR.spaceLayerTitle ? ADR.spaceLayerTitle(sp.altitude || 0) : ADR.t("Space");
+    if (isPixel()) {
+      $("space-title").textContent = "";
+      $("space-title").setAttribute("aria-label", title);
+      $("space-status").textContent = "";
+    } else {
+      $("space-title").textContent = title;
+      $("space-status").textContent = ADR.t("hull: ") + (sp.hull || 0) + "/" + (sp.maxHull || 0);
+    }
+    var field = $("space-field");
+    if (!field) {
+      field = document.createElement("pre");
+      field.id = "space-field";
+      field.className = "space-field";
+      field.setAttribute("aria-label", "太空航道");
+      var hint = $("space-hint");
+      $("panel-space").insertBefore(field, hint);
+    }
+    field.textContent = spaceFieldText(sp);
+    keepButtons($("space-btns"), []);
+    $("space-hint").textContent = isPixel() ? "" : (game.state.flags.space_escaped ? "冲出大气层。" : "方向键或 WASD 躲避陨石。");
+  }
+
   function renderEvent() {
     var ov = $("overlay");
     var ev = game.state.active_event;
@@ -1361,12 +1451,16 @@
     $("panel-room").className = "panel" + (loc === "room" ? " active" : "");
     $("panel-outside").className = "panel" + (loc === "outside" ? " active" : "");
     $("panel-path").className = "panel" + (loc === "path" || loc === "world" ? " active" : "");
+    if ($("panel-ship")) $("panel-ship").className = "panel" + (loc === "ship" ? " active" : "");
+    if ($("panel-space")) $("panel-space").className = "panel" + (loc === "space" ? " active" : "");
     renderHeader();
     renderNotes();
     renderStores();
     if (loc === "room") renderRoom();
     if (loc === "outside") renderOutside();
     if (loc === "path" || loc === "world") renderPath();
+    if (loc === "ship") renderShip();
+    if (loc === "space") renderSpace();
     renderEvent();
     playPhaseWipe(loc);
     if (isPixel()) {
@@ -1710,13 +1804,30 @@
         return true;
       }
     };
+    var spaceDir = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right", w: "up", s: "down", a: "left", d: "right", W: "up", S: "down", A: "left", D: "right" };
     window.addEventListener("keydown", function (e) {
+      if (game.state.location === "space") {
+        var sdir = spaceDir[e.key];
+        if (sdir) {
+          e.preventDefault();
+          game.act("space_steer", { dir: sdir, down: true });
+        }
+        return;
+      }
       if (!game.state.world.on_expedition) return;
       var map = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0], w: [0, -1], s: [0, 1], a: [-1, 0], d: [1, 0] };
       var m = map[e.key];
       if (m) {
         e.preventDefault();
         game.act("world_move", { dx: m[0], dy: m[1] });
+      }
+    });
+    window.addEventListener("keyup", function (e) {
+      if (game.state.location !== "space") return;
+      var udir = spaceDir[e.key];
+      if (udir) {
+        e.preventDefault();
+        game.act("space_steer", { dir: udir, down: false });
       }
     });
   }

@@ -13,7 +13,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { emptySuite, ok, fail, summarize, writeJson } from "./lib/report.mjs";
 import { makeSandbox } from "./lib/engine-sandbox.mjs";
-import { playthrough, workshopPlaythrough, tradingPlaythrough, villageEventsPlaythrough, worldCombatPlaythrough, landmarksPlaythrough } from "./story.mjs";
+import { playthrough, workshopPlaythrough, tradingPlaythrough, villageEventsPlaythrough, worldCombatPlaythrough, landmarksPlaythrough, shipSpacePlaythrough } from "./story.mjs";
 import { runParity } from "./parity.mjs";
 import {
   ROOT,
@@ -128,6 +128,20 @@ function numericForRow(row, spec, ADR) {
         : { status: "mismatch", detail: `original RADIUS=${orig} remake world.size=${size}` };
     }
     return { status: row.status === "present" ? "match" : "skip", detail: String(orig) };
+  }
+  if (row.category === "ship" && spec.shipNums[name] != null) {
+    if (row.status !== "present") return { status: "skip", detail: row.status };
+    const rem = ADR[name];
+    return rem === spec.shipNums[name]
+      ? { status: "match", detail: String(spec.shipNums[name]) }
+      : { status: "mismatch", detail: `original ${spec.shipNums[name]} remake ${rem}` };
+  }
+  if (row.category === "space" && spec.spaceNums[name] != null) {
+    if (row.status !== "present") return { status: "skip", detail: row.status };
+    const rem = ADR[name];
+    return rem === spec.spaceNums[name]
+      ? { status: "match", detail: String(spec.spaceNums[name]) }
+      : { status: "mismatch", detail: `original ${spec.spaceNums[name]} remake ${rem}` };
   }
   if (row.status === "missing" || row.status === "no_producer") return { status: "skip", detail: row.status };
   return { status: "match", detail: "n/a" };
@@ -278,7 +292,7 @@ function reachabilityBatches(parityRows) {
         play.allPlaced && play.allEvents && play.storyPathClean && play.allSpawned
         && play.outpostWater && play.swampPerk && play.ironFlag && play.coalFlag
         && play.sulphurFlag && play.cityCleared && play.shipFlag && play.houseVisited
-        && play.executionerStart && play.minesBuilt && play.noShipArea
+        && play.executionerStart && play.minesBuilt && play.shipUnlockedOnReturn
         && play.persistLandmarks && play.persistCity && play.persistIronMine && play.persistShip
       );
       out.push({
@@ -288,6 +302,25 @@ function reachabilityBatches(parityRows) {
         kind: "story",
         detail: okc
           ? "landmarks placed + setpiece scenes + mine/city/ship flags + persist"
+          : JSON.stringify(play)
+      });
+      continue;
+    }
+    if (String(id) === "7" || id === 7) {
+      const play = shipSpacePlaythrough();
+      const okc = !!(
+        play.unlockedOnReturn && play.travelOk && play.seenShip && play.seenNote
+        && play.noHullBlocked && play.hull1 && play.thrust2 && play.persistHull && play.persistThrust
+        && play.warningOpen && play.lingerOk && play.inSpace && play.altitudeUp && play.crashed
+        && play.cooldownBlocked && play.noWarn && play.escaped && play.constsOk && play.persistEscaped
+      );
+      out.push({
+        batch: 7,
+        title: meta.title,
+        pass: okc && gaps.length === 0,
+        kind: "story",
+        detail: okc
+          ? "ship unlock-on-return + hull/engine + lift-off warning + space crash/ascent + persist"
           : JSON.stringify(play)
       });
       continue;

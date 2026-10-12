@@ -530,7 +530,7 @@ export function landmarksPlaythrough() {
   s.combat = null;
   g.act("world_move", { dx: 0, dy: 1 });
   const minesBuilt = s.buildings.iron_mine === 1 && s.buildings.coal_mine === 1 && s.buildings.sulphur_mine === 1;
-  const noShipArea = !sb.ADR.AREAS || sb.ADR.AREAS.indexOf("ship") < 0;
+  const shipUnlockedOnReturn = !!(s.unlocked.ship && s.spaceShip);
 
   const hydrated = sb.ADR.hydrateState(JSON.parse(JSON.stringify(s)));
   return {
@@ -553,11 +553,110 @@ export function landmarksPlaythrough() {
     executionerStart,
     houseVisited,
     minesBuilt,
-    noShipArea,
+    shipUnlockedOnReturn,
     persistLandmarks: Object.values(hydrated.world.landmarks || {}).includes("ironmine"),
     persistCity: !!hydrated.flags.city_cleared,
     persistIronMine: hydrated.buildings.iron_mine === 1,
     persistShip: !!hydrated.flags.world_ship
+  };
+}
+
+/** Headless batch-7 ship unlock / hull / lift-off / space ascent. */
+export function shipSpacePlaythrough() {
+  const sb = makeSandbox({ seed: 7 });
+  const events = loadEvents();
+  const g = new sb.ADR.Game({ director: "rule", time_scale: 1, stuck_minutes: 99 }, events);
+  const s = g.state;
+  const A = (n, a = {}) => g.act(n, a);
+  s.unlocked.path = true;
+  s.unlocked.world = true;
+  s.flags.world_ship = true;
+  Object.assign(s.stores, { cured_meat: 20 });
+  A("pack", { item: "cured_meat", amount: 8 });
+  A("embark");
+  s.world.x = 30;
+  s.world.y = 29;
+  A("world_move", { dx: 0, dy: 1 });
+  const unlockedOnReturn = !!(s.unlocked.ship && s.unlocked.space && s.spaceShip);
+  const travel = A("travel", { area: "ship" });
+  const seenShip = !!(s.spaceShip && s.spaceShip.seenShip);
+  const seenNote = s.notifications.some((n) => /碎片云|流浪者舰队/.test(n.text));
+  const noHull = A("lift_off");
+  s.stores.alien_alloy = 4;
+  const reinforce = A("reinforce_hull");
+  const hull1 = s.spaceShip.hull === 1 && s.stores.alien_alloy === 3;
+  const upgrade = A("upgrade_engine");
+  const thrust2 = s.spaceShip.thrusters === 2 && s.stores.alien_alloy === 2;
+  s.stores.alien_alloy = 0;
+  A("reinforce_hull");
+  s.stores.alien_alloy = 1;
+  A("reinforce_hull");
+  const hydrated = sb.ADR.hydrateState(JSON.parse(JSON.stringify(s)));
+  const persistHull = hydrated.spaceShip && hydrated.spaceShip.hull === 2;
+  const persistThrust = hydrated.spaceShip && hydrated.spaceShip.thrusters === 2;
+  const firstLift = A("lift_off");
+  const warningOpen = !!(s.active_event && s.active_event.id === "liftoff_warning");
+  const linger = A("event_choice", { button: "linger" });
+  const lingered = s.location === "ship" && !s.spaceShip.seenWarning && !s.active_event;
+  const lift2 = A("lift_off");
+  const warning2 = !!(s.active_event && s.active_event.id === "liftoff_warning");
+  A("event_choice", { button: "fly" });
+  const inSpace = s.location === "space" && !!(s.space && s.space.active) && !!s.spaceShip.seenWarning;
+  const alt0 = s.space ? s.space.altitude : -1;
+  tickGame(sb, g, 2, 0.25);
+  const altitudeUp = !!(s.space && s.space.altitude >= 2);
+  s.space.hull = 1;
+  s.space.asteroids = [{ x: s.space.shipX, y: s.space.shipY, w: 20, h: 16, glyph: "#", vy: 0 }];
+  tickGame(sb, g, 0.25, 0.05);
+  const crashed = s.location === "ship" && !(s.space && s.space.active);
+  const afterCrash = A("lift_off");
+  const cooldownBlocked = !!(afterCrash && afterCrash.ok === false);
+  tickGame(sb, g, 120, 1);
+  s.spaceShip.hull = 40;
+  const lift3 = A("lift_off");
+  const noWarn = !s.active_event && s.location === "space";
+  tickGame(sb, g, 61, 0.5);
+  const escaped = !!s.flags.space_escaped;
+  const consts = {
+    LIFTOFF_COOLDOWN: sb.ADR.LIFTOFF_COOLDOWN === 120,
+    ALLOY_PER_HULL: sb.ADR.ALLOY_PER_HULL === 1,
+    ALLOY_PER_THRUSTER: sb.ADR.ALLOY_PER_THRUSTER === 1,
+    BASE_HULL: sb.ADR.BASE_HULL === 0,
+    BASE_THRUSTERS: sb.ADR.BASE_THRUSTERS === 1,
+    SHIP_SPEED: sb.ADR.SHIP_SPEED === 3,
+    BASE_ASTEROID_DELAY: sb.ADR.BASE_ASTEROID_DELAY === 500,
+    BASE_ASTEROID_SPEED: sb.ADR.BASE_ASTEROID_SPEED === 1500,
+    FTB_SPEED: sb.ADR.FTB_SPEED === 60000
+  };
+  return {
+    unlockedOnReturn,
+    travelOk: !!(travel && travel.ok),
+    seenShip,
+    seenNote,
+    noHullBlocked: !!(noHull && noHull.ok === false),
+    reinforceOk: !!(reinforce && reinforce.ok),
+    hull1,
+    upgradeOk: !!(upgrade && upgrade.ok),
+    thrust2,
+    noAlloyNote: s.notifications.some((n) => /外星合金不足/.test(n.text)),
+    persistHull,
+    persistThrust,
+    firstLiftOk: !!(firstLift && firstLift.ok),
+    warningOpen,
+    lingerOk: !!(linger && linger.ok) && lingered,
+    lift2Ok: !!(lift2 && lift2.ok),
+    warning2,
+    inSpace,
+    alt0,
+    altitudeUp,
+    crashed,
+    cooldownBlocked,
+    lift3Ok: !!(lift3 && lift3.ok),
+    noWarn,
+    escaped,
+    consts,
+    constsOk: Object.values(consts).every(Boolean),
+    persistEscaped: !!sb.ADR.hydrateState(JSON.parse(JSON.stringify(s))).flags.space_escaped
   };
 }
 

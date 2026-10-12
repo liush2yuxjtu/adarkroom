@@ -9,7 +9,7 @@
   "use strict";
 
   var ITEMS = ["wood", "fur", "meat", "scales", "teeth", "cloth", "bait", "charm", "compass", "cured_meat", "leather", "iron", "coal", "steel", "sulphur", "bullets", "torch", "waterskin", "cask", "water_tank", "bone_spear", "rucksack", "wagon", "convoy", "l_armour", "i_armour", "s_armour", "iron_sword", "steel_sword", "rifle", "medicine", "energy_cell", "bolas", "grenade", "bayonet", "alien_alloy", "laser_rifle", "plasma_rifle", "energy_blade", "disruptor"];
-  var AREAS = ["room", "outside", "path", "world"];
+  var AREAS = ["room", "outside", "path", "world", "ship", "space"];
   var NPCS = ["builder", "nomad", "villagers"];
   var MOODS = ["unknown", "collapsed", "shivering", "sleeping", "helping", "neutral", "wary", "grateful"];
   var FIRE = ["熄灭了", "开始冒烟", "冒出火苗", "燃烧着", "熊熊燃烧"];
@@ -127,6 +127,19 @@
   var WORLD_SIZE = RADIUS * 2 + 1;
   var VILLAGE_X = RADIUS;
   var VILLAGE_Y = RADIUS;
+  /* Faithful copy of script/ship.js + script/space.js (batch 7). */
+  var LIFTOFF_COOLDOWN = 120;
+  var ALLOY_PER_HULL = 1;
+  var ALLOY_PER_THRUSTER = 1;
+  var BASE_HULL = 0;
+  var BASE_THRUSTERS = 1;
+  var SHIP_SPEED = 3;
+  var BASE_ASTEROID_DELAY = 500;
+  var BASE_ASTEROID_SPEED = 1500;
+  var FTB_SPEED = 60000;
+  var SPACE_WIDTH = 700;
+  var SPACE_HEIGHT = 700;
+  var ASTEROID_GLYPHS = ["#", "$", "%", "&", "H"];
   /* Faithful copy of script/world.js Weapons. */
   var WEAPONS = {
     fists: { verb: "punch", type: "unarmed", damage: 1, cooldown: 2 },
@@ -338,7 +351,26 @@
     "A Two-Headed Creature": "双头怪物",
     "two-headed creature": "双头怪物",
     "the two creatures are dead": "那两个生物倒下了",
-    "a two-headed creature appears, the smaller head trembling": "一只双头怪物出现了，较小的那颗头在发抖"
+    "a two-headed creature appears, the smaller head trembling": "一只双头怪物出现了，较小的那颗头在发抖",
+    "Ship": "飞船",
+    "An Old Starship": "破旧星舰",
+    "hull:": "外壳:",
+    "engine:": "引擎:",
+    "reinforce hull": "加固船身",
+    "upgrade engine": "升级引擎",
+    "lift off": "点火起飞",
+    "somewhere above the debris cloud, the wanderer fleet hovers. been on this rock too long.": "碎片云上方的某处，流浪者舰队徘徊着。在这块岩石上太久了。",
+    "not enough alien alloy": "外星合金不足",
+    "Ready to Leave?": "准备好要离开了吗?",
+    "time to get out of this place. won't be coming back.": "是时候离开这里了。不再回头",
+    "linger": "裹足徘徊",
+    "hull: ": "船身:",
+    "Troposphere": "对流层",
+    "Stratosphere": "平流层",
+    "Mesosphere": "中气层",
+    "Thermosphere": "增温层",
+    "Exosphere": "外逸层",
+    "Space": "太空"
   };
 
   function t(key) {
@@ -378,8 +410,10 @@
       population: 0,
       workers: { gatherer: 0, hunter: 0, trapper: 0, tanner: 0, charcutier: 0, iron_miner: 0, coal_miner: 0, sulphur_miner: 0, steelworker: 0, armourer: 0 },
       seen: {},
-      unlocked: { room: true, outside: false, path: false, world: false },
+      unlocked: { room: true, outside: false, path: false, world: false, ship: false, space: false },
       location: "room",
+      spaceShip: { hull: BASE_HULL, thrusters: BASE_THRUSTERS, seenShip: false, seenWarning: false },
+      space: null,
       phase: "room_dark",
       flags: {},
       notifications: [],
@@ -417,7 +451,7 @@
 
   var SAVE_KEY = "adr.save.v1";
   var SAVE_VERSION = 1;
-  var OBJECT_KEYS = ["stores", "buildings", "unlocked", "npc_moods", "workers", "outfit", "income_acc", "world", "flags", "cooldowns", "cooldown_ends_at", "seen", "perks"];
+  var OBJECT_KEYS = ["stores", "buildings", "unlocked", "npc_moods", "workers", "outfit", "income_acc", "world", "flags", "cooldowns", "cooldown_ends_at", "seen", "perks", "spaceShip"];
   var ARRAY_KEYS = ["notifications", "scheduled"];
   var NUMBER_KEYS = ["fire", "temperature", "game_time_sec", "builder_level", "population", "punches"];
 
@@ -648,6 +682,14 @@
     if (typeof state.world.water_moves !== "number") state.world.water_moves = 0;
     unlockWorkersForBuildings(state);
     syncGatherers(state);
+    ensureSpaceShip(state);
+    if (state.flags.world_ship && state.world && !state.world.on_expedition) {
+      state.unlocked.ship = true;
+      state.unlocked.space = true;
+    }
+    if (state.location === "space" && (!state.space || !state.space.active)) {
+      state.location = state.unlocked.ship ? "ship" : "path";
+    }
     return state;
   }
 
@@ -864,7 +906,14 @@
       state.phase, state.slice_complete ? 1 : 0,
       state.world.on_expedition ? 1 : 0, state.world.x, state.world.y,
       state.world.hp, state.world.water,
-      state.outfit.meat, state.outfit.cured_meat
+      state.outfit.meat, state.outfit.cured_meat,
+      state.unlocked.ship ? 1 : 0,
+      state.spaceShip ? state.spaceShip.hull : "",
+      state.spaceShip ? state.spaceShip.thrusters : "",
+      state.space ? state.space.altitude : "",
+      state.space ? state.space.hull : "",
+      state.space ? (state.space.asteroids || []).length : 0,
+      state.flags.space_escaped ? 1 : 0
     ].join("|");
   }
 
@@ -908,6 +957,11 @@
         state.unlocked[a.area] = true;
         if (a.area === "outside" && !state.wood_initialized) {
           addItem(state, "wood", 0);
+        }
+        if (a.area === "ship" || a.area === "space") {
+          ensureSpaceShip(state);
+          state.unlocked.ship = true;
+          state.unlocked.space = true;
         }
         break;
       case "set_flag":
@@ -1511,11 +1565,176 @@
   function cooldownSnapshot(state, timeScale) {
     var remaining = {};
     var ends = {};
-    ["stoke", "gather", "traps"].forEach(function (id) {
+    ["stoke", "gather", "traps", "liftoff"].forEach(function (id) {
       remaining[id] = Math.round(cooldownLeft(state, id, timeScale) * 10) / 10;
       ends[id] = (state.cooldown_ends_at && state.cooldown_ends_at[id]) || 0;
     });
     return { remaining: remaining, ends_at: ends, wall_now: nowMs() };
+  }
+
+  function clearCooldown(state, id) {
+    if (state.cooldowns) delete state.cooldowns[id];
+    if (state.cooldown_ends_at) delete state.cooldown_ends_at[id];
+  }
+
+  function ensureSpaceShip(state) {
+    if (!isPlainObject(state.spaceShip)) {
+      state.spaceShip = { hull: BASE_HULL, thrusters: BASE_THRUSTERS, seenShip: false, seenWarning: false };
+    }
+    if (typeof state.spaceShip.hull !== "number" || !isFinite(state.spaceShip.hull)) state.spaceShip.hull = BASE_HULL;
+    if (typeof state.spaceShip.thrusters !== "number" || !isFinite(state.spaceShip.thrusters)) state.spaceShip.thrusters = BASE_THRUSTERS;
+    if (typeof state.spaceShip.seenShip !== "boolean") state.spaceShip.seenShip = !!state.spaceShip.seenShip;
+    if (typeof state.spaceShip.seenWarning !== "boolean") state.spaceShip.seenWarning = !!state.spaceShip.seenWarning;
+    if (!isPlainObject(state.unlocked)) state.unlocked = {};
+    if (typeof state.unlocked.ship !== "boolean") state.unlocked.ship = !!state.unlocked.ship;
+    if (typeof state.unlocked.space !== "boolean") state.unlocked.space = !!state.unlocked.space;
+    return state.spaceShip;
+  }
+
+  function shipSpeed(state) {
+    var ship = ensureSpaceShip(state);
+    return SHIP_SPEED + (ship.thrusters || 0);
+  }
+
+  function spaceLayerTitle(altitude) {
+    if (altitude < 10) return t("Troposphere");
+    if (altitude < 20) return t("Stratosphere");
+    if (altitude < 30) return t("Mesosphere");
+    if (altitude < 45) return t("Thermosphere");
+    if (altitude < 60) return t("Exosphere");
+    return t("Space");
+  }
+
+  function maybeSeeShip(state) {
+    var ship = ensureSpaceShip(state);
+    if (!ship.seenShip) {
+      pushNote(state, t("somewhere above the debris cloud, the wanderer fleet hovers. been on this rock too long."), "ship");
+      ship.seenShip = true;
+    }
+  }
+
+  function asteroidCountAt(altitude) {
+    var n = 1;
+    if (altitude > 10) n += 1;
+    if (altitude > 20) n += 2;
+    if (altitude > 40) n += 2;
+    return n;
+  }
+
+  function spawnAsteroid(space) {
+    var glyph = ASTEROID_GLYPHS[Math.floor(Math.random() * ASTEROID_GLYPHS.length)];
+    var dur = BASE_ASTEROID_SPEED - Math.floor(Math.random() * (BASE_ASTEROID_SPEED * 0.65));
+    if (dur < 200) dur = 200;
+    space.asteroids.push({
+      x: Math.floor(Math.random() * SPACE_WIDTH),
+      y: 0,
+      w: 14,
+      h: 16,
+      glyph: glyph,
+      vy: SPACE_HEIGHT / (dur / 1000)
+    });
+  }
+
+  function startSpace(state) {
+    var ship = ensureSpaceShip(state);
+    state.space = {
+      active: true,
+      done: false,
+      altitude: 0,
+      hull: ship.hull,
+      maxHull: ship.hull,
+      shipX: SPACE_WIDTH / 2,
+      shipY: SPACE_HEIGHT / 2,
+      up: false,
+      down: false,
+      left: false,
+      right: false,
+      asteroids: [],
+      spawnAcc: 0,
+      startedAt: state.game_time_sec,
+      altAcc: 0
+    };
+    state.location = "space";
+    spawnAsteroid(state.space);
+  }
+
+  function crashSpace(state) {
+    if (!state.space || state.space.done) return;
+    state.space.done = true;
+    state.space.active = false;
+    state.space.asteroids = [];
+    state.location = "ship";
+    setCooldown(state, "liftoff", LIFTOFF_COOLDOWN, 1);
+    pushNote(state, t("the world fades"), "ship");
+  }
+
+  function finishAscent(state) {
+    if (!state.space || state.space.done) return;
+    state.space.done = true;
+    state.space.active = false;
+    state.space.asteroids = [];
+    state.flags.space_escaped = true;
+    pushNote(state, t("Space"), "space");
+  }
+
+  function tickSpace(state, dt) {
+    var sp = state.space;
+    if (!sp || !sp.active || sp.done) return;
+    var speed = shipSpeed(state);
+    var dx = 0;
+    var dy = 0;
+    if (sp.up) dy -= speed;
+    else if (sp.down) dy += speed;
+    if (sp.left) dx -= speed;
+    else if (sp.right) dx += speed;
+    if (dx !== 0 && dy !== 0) {
+      dx = dx / Math.sqrt(2);
+      dy = dy / Math.sqrt(2);
+    }
+    var frames = dt / (33 / 1000);
+    sp.shipX += dx * frames;
+    sp.shipY += dy * frames;
+    if (sp.shipX < 10) sp.shipX = 10;
+    else if (sp.shipX > SPACE_WIDTH - 10) sp.shipX = SPACE_WIDTH - 10;
+    if (sp.shipY < 10) sp.shipY = 10;
+    else if (sp.shipY > SPACE_HEIGHT - 10) sp.shipY = SPACE_HEIGHT - 10;
+
+    sp.altAcc += dt;
+    while (sp.altAcc >= 1) {
+      sp.altAcc -= 1;
+      sp.altitude += 1;
+      if (sp.altitude > 60) sp.altAcc = 0;
+    }
+
+    var spawnEvery = Math.max(0.1, (1000 - sp.altitude * 10) / 1000);
+    void BASE_ASTEROID_DELAY;
+    sp.spawnAcc += dt;
+    while (sp.spawnAcc >= spawnEvery && !sp.done) {
+      sp.spawnAcc -= spawnEvery;
+      var extra = asteroidCountAt(sp.altitude);
+      for (var i = 0; i < extra; i++) spawnAsteroid(sp);
+    }
+
+    var next = [];
+    for (var a = 0; a < sp.asteroids.length; a++) {
+      var rock = sp.asteroids[a];
+      rock.y += rock.vy * dt;
+      if (rock.x - rock.w / 2 <= sp.shipX && rock.x + rock.w / 2 >= sp.shipX
+          && rock.y <= sp.shipY && rock.y + rock.h >= sp.shipY) {
+        sp.hull -= 1;
+        if (sp.hull <= 0) {
+          crashSpace(state);
+          return;
+        }
+        continue;
+      }
+      if (rock.y < SPACE_HEIGHT + 20) next.push(rock);
+    }
+    sp.asteroids = next;
+
+    if (state.game_time_sec - sp.startedAt >= FTB_SPEED / 1000) {
+      finishAscent(state);
+    }
   }
 
   function outsideTitle(state) {
@@ -2400,9 +2619,12 @@
         });
         break;
       case "travel":
+        if (s.location === "space" && s.space && s.space.active) return { ok: false, error: "in_space" };
+        if (args.area === "space") return { ok: false, error: "locked" };
         if (!s.unlocked[args.area] && args.area !== "room") return { ok: false, error: "locked" };
         if (s.world.on_expedition) return { ok: false, error: "away" };
         s.location = args.area;
+        if (args.area === "ship") maybeSeeShip(s);
         break;
       case "assign_worker":
         var job = args.job;
@@ -2593,6 +2815,59 @@
         this.analytics.log(s, "quit", {});
         this.analytics.log(s, "session_end", { reason: "quit" });
         break;
+      case "reinforce_hull":
+        if (!s.unlocked.ship) return { ok: false, error: "locked" };
+        ensureSpaceShip(s);
+        if ((s.stores.alien_alloy || 0) < ALLOY_PER_HULL) {
+          pushNote(s, t("not enough alien alloy"), "ship");
+          return { ok: false, error: "cost" };
+        }
+        addItem(s, "alien_alloy", -ALLOY_PER_HULL);
+        s.spaceShip.hull += 1;
+        break;
+      case "upgrade_engine":
+        if (!s.unlocked.ship) return { ok: false, error: "locked" };
+        ensureSpaceShip(s);
+        if ((s.stores.alien_alloy || 0) < ALLOY_PER_THRUSTER) {
+          pushNote(s, t("not enough alien alloy"), "ship");
+          return { ok: false, error: "cost" };
+        }
+        addItem(s, "alien_alloy", -ALLOY_PER_THRUSTER);
+        s.spaceShip.thrusters += 1;
+        break;
+      case "lift_off":
+        if (!s.unlocked.ship) return { ok: false, error: "locked" };
+        if (s.location === "space") return { ok: false, error: "in_space" };
+        ensureSpaceShip(s);
+        if (s.spaceShip.hull <= 0) return { ok: false, error: "no_hull" };
+        if (!cooldownReady(s, "liftoff")) return { ok: false, error: "cooldown" };
+        setCooldown(s, "liftoff", LIFTOFF_COOLDOWN, this.timeScale);
+        if (!s.spaceShip.seenWarning) {
+          var warn = executeTool(s, { tool: "spawn_event", args: { event_id: "liftoff_warning" } }, { events: this.events });
+          if (!warn || !warn.ok) {
+            s.spaceShip.seenWarning = true;
+            startSpace(s);
+          }
+        } else {
+          startSpace(s);
+        }
+        break;
+      case "space_steer":
+        if (s.location !== "space" || !s.space || !s.space.active) return { ok: false, error: "grounded" };
+        var dir = args.dir;
+        var held = args.down !== false;
+        if (dir === "up" || dir === "down" || dir === "left" || dir === "right") {
+          s.space[dir] = held;
+        }
+        if (args.dx || args.dy) {
+          s.space.shipX += (args.dx || 0) * shipSpeed(s);
+          s.space.shipY += (args.dy || 0) * shipSpeed(s);
+          if (s.space.shipX < 10) s.space.shipX = 10;
+          if (s.space.shipX > SPACE_WIDTH - 10) s.space.shipX = SPACE_WIDTH - 10;
+          if (s.space.shipY < 10) s.space.shipY = 10;
+          if (s.space.shipY > SPACE_HEIGHT - 10) s.space.shipY = SPACE_HEIGHT - 10;
+        }
+        break;
       default:
         return { ok: false, error: "unknown_action" };
     }
@@ -2618,6 +2893,11 @@
     if (s.flags.world_ironmine && !s.buildings.iron_mine) s.buildings.iron_mine = 1;
     if (s.flags.world_coalmine && !s.buildings.coal_mine) s.buildings.coal_mine = 1;
     if (s.flags.world_sulphurmine && !s.buildings.sulphur_mine) s.buildings.sulphur_mine = 1;
+    if (s.flags.world_ship) {
+      ensureSpaceShip(s);
+      s.unlocked.ship = true;
+      s.unlocked.space = true;
+    }
     if (s.flags.visited_old_house && success && !s.slice_complete) {
       s.slice_complete = true;
       pushNote(s, "你带回了旧房子里的见闻。尘途的第一段走完了。", "path");
@@ -2676,8 +2956,18 @@
       this._enterEventScene(btn.next);
       return;
     }
+    var evId = s.active_event.id;
     s.active_event = null;
     if (s.combat) s.combat = null;
+    if (evId === "liftoff_warning") {
+      if (buttonId === "fly") {
+        ensureSpaceShip(s);
+        s.spaceShip.seenWarning = true;
+        startSpace(s);
+      } else if (buttonId === "linger") {
+        clearCooldown(s, "liftoff");
+      }
+    }
   };
 
   Game.prototype._combat = function (move) {
@@ -2811,6 +3101,7 @@
     maybeStartThieves(s);
     checkCraftUnlocks(s);
     checkBuyUnlocks(s);
+    if (s.location === "space") tickSpace(s, dt);
 
     if (s.pop_timer != null && s.game_time_sec >= s.pop_timer) {
       var cap = s.buildings.hut * 4;
@@ -2988,6 +3279,17 @@
     MEDS_HEAL: MEDS_HEAL,
     HYPO_HEAL: HYPO_HEAL,
     FIGHT_DELAY: FIGHT_DELAY,
+    LIFTOFF_COOLDOWN: LIFTOFF_COOLDOWN,
+    ALLOY_PER_HULL: ALLOY_PER_HULL,
+    ALLOY_PER_THRUSTER: ALLOY_PER_THRUSTER,
+    BASE_HULL: BASE_HULL,
+    BASE_THRUSTERS: BASE_THRUSTERS,
+    SHIP_SPEED: SHIP_SPEED,
+    BASE_ASTEROID_DELAY: BASE_ASTEROID_DELAY,
+    BASE_ASTEROID_SPEED: BASE_ASTEROID_SPEED,
+    FTB_SPEED: FTB_SPEED,
+    spaceLayerTitle: spaceLayerTitle,
+    shipSpeed: shipSpeed,
     hasPerk: hasPerk,
     addPerk: addPerk,
     worldDistance: worldDistance,
