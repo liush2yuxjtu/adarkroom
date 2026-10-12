@@ -1,0 +1,10 @@
+{
+  "v": 1,
+  "state": {
+    "stores": "lots of wood",
+    "notifications": { "text": "broken" },
+    "fire": "hot",
+    "unlocked": true,
+    "buildings": 3
+  }
+}

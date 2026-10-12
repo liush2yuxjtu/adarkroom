@@ -6,4 +6,6 @@
 lang/.DS_Store
 .DS_Store
 node_modules
+/dist
+.godot
 img/Thumbs.db

@@ -1,0 +1,17 @@
+This directory is a remake of A Dark Room.
+
+A Dark Room
+Copyright (c) Michael Townsend and doublespeak games
+https://github.com/doublespeakgames/adarkroom
+
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+The original game remains intact at the repository root and is served
+at /classic/ in the web deployment. Chinese strings are reused from
+lang/zh_cn/strings.js of the original project.
+
+Bundled fonts (SIL Open Font License 1.1; see fonts/OFL-*.txt):
+- JetBrains Mono © JetBrains
+- Noto Sans SC / Source Han Sans © Google / Adobe

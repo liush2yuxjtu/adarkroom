@@ -1,0 +1,4 @@
+.godot/
+*.translation
+export_credentials.cfg
+tools/cjk-glyphs.txt
