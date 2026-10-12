@@ -364,8 +364,6 @@
   }
 
   function createState() {
-    var house = {};
-    house[(VILLAGE_X + 3) + "," + (VILLAGE_Y - 2)] = "old_house";
     return {
       session_id: (typeof ADRTelemetry !== "undefined" && ADRTelemetry.sessionId) ? ADRTelemetry.sessionId() : uuid(),
       started_at: Date.now(),
@@ -408,7 +406,7 @@
         water_moves: 0,
         fight_moves: 0,
         visited: {},
-        landmarks: house,
+        landmarks: { "33,28": "old_house" },
         seen_danger: false
       },
       slice_complete: false
