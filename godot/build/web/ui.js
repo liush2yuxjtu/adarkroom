@@ -112,16 +112,32 @@
     });
   }
 
+  function noteLabel(n) {
+    var text = n && n.text ? n.text : "";
+    var count = n && n.count > 1 ? n.count : 0;
+    return count ? text + " ×" + count : text;
+  }
+
   function renderNotes() {
     var box = $("notifications");
-    var want = game.state.notifications.slice(0, 16).map(function (n) { return n.text; });
+    var notes = game.state.notifications.slice(0, 30);
+    var want = notes.map(noteLabel);
     var have = [].slice.call(box.querySelectorAll(".note")).map(function (n) { return n.textContent; });
     if (want.join("\n") === have.join("\n")) return;
     box.innerHTML = "";
-    want.forEach(function (text) {
+    notes.forEach(function (n, i) {
       var d = document.createElement("div");
-      d.className = "note";
-      d.textContent = text;
+      d.className = i >= 8 ? "note fade" : "note";
+      var label = document.createElement("span");
+      label.className = "note-text";
+      label.textContent = n.text;
+      d.appendChild(label);
+      if (n.count > 1) {
+        var times = document.createElement("span");
+        times.className = "times";
+        times.textContent = " ×" + n.count;
+        d.appendChild(times);
+      }
       box.appendChild(d);
     });
   }
@@ -515,6 +531,21 @@
     $("cfg-scale").value = String(game.timeScale === 4 ? 4 : game.timeScale === 2 ? 2 : 1);
   }
 
+  function emitViewportLayout() {
+    if (!window.ADRTelemetry || !ADRTelemetry.log) return;
+    var w = window.innerWidth || 0;
+    var layout = w <= 768 ? "mobile" : "desktop";
+    var box = $("notifications");
+    var r = box ? box.getBoundingClientRect() : null;
+    var visible = !!(r && r.width > 0 && r.height > 0 && r.right > 0 && r.left < w && r.bottom > 0 && r.top < (window.innerHeight || 0));
+    ADRTelemetry.log("viewport_layout", {
+      width: w,
+      height: window.innerHeight || 0,
+      layout: layout,
+      notif_visible: visible
+    });
+  }
+
   function bindMenu() {
     $("btn-hyper").addEventListener("click", function () {
       var next = game.timeScale >= 2 ? 1 : 2;
@@ -544,7 +575,6 @@
       game.analytics.log(game.state, "session_end", { reason: "quit" });
       if (window.ADRTelemetry) {
         ADRTelemetry.pageUnload("beforeunload");
-        ADRTelemetry.flush("beforeunload");
       } else if (game.analytics.flushHttp) {
         game.analytics.flushHttp("unload");
       }
@@ -626,6 +656,12 @@
       game.hud = paintCooldowns;
       bindMenu();
       renderAll();
+      emitViewportLayout();
+      var resizeTimer = 0;
+      window.addEventListener("resize", function () {
+        if (resizeTimer) clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(emitViewportLayout, 250);
+      });
       if (window.ADRTelemetry) ADRTelemetry.markFirstFrame();
       requestAnimationFrame(loop);
     });

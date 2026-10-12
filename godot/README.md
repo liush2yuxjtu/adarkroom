@@ -57,6 +57,12 @@ Analytics 有事件等级：`info`（默认，始终上报）和 `debug`。`dire
 | `save_load` | 启动/手动读档 | `ok`, `backend` (`localStorage`/`IndexedDB`), `error`, `size`, `save_id`, `save_version` | 每次 |
 | `save_corrupt` | 读档完整性失败 | `reason`, `backend`, `error`, `backup_key`, `save_id` | 每次 |
 | `new_game_start` | 重开且已有旧档 | `overwritten`, `previous_save_id`, `previous_phase`, `previous_play_time_sec`, `previous_last_action`, `previous_last_save_at`, `recent_actions`, `last_phase` | 每次重开 |
+| `viewport_layout` | 首屏渲染、窗口缩放（250ms 去抖） | `width`, `height`, `layout` (`mobile`≤768 / `desktop`), `notif_visible` | 每次布局变化 |
+| `notification_dedup` | 连续相同通知合并为 ×N | `text`, `count` | 每次叠次 |
+| `telemetry_send_fail` | POST `playtest_events` 失败（CORS/网络/HTTP/中止） | `status`, `attempt`, `reason`, `n` | 每次失败 |
+| `telemetry_retry_ok` | 同一批在退避重试后成功 | `status`, `attempt`, `via` | 重试成功 |
+
+HTTP 上报：`mode: cors` + `credentials: omit`（兼容 COEP credentialless）。平时不用 `keepalive`（Chrome 对 keepalive 体积极限约 64KB，审计里的 `requestfailed` 多为导航中止或超限，不是 key 错——anon INSERT 本身是通的）。卸载时优先 `sendBeacon`，`pagehide`/`beforeunload` 只 flush 一次。批次最多 20 条且 JSON 小于 55KB；失败指数退避（0.5s×2^n，封顶 30s，最多 8 次）并累加 `ADRTelemetry.failCount()`。
 
 存档埋点挂在现有存档模块上（`save-telemetry.js` 包装 `save`/`load`/`autosave` 以及约定的 storage key），**不另做一套存档**。损坏存档会备份到 `localStorage` 键 `adr.save.corrupt.<ts>`，不把整份档塞进 payload（RLS 限制 `pg_column_size(payload) < 16384`）。
 

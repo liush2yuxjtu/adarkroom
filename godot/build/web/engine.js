@@ -428,12 +428,22 @@
   function pushNote(state, text, source) {
     if (!text) return;
     var line = /[。.!！?？]$/.test(text) ? text : text + "。";
+    var top = state.notifications[0];
+    if (top && top.text === line) {
+      top.count = (top.count || 1) + 1;
+      top.at = state.game_time_sec;
+      if (typeof ADRTelemetry !== "undefined" && ADRTelemetry.log) {
+        ADRTelemetry.log("notification_dedup", { text: line, count: top.count });
+      }
+      return;
+    }
     state.notifications.unshift({
       text: line,
       source: source || state.location,
-      at: state.game_time_sec
+      at: state.game_time_sec,
+      count: 1
     });
-    if (state.notifications.length > 40) state.notifications.length = 40;
+    if (state.notifications.length > 30) state.notifications.length = 30;
   }
 
   function addItem(state, item, amount) {
@@ -450,7 +460,7 @@
       state.stores.wood, state.stores.fur, state.stores.meat, state.stores.compass,
       state.buildings.trap, state.buildings.cart, state.buildings.hut,
       state.population, state.unlocked.outside ? 1 : 0, state.unlocked.path ? 1 : 0,
-      state.notifications.length, n0 ? n0.text : "",
+      state.notifications.length, n0 ? n0.text : "", n0 ? (n0.count || 1) : "",
       ev ? ev.id : "", ev ? ev.scene : "",
       state.combat ? state.combat.hp : "",
       state.phase, state.slice_complete ? 1 : 0,

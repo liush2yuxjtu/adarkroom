@@ -27,6 +27,8 @@
   src: url("fonts/NotoSansSC-Regular-subset.woff2") format("woff2");
 }
 
+*, *::before, *::after { box-sizing: border-box; }
+
 html, body {
   height: 100%;
   margin: 0;
@@ -34,6 +36,8 @@ html, body {
   color: #111;
   font-family: "JetBrains Mono", "Noto Sans SC", monospace;
   font-size: 16px;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 button, input, select, textarea {
@@ -43,21 +47,33 @@ button, input, select, textarea {
 
 #app {
   min-height: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 #wrapper {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 700px);
+  grid-template-areas:
+    "notes header"
+    "notes main";
+  column-gap: 20px;
+  width: 100%;
+  max-width: 952px;
   margin: 0 auto;
-  width: 700px;
-  padding: 24px 0 80px 220px;
+  padding: 24px 16px 80px;
   position: relative;
 }
 
 #notifications {
-  position: absolute;
-  left: -210px;
-  top: 48px;
-  width: 200px;
+  grid-area: notes;
+  position: relative;
+  left: auto;
+  top: 24px;
+  width: auto;
+  max-width: 200px;
   max-height: 70vh;
+  overflow-x: hidden;
   overflow-y: auto;
   color: #333;
   font-size: 14px;
@@ -69,7 +85,17 @@ button, input, select, textarea {
   opacity: 0.95;
 }
 
+#notifications .note .times {
+  margin-left: 0.3em;
+  color: #555;
+}
+
+#notifications .note.fade {
+  opacity: 0.42;
+}
+
 #header {
+  grid-area: header;
   height: 28px;
   margin-bottom: 16px;
   border-bottom: 1px solid #111;
@@ -95,9 +121,11 @@ button, input, select, textarea {
 }
 
 .panel {
+  grid-area: main;
   display: none;
   min-height: 420px;
   position: relative;
+  min-width: 0;
 }
 
 .panel.active { display: block; }
@@ -141,13 +169,13 @@ button.adr:hover:not([disabled]) .cd { background: rgba(255, 255, 255, 0.22); }
 
 button.adr[disabled] {
   cursor: default;
-  border-color: #b2b2b2;
-  color: #b2b2b2;
+  border-color: #8a8a8a;
+  color: #4a4a4a;
 }
 
 button.adr[disabled] .btn-label,
 button.adr[disabled] .cd-sec {
-  color: #b2b2b2;
+  color: #4a4a4a;
 }
 
 button.adr .cd {
@@ -162,12 +190,14 @@ button.adr .cd {
 }
 
 #stores {
+  grid-area: main;
   position: absolute;
   top: 48px;
-  right: -16px;
+  right: 16px;
   border: 1px solid #111;
   padding: 10px 14px 12px;
   min-width: 160px;
+  max-width: min(220px, 40%);
   background: #f3f1ea;
 }
 
@@ -187,7 +217,8 @@ button.adr .cd {
   left: 16px;
   bottom: 12px;
   display: flex;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 16px 24px;
   font-size: 14px;
   z-index: 40;
 }
@@ -197,7 +228,7 @@ button.adr .cd {
   border: none;
   cursor: pointer;
   text-decoration: underline;
-  padding: 0;
+  padding: 6px 8px;
 }
 
 #overlay {
@@ -239,6 +270,8 @@ button.adr .cd {
   letter-spacing: 2px;
   white-space: pre;
   margin: 8px 0 16px;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 .hint { color: #555; font-size: 14px; margin-top: 8px; }
@@ -278,3 +311,63 @@ a { color: #111; }
 
 .pack-row { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
 .pack-row button { min-width: 32px; padding: 2px 8px; }
+
+@media (max-width: 768px) {
+  #wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 100%;
+    padding: 12px 12px 108px;
+    column-gap: 0;
+  }
+
+  #header {
+    order: 1;
+  }
+
+  .panel {
+    order: 2;
+    min-height: 0;
+  }
+
+  #notifications {
+    order: 3;
+    position: static;
+    left: auto;
+    top: auto;
+    width: 100%;
+    max-width: 100%;
+    max-height: 28vh;
+    margin-top: 16px;
+  }
+
+  #stores {
+    order: 4;
+    position: static;
+    top: auto;
+    right: auto;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin-top: 16px;
+  }
+
+  #menu {
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    gap: 12px 20px;
+  }
+
+  #menu button {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 10px 12px;
+  }
+
+  #world-map {
+    font-size: clamp(10px, 3.4vw, 16px);
+    letter-spacing: 0.06em;
+  }
+}

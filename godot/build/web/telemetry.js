@@ -92,8 +92,15 @@
     game: null,
     url: "",
     anonKey: "",
-    sink: null
+    sink: null,
+    failCount: 0,
+    retryAttempt: 0,
+    inflight: false,
+    unloadFlushStarted: false
   };
+  var MAX_BATCH = 20;
+  var MAX_BODY = 55000;
+  var retryTimer = 0;
 
   function cfg() {
     return (typeof root.ADR_TELEMETRY === "object" && root.ADR_TELEMETRY) || {};
@@ -191,7 +198,7 @@
     if (opts.skipHttp) return;
     if (!T.url || !T.anonKey) return;
     T.queue.push(row);
-    if (T.queue.length >= FLUSH_N) flush("count");
+    if (!T.inflight && !T._holdFlush && T.queue.length >= FLUSH_N) flush("count");
   }
 
   function log(name, payload, level) {
@@ -234,50 +241,140 @@
     return T.url + sep + "apikey=" + encodeURIComponent(T.anonKey);
   }
 
+  function toRow(ev) {
+    var sink = sinkApi();
+    return sink && sink.rowFromEvent ? sink.rowFromEvent(ev) : {
+      session_id: ev.session_id,
+      event_name: ev.event_name,
+      occurred_at: ev.occurred_at,
+      game_time_sec: ev.game_time_sec,
+      phase: ev.phase,
+      payload: ev.payload || {},
+      user_agent: ev.user_agent || ""
+    };
+  }
+
+  function takeFit() {
+    var n = Math.min(MAX_BATCH, T.queue.length);
+    while (n > 1) {
+      var trial = T.queue.slice(0, n).map(toRow);
+      if (JSON.stringify(trial).length <= MAX_BODY) {
+        return { events: T.queue.splice(0, n), rows: trial };
+      }
+      n = Math.floor(n / 2);
+    }
+    var one = T.queue.splice(0, 1);
+    return { events: one, rows: one.map(toRow) };
+  }
+
+  function scheduleRetry(attempt) {
+    if (retryTimer) clearTimeout(retryTimer);
+    var wait = Math.min(30000, 500 * Math.pow(2, Math.min(attempt, 6)));
+    retryTimer = setTimeout(function () { flush("retry"); }, wait);
+  }
+
   function flush(reason) {
     if (!T.queue.length || !T.url || !T.anonKey) return;
-    var sink = sinkApi();
-    var rows = T.queue.splice(0, 200).map(function (ev) {
-      return sink && sink.rowFromEvent ? sink.rowFromEvent(ev) : {
-        session_id: ev.session_id,
-        event_name: ev.event_name,
-        occurred_at: ev.occurred_at,
-        game_time_sec: ev.game_time_sec,
-        phase: ev.phase,
-        payload: ev.payload || {},
-        user_agent: ev.user_agent || ""
-      };
-    });
-    T.sent += rows.length;
-    var body = JSON.stringify(rows);
+    if (T.inflight && reason !== "unload" && reason !== "pagehide" && reason !== "beforeunload") return;
     var unloading = reason === "unload" || reason === "pagehide" || reason === "beforeunload";
-    var headers = sink && sink.headersFromAnonKey
-      ? sink.headersFromAnonKey(T.anonKey)
-      : { "Content-Type": "application/json", apikey: T.anonKey, Authorization: "Bearer " + T.anonKey, Prefer: "return=minimal" };
-    if (typeof fetch === "function") {
-      fetch(T.url, {
-        method: "POST",
-        keepalive: true,
-        headers: headers,
-        body: body
-      }).then(function (r) {
-        if (!r.ok) throw new Error(String(r.status));
-      }).catch(function () {
-        if (unloading && typeof navigator !== "undefined" && navigator.sendBeacon) {
-          try { navigator.sendBeacon(beaconUrl(), new Blob([body], { type: "application/json" })); } catch (e) { /* ignore */ }
-        }
-        for (var j = rows.length - 1; j >= 0; j--) T.queue.unshift(rows[j]);
-        T.sent -= rows.length;
+    if (unloading && T.unloadFlushStarted && reason === "beforeunload") return;
+    if (unloading) T.unloadFlushStarted = true;
+    var sink = sinkApi();
+    var batch = takeFit();
+    var events = batch.events;
+    var rows = batch.rows;
+    if (!rows.length) return;
+    T.inflight = !unloading;
+    var attempt = (T.retryAttempt || 0) + 1;
+    T.retryAttempt = attempt;
+
+    function requeue() {
+      for (var i = events.length - 1; i >= 0; i--) T.queue.unshift(events[i]);
+    }
+
+    function onFail(err, status) {
+      T.inflight = false;
+      T.failCount += 1;
+      T._holdFlush = true;
+      if (attempt >= 8) {
+        T.dropped += events.length;
+        log("telemetry_send_fail", { status: status, attempt: attempt, reason: reason || "", n: rows.length, dropped: events.length }, "info");
+        T.retryAttempt = 0;
+        T._holdFlush = false;
+        if (T.queue.length && !unloading) scheduleRetry(0);
+        return;
+      }
+      requeue();
+      log("telemetry_send_fail", { status: status, attempt: attempt, reason: reason || "", n: rows.length }, "info");
+      T._holdFlush = false;
+      if (!unloading) scheduleRetry(attempt);
+    }
+
+    function onOk(res) {
+      T.inflight = false;
+      T.sent += rows.length;
+      T._holdFlush = true;
+      if (attempt > 1) {
+        log("telemetry_retry_ok", { status: (res && res.status) || 201, attempt: attempt, via: (res && res.via) || "fetch" }, "info");
+      }
+      T._holdFlush = false;
+      T.retryAttempt = 0;
+      if (T.queue.length && !unloading) flush("drain");
+    }
+
+    if (sink && sink.postRows) {
+      sink.postRows(T.url, T.anonKey, rows, {
+        beacon: unloading,
+        retries: unloading ? 1 : 1,
+        returnPromise: true,
+        onOk: onOk,
+        onFail: function (err, att, status) { onFail(err, status || (sink.failStatus && sink.failStatus(err)) || "network"); }
       });
       return;
     }
-    if (unloading && typeof navigator !== "undefined" && navigator.sendBeacon) {
+
+    var body = JSON.stringify(rows);
+    var headers = { "Content-Type": "application/json", apikey: T.anonKey, Authorization: "Bearer " + T.anonKey, Prefer: "return=minimal" };
+    if (unloading && typeof navigator !== "undefined" && navigator.sendBeacon && body.length <= MAX_BODY) {
       try {
-        if (navigator.sendBeacon(beaconUrl(), new Blob([body], { type: "application/json" }))) return;
-      } catch (e2) { /* ignore */ }
+        if (navigator.sendBeacon(beaconUrl(), new Blob([body], { type: "application/json" }))) {
+          onOk({ status: 0, via: "beacon" });
+          return;
+        }
+      } catch (e2) { /* fall through */ }
     }
-    for (var i = rows.length - 1; i >= 0; i--) T.queue.unshift(rows[i]);
-    T.sent -= rows.length;
+    if (typeof fetch !== "function") {
+      onFail(new Error("no-fetch"), "no-fetch");
+      return;
+    }
+    var fetchOpts = {
+      method: "POST",
+      mode: "cors",
+      credentials: "omit",
+      cache: "no-store",
+      headers: headers,
+      body: body
+    };
+    if (unloading && body.length <= MAX_BODY) fetchOpts.keepalive = true;
+    fetch(T.url, fetchOpts).then(function (r) {
+      if (!r.ok) {
+        var err = new Error(String(r.status));
+        err.status = r.status;
+        throw err;
+      }
+      onOk({ status: r.status, via: "fetch" });
+    }).catch(function (err) {
+      var status = err && err.status ? err.status : (sink && sink.failStatus ? sink.failStatus(err) : "network");
+      if (unloading && typeof navigator !== "undefined" && navigator.sendBeacon) {
+        try {
+          if (navigator.sendBeacon(beaconUrl(), new Blob([body], { type: "application/json" }))) {
+            onOk({ status: 0, via: "beacon" });
+            return;
+          }
+        } catch (e3) { /* ignore */ }
+      }
+      onFail(err, status);
+    });
   }
 
   function flushMouse(why) {
@@ -654,6 +751,7 @@
     EVENT_LEVEL: EVENT_LEVEL,
     activePlayMs: activePlayMs,
     exportJson: function () { return JSON.stringify(T.buffer, null, 2); },
+    failCount: function () { return T.failCount; },
     buffer: T.buffer,
     _state: T
   };
