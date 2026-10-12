@@ -235,6 +235,15 @@ body.style-text button.adr .cd {
   padding: 6px 8px;
 }
 
+#btn-style {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
 #overlay {
   display: none;
   position: fixed;

@@ -48,6 +48,123 @@
     document.body.classList.toggle("style-text", uiStyle === "text");
   }
 
+  function saveHash() {
+    var raw = "";
+    try { raw = localStorage.getItem("adr.save.v1") || ""; } catch (e) { raw = ""; }
+    if (window.ADRSaveTelemetry && ADRSaveTelemetry.checksum) return ADRSaveTelemetry.checksum(raw);
+    var h = 2166136261;
+    for (var i = 0; i < raw.length; i++) {
+      h ^= raw.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return ("00000000" + (h >>> 0).toString(16)).slice(-8);
+  }
+
+  function styleActionLabel(style) {
+    return style === "pixel" ? "文字." : "像素.";
+  }
+
+  function rememberStyleInUrl(style) {
+    try {
+      var url = new URL(location.href);
+      if (url.searchParams.has("style")) {
+        url.searchParams.set("style", style);
+        history.replaceState(null, "", url.pathname + url.search + url.hash);
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  function stripStyleChrome() {
+    document.querySelectorAll(".px-scene-host").forEach(function (el) {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    });
+    ["panel-room", "panel-outside", "panel-path"].forEach(function (id) {
+      var p = $(id);
+      if (!p) return;
+      delete p.dataset.ready;
+      p.innerHTML = "";
+    });
+    var stores = $("stores");
+    if (stores) {
+      stores.innerHTML = "";
+      delete stores.dataset.html;
+    }
+    var notes = $("notifications");
+    if (notes) notes.innerHTML = "";
+    var header = $("header");
+    if (header) header.innerHTML = "";
+  }
+
+  function restoreMenuLabels() {
+    var hyper = $("btn-hyper");
+    if (hyper) hyper.textContent = (game && game.timeScale >= 2) ? "原速." : "加速.";
+    var settings = $("btn-settings");
+    if (settings) settings.textContent = "设置.";
+    var exp = $("btn-export");
+    if (exp) exp.textContent = "导出遥测.";
+    var restart = $("btn-restart");
+    if (restart) restart.textContent = "重开.";
+    var classic = $("btn-classic");
+    if (classic) classic.textContent = "原版.";
+    var dir = $("director-label");
+    if (dir && game) {
+      dir.textContent = game.directorName === "llm" ? "导演：语言模型" : "导演：规则";
+      dir.removeAttribute("aria-label");
+    }
+  }
+
+  function paintStyleToggle() {
+    var el = $("btn-style");
+    if (!el) return;
+    var label = styleActionLabel(uiStyle);
+    var name = label.replace(/\.$/, "");
+    el.setAttribute("aria-label", "切换到" + name + "风格");
+    el.setAttribute("title", "切换到" + name + "风格");
+    el.setAttribute("aria-pressed", uiStyle === "pixel" ? "true" : "false");
+    if (isPixel()) {
+      if (!el.querySelector(".px-icon")) {
+        el.textContent = "";
+        el.appendChild(pxIconEl(el.getAttribute("data-icon") || "spark"));
+      }
+    } else {
+      el.textContent = label;
+    }
+  }
+
+  function switchStyle() {
+    var from = uiStyle === "pixel" ? "pixel" : "text";
+    var to = from === "pixel" ? "text" : "pixel";
+    if (game && game.persistSave) game.persistSave();
+    var hashBefore = saveHash();
+    persistStyle(to);
+    rememberStyleInUrl(to);
+    applyStyle(to);
+    stripStyleChrome();
+    restoreMenuLabels();
+    lastViewSig = "";
+    lastLoc = "";
+    eventKey = "";
+    if (game) {
+      renderAll();
+      decorateMenuIcons();
+      paintStyleToggle();
+      fitPixelScene();
+      emitViewportLayout();
+    } else {
+      paintStyleToggle();
+    }
+    var hashAfter = saveHash();
+    if (window.ADRTelemetry && ADRTelemetry.log) {
+      ADRTelemetry.log("style_toggle", {
+        from: from,
+        to: to,
+        save_hash_before: hashBefore,
+        save_hash_after: hashAfter
+      });
+    }
+    toast(to === "pixel" ? "已切换到像素风格" : "已切换到文字风格");
+  }
+
   function pxIconEl(name) {
     var s = document.createElement("span");
     s.className = "px-icon px-" + name;
@@ -1042,7 +1159,7 @@
 
   function decorateMenuIcons() {
     if (!isPixel()) return;
-    ["btn-hyper", "btn-settings", "btn-export", "btn-restart", "btn-classic"].forEach(function (id) {
+    ["btn-style", "btn-hyper", "btn-settings", "btn-export", "btn-restart", "btn-classic"].forEach(function (id) {
       var el = $(id);
       if (!el) return;
       var icon = el.getAttribute("data-icon") || "spark";
@@ -1168,6 +1285,10 @@
 
   function bindMenu() {
     decorateMenuIcons();
+    paintStyleToggle();
+    $("btn-style").addEventListener("click", function () {
+      switchStyle();
+    });
     $("btn-hyper").addEventListener("click", function () {
       var next = game.timeScale >= 2 ? 1 : 2;
       game.act("set_timescale", { scale: next });
@@ -1285,6 +1406,7 @@
       events = Object.keys(pair[0] || {}).length ? pair[0] : (pair[2] || {});
       config = applyUrlConfig(Object.assign({}, pair[1] || {}, pair[3] || {}));
       applyStyle(resolveStyle(config));
+      paintStyleToggle();
       if (!Object.keys(events).length) {
         console.warn("events catalog missing; director spawn_event will reject");
       }
