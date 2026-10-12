@@ -264,7 +264,7 @@ Run only the steps the mapping table selects for the diff. Each step has a trigg
 3. **Cooldown bar** — full button-height overlay, width shrinking, button opacity 1, countdown number, screenshot.
 4. **Telemetry write** — unique session, then SELECT `playtest_events` with the service/read key (anon is insert-only).
 5. **Mapping** — file types → steps → surfaces. Font → step 1 + `aesthetic-community-consensus`. Telemetry → step 4 + `pr-telemetry-required`. `verification-scope-mismatch` → measure the live path. Game docs/skills in the wrong GitHub repo → `wrong-repo-pr`. UI/art/interaction proposal → `original-intent-check` **before** proposing the change. Pacing analyzer / `early_phase_slow` → `game-pacing-intent` **plus** `art-style-boredom-mitigation`.
-6. **Playwright multi-viewport UI audit** — 1280×800, 390×844, 1920×1080; layout, spacing, contrast (WCAG 4.5:1), tap targets ≥44px, alignment, overlap/clipping (`x<0`), horizontal scroll, console/`requestfailed`; numbered issues + screenshots, then P0–P5 triage.
+6. **Playwright multi-viewport UI audit** — 1280×800, **1024×768**, 390×844, 1920×1080; layout, spacing, contrast (WCAG 4.5:1), tap targets ≥44px, alignment, overlap/clipping (`x<0`), horizontal scroll; classify `realFailures` vs paired `ERR_ABORTED`+2xx; confirm the verify-script URL; numbered issues + screenshots, then P0–P5 triage; stop rounds when no new issues. Worked example: 2026-10-12 12-issue audit (PR #7 / `2361374`).
 
 Worked example (this repo, commit `5e3b891`, live export `godot/build/web`): font 500 loaded; overlay 39px tall at about 93% width; opacity 1; save restored after reload.
 

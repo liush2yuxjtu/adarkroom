@@ -199,11 +199,12 @@ Skip a step only when its trigger does not match the diff. Record the skip. Do n
 
 **Trigger.** Diff or claim touches UI, layout, CSS, responsive behavior, visual style, overlap, clipping, or any page a player sees at more than one size.
 
-**How to execute.** Open the live page (or the local `godot/build/web` export when the change is not yet deployed) at three viewports. Use real Playwright, not a screenshot-only guess. Collect console errors and `requestfailed` on each size.
+**How to execute.** Open the live page (or the local `godot/build/web` export when the change is not yet deployed) at **four** viewports, including **1024**. Use real Playwright, not a screenshot-only guess. Collect console errors and `requestfailed` on each size. Classify network noise before treating it as a product bug.
 
 ```js
 const viewports = [
   { name: 'desktop', width: 1280, height: 800 },
+  { name: 'narrow-desktop', width: 1024, height: 768 },
   { name: 'mobile', width: 390, height: 844 },
   { name: 'fullhd', width: 1920, height: 1080 },
 ];
@@ -212,10 +213,22 @@ for (const vp of viewports) {
   const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });
   const consoleErrors = [];
   const failed = [];
+  const posts = [];
   page.on('console', (msg) => {
     if (msg.type() === 'error') consoleErrors.push(msg.text());
   });
-  page.on('requestfailed', (req) => failed.push(req.url()));
+  page.on('requestfailed', (req) => {
+    failed.push({
+      url: req.url(),
+      method: req.method(),
+      error: req.failure()?.errorText || '',
+    });
+  });
+  page.on('response', (res) => {
+    if (res.request().method() === 'POST') {
+      posts.push({ url: res.url(), status: res.status() });
+    }
+  });
   await page.goto(liveUrl, { waitUntil: 'networkidle' });
 
   const audit = await page.evaluate(() => {
@@ -260,7 +273,16 @@ for (const vp of viewports) {
 
   await page.screenshot({ path: `artifacts/ui-audit-${vp.name}.png`, fullPage: true });
   await page.close();
-  // record { vp, audit, consoleErrors, failed }
+
+  const abortedWithSuccess = failed.filter(
+    (f) =>
+      f.error === 'net::ERR_ABORTED' &&
+      posts.some((p) => p.status >= 200 && p.status < 300)
+  );
+  const realFailures = failed.filter(
+    (f) => !abortedWithSuccess.some((p) => p.url === f.url && p.error === f.error)
+  );
+  // record { vp, audit, consoleErrors, realFailures, abortedWithSuccess }
 }
 ```
 
@@ -272,15 +294,43 @@ Check on each viewport:
 - alignment
 - overlap / clipping (any element `x < 0`)
 - horizontal scroll
-- console errors and `requestfailed`
+- console errors and `requestfailed`, split into `realFailures` vs paired `ERR_ABORTED`+2xx
 
-**Pass.** Numbered issue list written (empty list is allowed). One screenshot per viewport saved. Issues triaged **P0–P5**. No untriaged finding. Console/`requestfailed` entries are in the list or explicitly waived with evidence.
+**Audit lessons** (from the 2026-10-12 12-issue run; apply every time):
 
-**Failure handling.** **FAIL** if a viewport was skipped, screenshots are missing, issues are unnumbered, or severity is missing. Keep the issue list and screenshots. Then run surface `verification-scope-mismatch` on the live path (`godot/build/web`, not a Godot scene script the deploy does not serve).
+1. **Include 1024.** 390 and 1920 alone miss the narrow-desktop clip. P0-1 (`#notifications` off-canvas) showed at 1280 and **≥1024**, not on phone or full-HD. Always run 1024×768 (or 1024×800) as well as 1280×800, 390×844, and 1920×1080.
+2. **Distinguish `realFailures` vs paired `ERR_ABORTED`.** Chromium/Playwright records CORS preflight and `keepalive` POSTs as `requestfailed` / `net::ERR_ABORTED` even when the same URL returns **201**. Pair each abort with a 2xx POST → `abortedWithSuccess` (noise). Only unpaired failures are `realFailures`. P0-10 was this noise, not dropped rows; the product fix was a same-origin `/api/playtest_events` rewrite so the browser never leaves origin.
+3. **Verify the verify-script URL first.** Before treating a network error as a product bug, confirm the audit script is hitting the live (or intended preview) URL — not a hardcoded stale preview, a typo'd query, or a script-local 404. A wrong script URL is a verifier bug, not a game FAIL.
+4. **Stop rounds when no new issues.** Each audit/fix pass must produce a numbered delta. If a round finds no new issues (only known deferred IDs, or an empty new list), stop. Do not open another fix PR or re-audit loop for the same surface.
+
+**Pass.** Numbered issue list written (empty list is allowed). One screenshot per viewport saved, **including 1024**. Issues triaged **P0–P5**. No untriaged finding. Console/`requestfailed` entries are classified (`realFailures` vs `abortedWithSuccess`) and either listed or explicitly waived with evidence. The verify script's URL was confirmed. No extra round after a clean (no-new-issues) pass.
+
+**Failure handling.** **FAIL** if a viewport (including 1024) was skipped, screenshots are missing, issues are unnumbered, or severity is missing. **FAIL** if every `requestfailed` is treated as a product bug without pairing `ERR_ABORTED`+2xx. Keep the issue list and screenshots. Then run surface `verification-scope-mismatch` on the live path (`godot/build/web`, not a Godot scene script the deploy does not serve).
 
 ## Worked example: 2026-10-12 12-issue audit
 
-*(Placeholder. The UI-fix PR will fill this heading with the numbered 12-issue list, screenshots, and P0–P5 triage.)*
+UI-fix [PR #7](https://github.com/liush2yuxjtu/adarkroom/pull/7), merged into live `cursor/godot-chinese-remake-5c3a` at `2361374` (`23613748bb349ec44147cb458eaf600f80bd03f6`). Live export `godot/build/web`. In-repo auditor `godot/tools/verify_uifix.mjs`. Screenshots `/opt/cursor/artifacts/uifix/`.
+
+Twelve numbered issues. Six P0/P1 fixed in that PR; six P2–P5 deferred.
+
+| ID | severity | finding | action |
+|---|---|---|---|
+| **P0-1** | P0 | 1280 / **≥1024**: `#notifications` clipped (`x<0` / off-canvas). 390 and 1920 alone missed it. | **fixed**: relative grid placement; bar visible at 1280 and ≥1024 |
+| **P0-2** | P0 | No mobile layout: 390×844 horizontal scroll, no viewport meta | **fixed**: ≤768 single column + viewport meta, no horizontal scroll |
+| **P0-10** | P0 | Playwright `requestfailed` on Supabase `playtest_events` POST looked like dropped telemetry | **not a product drop**: CORS preflight + `keepalive` produced paired `net::ERR_ABORTED` + **201**. Split `realFailures` vs `abortedWithSuccess`. **fixed** by same-origin `/api/playtest_events` rewrite in `vercel.json` (+ backoff retry + `failCount`). Anon INSERT already worked. |
+| **P1-3** | P1 | Identical notifications spammed the list | **fixed**: consecutive identical notes merge as ×N; list cap 30 + fade |
+| **P1-4** | P1 | Disabled / cooldown text failed WCAG 4.5:1 | **fixed**: text `#4a4a4a`, contrast **8.86:1** |
+| **P1-8** | P1 | Mobile menu tap targets &lt;44px | **fixed**: `#menu button` min **44×44**, more spacing; keep reopen confirm |
+| **P2-5** | P2 | Locked-tab opacity contrast | **deferred** |
+| **P2-6** | P2 | Inventory box overlapping the tab line | **deferred** |
+| **P3-7** | P3 | Renaming a tab squeezes later tabs | **deferred** |
+| **P3-12** | P3 | Stale Noto Serif preload (other agent deleting) | **deferred** |
+| **P4-11** | P4 | Widescreen whitespace | **deferred** |
+| **P5-9** | P5 | Menu half-width / full-width punctuation | **deferred** |
+
+Telemetry added on the same PR (`pr-telemetry-required`): `viewport_layout`, `notification_dedup`, `telemetry_send_fail`, `telemetry_retry_ok`. Session `93df3495-c911-4593-9243-0c226a401c71`: `viewport_layout` 8, `notification_dedup` 12, `player_action` 14, `failCount=0`.
+
+These numbers are execution evidence for step 6. They feed `verification-scope-mismatch` (live `godot/build/web` + `vercel.json` rewrite) and `pr-telemetry-required` (new event types + landed rows). They do not collapse into a surface.
 
 ## Worked example: A Dark Room live verification (`5e3b891`)
 
