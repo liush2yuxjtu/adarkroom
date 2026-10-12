@@ -28,16 +28,18 @@ for f in favicon.ico mobileWarning.html browserWarning.html; do
 done
 
 # Static site: inject Vercel SUPABASE_* at build time (empty = localStorage-only).
-python3 - "$DIST/telemetry-config.js" "${SUPABASE_URL:-}" "${SUPABASE_ANON_KEY:-}" <<'PY'
+python3 - "$DIST/telemetry-config.js" "${SUPABASE_URL:-}" "${SUPABASE_ANON_KEY:-}" "${TELEMETRY_DEBUG:-}" <<'PY'
 import json, sys
-dest, raw_url, key = sys.argv[1], sys.argv[2].strip(), sys.argv[3].strip()
+dest, raw_url, key, debug_raw = sys.argv[1], sys.argv[2].strip(), sys.argv[3].strip(), sys.argv[4].strip().lower()
 url = ""
 if raw_url and key:
     base = raw_url.rstrip("/")
     url = base if base.endswith("/rest/v1/playtest_events") else base + "/rest/v1/playtest_events"
+debug = debug_raw in ("1", "true", "yes")
 with open(dest, "w", encoding="utf-8") as f:
-    f.write("self.ADR_TELEMETRY = { url: %s, anonKey: %s };\n" % (json.dumps(url), json.dumps(key)))
-print("Wrote telemetry-config.js (%s)" % ("Supabase REST sink enabled" if url else "localStorage-only; SUPABASE_* unset"))
+    f.write("self.ADR_TELEMETRY = { url: %s, anonKey: %s, debug: %s };\n" % (
+        json.dumps(url), json.dumps(key), "true" if debug else "false"))
+print("Wrote telemetry-config.js (%s, debug=%s)" % ("Supabase REST sink enabled" if url else "localStorage-only; SUPABASE_* unset", debug))
 PY
 
 echo "Prepared $DIST"

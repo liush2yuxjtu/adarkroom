@@ -84,19 +84,45 @@ or play the latest on [GitHub](http://doublespeakgames.github.io/adarkroom)
 https://<project>.supabase.co/rest/v1/playtest_events
 ```
 
-并把 anon key 填进「遥测 apikey」。适配器见 `godot/build/web/sinks/supabase.js` 与 `godot/scripts/sinks/SupabaseSink.gd`。Vercel 预览/生产构建会把 `SUPABASE_URL` / `SUPABASE_ANON_KEY` 写入 `telemetry-config.js`，浏览器每 10 秒（以及 `pagehide`）批量 POST 到 `playtest_events`。新增埋点：在游戏逻辑里加一行 `this.analytics.log(this.state, "事件名", { 任意字段 })`。
-
-分析用 SQL 见 [`analysis/README.md`](analysis/README.md)。
+并把 anon key 填进「遥测 apikey」。适配器见 `godot/build/web/sinks/supabase.js` 与 `godot/scripts/sinks/SupabaseSink.gd`。Vercel 预览/生产构建会把 `SUPABASE_URL` / `SUPABASE_ANON_KEY` 写入 `telemetry-config.js`。浏览器把事件放进队列，每 3 秒或满 15 条 flush；`pagehide` / `beforeunload` 用 `sendBeacon`（`apikey` 查询参数）或 `fetch keepalive`。单会话上限 2500 条。`director_think` 是 debug 级，默认不进 Supabase（只 `console.debug`）；用 `/?telemetry_debug=1`、`localStorage.adr.telemetry_debug=1`、`data/config.json` 的 `telemetry_debug` 或构建变量 `TELEMETRY_DEBUG=1` 打开。已在预览验证：默认局 `cfbc47e3-…` 的 `playtest_events` 里 **0** 条 `director_think`，`?telemetry_debug=1` 局 `5768c975-…` 有 **55** 条。新增埋点：`this.analytics.log(this.state, "事件名", { 任意字段 })`。完整事件目录、采样率与弃档 SQL 见 [`godot/README.md`](godot/README.md#遥测事件目录) 与 [`analysis/README.md`](analysis/README.md)。
 
 本地预览：`bash scripts/prepare-vercel.sh && npx --yes serve dist`。Godot 编辑器打开 `godot/project.godot`；有导出模板时跑 `godot/export.sh`。
 
-### 节奏分析器（独立脚本，不需要 agent）
+### Vercel 自动部署（adarkroom-zh）
 
-`tools/pacing_analyzer.py` 只读 `@pacing` 标签和 `playtest_events`，对比设计曲线与试玩停留。游戏逻辑里只加注释，不改节奏数值。
+只有 **`main`** 和试玩分支 **`cursor/godot-chinese-remake-5c3a`** 会自动构建。其它分支（`cursor/*`、`font-preview/*`、agent 工作分支）默认不部署。
+
+需要预览时在该分支手动部署一次：
+
+```
+npx vercel deploy --scope nyn5255-8475s-projects
+```
+
+或调用 Vercel Deploy API。规则写在 `vercel.json` 的 `git.deploymentEnabled` 与 `scripts/vercel-ignore.sh`。仅改文档/工具的提交也会跳过：`*.md`、`reports/`、`tools/`、`agent/skills/`、`.github/`。浅克隆缺少 `HEAD^` 时脚本会选择构建，以免漏发。
+
+### 节奏分析器（由 verify 按需调用，无 cron）
+
+`tools.pacing_analyzer` 只读 `@pacing` 标签和 `playtest_events`，对比设计曲线与试玩停留。每次 dot-pi verify 跑 **`pacing-intent-check`** 表面时按需调用，没有 GitHub Action、没有 cron、也没有 webhook。游戏逻辑里只加注释，不改节奏数值。
+
+稳定 API：
+
+```python
+from tools.pacing_analyzer import analyze
+result = analyze(repo_root, input_path=None, supabase_url=None, key=None, slow_ratio=1.5)
+```
+
+verify 用的命令接口（只此一种）：
+
+```
+python -m tools.pacing_analyzer --json
+python -m tools.pacing_analyzer --json --input tools/testdata/playtest_events_sample.json
+```
+
+停留一律用 `game_time_sec`，不用墙钟。`--input` 供测试/离线；不传则读 Supabase。
 
 #### 标签语法
 
-放在常量**上一行**，JS 用 `//`，GDScript 用 `#`。`kind` / `id` / `value` 必填；`phase` / `min` / `max` / `note` 可选。
+放在常量**上一行**，JS 用 `//`，GDScript 用 `#`。`kind` / `id` / `value` 必填；`phase` / `min` / `max` / `note` 可选。`note` 写在最后，可含空格。
 
 ```
 // @pacing kind=cooldown id=gather value=60s phase=forest
@@ -108,50 +134,25 @@ https://<project>.supabase.co/rest/v1/playtest_events
 | `kind` | `cooldown` 冷却 · `trigger` 阶段触发 · `interval` 周期 · `income` 收入 · `consume` 消耗 · `cost` 花费 · `threshold` 门槛 |
 | `id` | 稳定名字，如 `gather`、`stoke`、`hut_base` |
 | `value` | 带单位：`60s` / `300ms` / `3min`；速率 `0.2/s` 或 `2/10s`；无量纲数量 `10` |
-| `note` | 写在最后，可含空格；或用引号 `"..."` |
 | `phase` | `room_dark` → `room_fire` → `stranger` → `forest` → `village` → `path` → `world` → `slice_complete` |
 | 忽略 | `// @pacing-ignore note=autosave`（存档/遥测冲刷等非节奏字面量） |
 
 分析器会：1) 标出靠近 `cooldown` / `timeout` / `*_at` 等关键词、却没有标签的数字；2) 核对标签的 `value` 是否出现在下一行字面量里。
 
-#### 命令
-
-```
-# 离线（本仓库样例 577 行，已排除 director_think）
-python3 tools/pacing_analyzer.py --input tools/testdata/playtest_events_sample.json
-
-# 只检查标签
-python3 tools/pacing_analyzer.py --check-only
-
-# 拉 Supabase 后写 reports/pacing-<date>.md/.json
-python3 tools/pacing_analyzer.py
-
-python3 -m unittest discover -s tools -p 'test_*.py'
-```
-
-停留一律用 `game_time_sec`，不用墙钟（游戏暂停时墙钟还会走）。
-
-#### 环境变量
+#### 环境变量（拉线上事件时）
 
 | 变量 | 用途 |
 | --- | --- |
 | `SUPABASE_URL` | `https://<ref>.supabase.co`（或已带 `/rest/v1/playtest_events` 的完整 URL） |
 | `SUPABASE_SERVICE_ROLE_KEY` 或 `SUPABASE_READ_KEY` | 能 `SELECT` 的密钥。**anon RLS 只允许 INSERT，anon key 读不到行** |
-| `PACING_WEBHOOK_URL` | 可选；报告写完后 POST 一段通用 JSON |
 
-不要把密钥写进仓库。GitHub Actions 用 repo secrets，需你在 Settings → Secrets 里自己加，工作流不会创建密钥。
+不要把密钥写进仓库。
 
-#### 每日 cron
+#### 返回 JSON（`--json` / `analyze()`）
 
-[`.github/workflows/pacing.yml`](.github/workflows/pacing.yml) 每天 06:00 UTC 跑，也可 `workflow_dispatch`。密钥同样由你添加：`SUPABASE_URL`、`SUPABASE_SERVICE_ROLE_KEY`（可选 `SUPABASE_READ_KEY`、`PACING_WEBHOOK_URL`）。产物是 `reports/pacing-*` artifact。
+- `phases[]`：`phase`、`expected_min`、`expected_max`、`actual_median`、`ratio`（实际中位 / 预期 max）、`sample_count`
+- `cooldown_utilization`：`gather` / `stoke` / `traps` 的利用率（冷却 / 间隔中位，%）
+- `resource_balance`：`wood_in`、`wood_out`、`net`
+- `early_phase_slow`：前期（`room_dark` / `room_fire` / `stranger`）任一 `ratio >= slow_ratio` 则为 true；`slow_ratio` 默认 **1.5**
 
-#### 怎么读报告
-
-样例：[`reports/pacing-2026-10-12.md`](reports/pacing-2026-10-12.md)。
-
-- **阶段表**：预期 min/max 来自触发器、冷却、以及花费÷收入。实际是 `phase_time.payload.seconds` 的中位数。
-- **偏慢**：可能盯着按钮或没看见下一拍（例如伐木冷却 60s 却隔了几分钟才点）。
-- **偏快**：短于触发下界，可能开了加速或跳过建造者剧情。
-- **未完成**：会话停在该阶段；森林没到小屋成本时间通常是试玩中断。
-- **利用率**：冷却 / 实际间隔中位。接近 100% = 一好就点；低于 50% = 按钮闲着。
-- **木头**：伐木入账 vs 添柴/建造消耗，对照快照净变化。
+样例报告：[`reports/pacing-2026-10-12.json`](reports/pacing-2026-10-12.json)。`ratio > 1` 表示慢于设计上界（可能盯着按钮）；`ratio < expected_min/expected_max` 且实际短于下界，可能跳过内容。

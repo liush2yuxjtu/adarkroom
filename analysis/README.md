@@ -12,14 +12,20 @@
 |------------|------|
 | `session_start` / `session_end` | 会话起止 |
 | `player_action` | 每次玩家操作（生火、伐木、建造、移动…） |
-| `director_think` | 导演一次决策 |
+| `director_think` | **debug** 级：默认不进 Supabase；`?telemetry_debug=1` / `localStorage.adr.telemetry_debug` / `TELEMETRY_DEBUG=1` 才上报 |
 | `director_tool` | 单条工具调用及 `ok` / `rejected` / `error` |
-| `resource_snapshot` | 定期库存快照 |
+| `resource_snapshot` | 15s 或库存变化 |
 | `phase_time` | 离开某阶段时的停留秒数 |
 | `death` | 远征死亡 |
 | `quit` | 玩家退出/关闭页 |
 | `stuck` | N 分钟无进度（无新旗标、无资源增长、无解锁） |
 | `slice_complete` | 走到旧房子并回家（本切片目标） |
+| `tab_hidden` / `tab_visible` | 页签隐藏/恢复，含累计有效游玩时间 |
+| `mouse_trajectory` / `click_heat` / `scroll` / `button_hover_*` | 输入与热区 |
+| `npc_interact` / `dialogue` / `dialogue_choice` / `unlock` / `build` | 叙事与进度 |
+| `js_error` / `load_performance` / `audio_play` | 错误、加载、音效 |
+| `page_unload` / `page_reload` | 关页快照；刷新并回链上一 `session_id` |
+| `save_write` / `save_load` / `save_corrupt` / `new_game_start` | 存档生命周期与弃档 |
 
 ## 对接 Supabase
 
@@ -166,4 +172,28 @@ where session_id in (
 )
 group by 1, 2
 order by quits desc;
+```
+
+### 弃档长局（上一局 ≥30 / 60 分钟后重开）
+
+视图定义见 [`supabase/migrations/002_abandoned_long_runs.sql`](../supabase/migrations/002_abandoned_long_runs.sql)。
+
+```sql
+-- 30 分钟以上弃档
+select
+  previous_save_id,
+  previous_phase,
+  previous_play_time_sec / 60.0 as previous_minutes,
+  previous_last_action,
+  recent_actions,
+  last_phase,
+  abandonment_bucket,
+  started_at
+from abandoned_long_runs
+order by previous_play_time_sec desc;
+
+-- 只要 60 分钟以上
+select *
+from abandoned_long_runs
+where abandonment_bucket = '60m+';
 ```

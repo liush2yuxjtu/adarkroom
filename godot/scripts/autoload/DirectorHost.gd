@@ -24,8 +24,14 @@ func _think() -> void:
 	if director_name == "llm" and str(GameState.config.get("llm_endpoint", "")) != "":
 		llm.think()
 		return
-	Analytics.log_event("director_think", { "director": "rule" })
-	ToolExecutor.apply_calls(rule.think(), "rule")
+	var calls: Array = rule.think()
+	if calls.size() > 0:
+		var tools: Array = []
+		for c in calls:
+			if typeof(c) == TYPE_DICTIONARY:
+				tools.append(c.get("tool"))
+		Analytics.log_event("director_think", { "director": "rule", "call_count": calls.size(), "tools": tools })
+		ToolExecutor.apply_calls(calls, "rule")
 
 func set_director(name: String, endpoint: String = "", api_key: String = "") -> void:
 	director_name = "llm" if name == "llm" else "rule"

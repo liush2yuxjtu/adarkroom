@@ -7,11 +7,17 @@ var header: HBoxContainer
 var body: VBoxContainer
 var stores: VBoxContainer
 var font: FontFile
+var cjk_font: FontFile
 
 func _ready() -> void:
 	font = FontFile.new()
-	if font.load_dynamic_font("res://fonts/NotoSerifSC-Medium-subset.otf") != OK:
-		push_warning("Noto Serif SC Medium subset missing")
+	if font.load_dynamic_font("res://fonts/JetBrainsMono-Regular.ttf") != OK:
+		push_warning("JetBrains Mono missing")
+	cjk_font = FontFile.new()
+	if cjk_font.load_dynamic_font("res://fonts/NotoSansSC-Regular-subset.otf") != OK:
+		push_warning("Noto Sans SC subset missing")
+	else:
+		font.fallbacks = [cjk_font]
 	theme = Theme.new()
 	theme.default_font = font
 	theme.default_font_size = 16
@@ -69,6 +75,7 @@ func _link(text: String, cb: Callable) -> Button:
 	b.text = text
 	b.flat = true
 	b.pressed.connect(cb)
+	_wire_btn(b, text)
 	return b
 
 func _btn(text: String, cb: Callable, disabled: bool = false) -> Button:
@@ -77,7 +84,29 @@ func _btn(text: String, cb: Callable, disabled: bool = false) -> Button:
 	b.disabled = disabled
 	b.custom_minimum_size = Vector2(140, 32)
 	b.pressed.connect(cb)
+	_wire_btn(b, text)
 	return b
+
+func _wire_btn(b: Button, id: String) -> void:
+	var entered := [0.0]
+	b.mouse_entered.connect(func():
+		entered[0] = Time.get_ticks_msec() / 1000.0
+		Analytics.log_event("button_hover_enter", { "element_id": id, "label": b.text })
+	)
+	b.mouse_exited.connect(func():
+		var dur := Time.get_ticks_msec() / 1000.0 - entered[0]
+		Analytics.log_event("button_hover_exit", { "element_id": id, "label": b.text, "duration_ms": int(dur * 1000.0) })
+	)
+	b.pressed.connect(func():
+		var vp := get_viewport().get_visible_rect().size
+		var p := get_viewport().get_mouse_position()
+		Analytics.log_event("click_heat", {
+			"x": p.x, "y": p.y,
+			"nx": snapped(p.x / max(vp.x, 1.0), 0.0001),
+			"ny": snapped(p.y / max(vp.y, 1.0), 0.0001),
+			"element_id": id, "label": b.text
+		})
+	)
 
 func _label(text: String, size: int = 16) -> Label:
 	var l := Label.new()
@@ -92,7 +121,7 @@ func _render() -> void:
 	_clear(body)
 	_clear(stores)
 	for n in GameState.notifications.slice(0, 14):
-		var l := _label(str(n.text), 16)
+		var l := _label(str(n.text), 14)
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		notes.add_child(l)
 	header.add_child(_btn(_room_title(), func(): loop.act("travel", { "area": "room" }), false))

@@ -105,7 +105,7 @@
 
   function createState() {
     return {
-      session_id: uuid(),
+      session_id: (typeof ADRTelemetry !== "undefined" && ADRTelemetry.sessionId) ? ADRTelemetry.sessionId() : uuid(),
       started_at: Date.now(),
       game_time_sec: 0,
       fire: 0,
@@ -152,27 +152,92 @@
   var OBJECT_KEYS = ["stores", "buildings", "unlocked", "npc_moods", "workers", "outfit", "income_acc", "world", "flags", "cooldowns"];
   var ARRAY_KEYS = ["notifications", "scheduled"];
 
-  function readSaveRaw() {
+  function readSaveRaw(opts) {
+    opts = opts || {};
+    var silent = !!opts.silent;
     if (typeof localStorage === "undefined") return null;
+    var raw = null;
     try {
-      var raw = localStorage.getItem(SAVE_KEY);
-      if (!raw) return null;
-      var doc = JSON.parse(raw);
-      if (!doc || doc.v !== SAVE_VERSION || !doc.state || typeof doc.state !== "object") return null;
-      return doc;
+      raw = localStorage.getItem(SAVE_KEY);
     } catch (e) {
+      raw = null;
+    }
+    if (!raw) {
+      if (!silent && typeof ADRSaveTelemetry !== "undefined") {
+        ADRSaveTelemetry.onSaveLoad({ ok: false, backend: "localStorage", error: "missing", size: 0 });
+      }
       return null;
     }
+    var tel = (!silent && typeof ADRSaveTelemetry !== "undefined") ? ADRSaveTelemetry : null;
+    var check = tel
+      ? tel.validateBlob(raw, { maxVersion: SAVE_VERSION, require: ["v", "state"] })
+      : null;
+    var doc = check ? check.value : null;
+    if (!check) {
+      try { doc = JSON.parse(raw); } catch (e) { doc = null; }
+    }
+    if ((check && !check.ok) || !doc || doc.v !== SAVE_VERSION || !doc.state || typeof doc.state !== "object") {
+      var reason = (check && check.reason) || (!doc ? "json" : "schema");
+      if (tel) {
+        tel.onSaveCorrupt({
+          reason: reason,
+          raw: raw,
+          backend: "localStorage",
+          error: check && check.error,
+          save_id: doc && (doc.save_id || (doc.state && doc.state.session_id))
+        });
+        tel.onSaveLoad({ ok: false, backend: "localStorage", error: reason, size: raw.length });
+      }
+      return null;
+    }
+    if (tel) {
+      var loadedId = doc.save_id || (doc.state && doc.state.session_id) || null;
+      if (loadedId && typeof ADRTelemetry !== "undefined") {
+        if (ADRTelemetry.setSessionId) ADRTelemetry.setSessionId(loadedId);
+        else if (ADRTelemetry._state) ADRTelemetry._state.sessionId = loadedId;
+      }
+      tel.onSaveLoad({
+        ok: true,
+        backend: "localStorage",
+        size: raw.length,
+        save_id: loadedId,
+        save_version: doc.v,
+        checksum: doc.checksum || (check && check.checksum),
+        phase: doc.state.phase,
+        play_time_sec: doc.state.game_time_sec,
+        saved_at: doc.saved_at
+      });
+    }
+    return doc;
   }
 
   function writeSave(state) {
     if (typeof localStorage === "undefined") return;
+    var t0 = typeof performance !== "undefined" ? performance.now() : Date.now();
     try {
-      localStorage.setItem(SAVE_KEY, JSON.stringify({
+      var doc = {
         v: SAVE_VERSION,
+        save_id: state.session_id,
         saved_at: new Date().toISOString(),
         state: deepClone(state)
-      }));
+      };
+      var tel = typeof ADRSaveTelemetry !== "undefined" ? ADRSaveTelemetry : null;
+      if (tel && tel.checksum) {
+        doc.checksum = tel.checksum(JSON.stringify({ v: doc.v, save_id: doc.save_id, saved_at: doc.saved_at, state: doc.state }));
+      }
+      var raw = JSON.stringify(doc);
+      localStorage.setItem(SAVE_KEY, raw);
+      if (tel) {
+        tel.onSaveWrite({
+          save_id: state.session_id,
+          save_version: SAVE_VERSION,
+          write_ms: Math.round(((typeof performance !== "undefined" ? performance.now() : Date.now()) - t0) * 100) / 100,
+          backend: "localStorage",
+          size: raw.length,
+          checksum: doc.checksum || null,
+          state: state
+        });
+      }
     } catch (e) { /* quota / private mode */ }
   }
 
@@ -694,9 +759,12 @@
     this.currentPhase = "room_dark";
     // @pacing kind=interval id=stuck value=3min
     this.stuckMinutes = opts.stuck_minutes || 3;
-    // @pacing kind=interval id=resource_snapshot value=30s
-    this.snapshotEvery = opts.snapshot_interval_sec || 30;
+    // @pacing kind=interval id=resource_snapshot value=15s
+    this.snapshotEvery = opts.snapshot_interval_sec || 15;
     this.lastSnapshot = 0;
+    this.lastStoreSig = "";
+    this.lastChangeSnap = -10;
+    this.recentActions = [];
     this.httpEndpoint = opts.analytics_endpoint || "";
     this.httpEnabled = !!opts.analytics_http_enabled;
     this.extraHeaders = opts.analytics_headers || {};
@@ -724,6 +792,32 @@
   };
 
   Analytics.prototype.log = function (state, name, payload) {
+    if (name === "player_action") {
+      this.recentActions.push({
+        action: (payload || {}).action,
+        args: (payload || {}).args || {},
+        at: new Date().toISOString(),
+        game_time_sec: Math.round(state.game_time_sec * 100) / 100,
+        phase: state.phase
+      });
+      if (this.recentActions.length > 8) this.recentActions.shift();
+      if (typeof ADRTelemetry !== "undefined" && ADRTelemetry.noteLastAction) {
+        ADRTelemetry.noteLastAction((payload || {}).action, (payload || {}).args);
+      }
+    }
+    var level = arguments.length > 3 && arguments[3] ? arguments[3] : (name === "director_think" ? "debug" : "info");
+    if (typeof ADRTelemetry !== "undefined" && ADRTelemetry.log) {
+      var evT = ADRTelemetry.log(name, payload || {}, level);
+      this.buffer = ADRTelemetry.buffer || this.buffer;
+      return evT;
+    }
+    if (level === "debug") {
+      var debugOn = !!(this.opts && (this.opts.telemetry_debug === true || this.opts.telemetry_debug === 1 || this.opts.telemetry_debug === "1"));
+      if (!debugOn) {
+        if (typeof console !== "undefined" && console.debug) console.debug("[adr:debug]", name, payload || {});
+        return null;
+      }
+    }
     var ev = {
       session_id: state.session_id,
       event_name: name,
@@ -741,17 +835,29 @@
   };
 
   Analytics.prototype.attachSupabase = function () {
+    if (typeof ADRTelemetry !== "undefined") {
+      if (ADRTelemetry.attachSink) ADRTelemetry.attachSink();
+      var cfgT = (typeof globalThis !== "undefined" && globalThis.ADR_TELEMETRY) || {};
+      this.httpEndpoint = cfgT.url || "";
+      this.httpEnabled = !!cfgT.url;
+      this.flushHttp = function () { ADRTelemetry.flush("manual"); };
+      return;
+    }
     var cfg = (typeof globalThis !== "undefined" && globalThis.ADR_TELEMETRY) || {};
     var sink = typeof globalThis !== "undefined" ? globalThis.ADRSupabaseSink : null;
     if (!cfg.url || !cfg.anonKey || !sink) return;
     var queue = [];
     function enqueue(ev) {
       queue.push(sink.rowFromEvent(ev));
-      if (queue.length >= 50) flush();
+      if (queue.length >= 15) flush();
     }
-    function flush() {
+    function flush(reason) {
       if (!queue.length) return;
       var rows = queue.splice(0, 200);
+      if (sink.postRows) {
+        sink.postRows(cfg.url, cfg.anonKey, rows, { beacon: reason === "unload" });
+        return;
+      }
       fetch(cfg.url, {
         method: "POST",
         keepalive: true,
@@ -768,11 +874,11 @@
     this.httpEndpoint = cfg.url;
     this.httpEnabled = true;
     // @pacing-ignore note=telemetry batch flush, not game pacing
-    if (typeof setInterval === "function") setInterval(flush, 10000);
+    if (typeof setInterval === "function") setInterval(flush, 3000);
     if (typeof addEventListener === "function") {
-      addEventListener("pagehide", flush);
+      addEventListener("pagehide", function () { flush("unload"); });
       addEventListener("visibilitychange", function () {
-        if (typeof document !== "undefined" && document.visibilityState === "hidden") flush();
+        if (typeof document !== "undefined" && document.visibilityState === "hidden") flush("hidden");
       });
     }
   };
@@ -817,13 +923,32 @@
     if (state.game_time_sec - this.lastProgress.at >= this.stuckMinutes * 60 && state.game_time_sec - this.lastProgress.at < this.stuckMinutes * 60 + 1.2) {
       this.log(state, "stuck", { phase: state.phase, idle_sec: this.stuckMinutes * 60 });
     }
-    if (state.game_time_sec - this.lastSnapshot >= this.snapshotEvery) {
+    var sig = [
+      JSON.stringify(state.stores), JSON.stringify(state.buildings),
+      state.fire, state.population, state.temperature
+    ].join("|");
+    if (sig !== this.lastStoreSig && state.game_time_sec - this.lastChangeSnap >= 2) {
+      this.lastStoreSig = sig;
+      this.lastChangeSnap = state.game_time_sec;
       this.lastSnapshot = state.game_time_sec;
       this.log(state, "resource_snapshot", {
         stores: deepClone(state.stores),
         buildings: deepClone(state.buildings),
         fire: state.fire,
-        population: state.population
+        population: state.population,
+        temperature: state.temperature,
+        reason: "change"
+      });
+    } else if (state.game_time_sec - this.lastSnapshot >= this.snapshotEvery) {
+      this.lastSnapshot = state.game_time_sec;
+      this.lastStoreSig = sig;
+      this.log(state, "resource_snapshot", {
+        stores: deepClone(state.stores),
+        buildings: deepClone(state.buildings),
+        fire: state.fire,
+        population: state.population,
+        temperature: state.temperature,
+        reason: "interval"
       });
     }
   };
@@ -852,6 +977,7 @@
     } else {
       restored = this.loadPersistedSave();
     }
+    if (typeof ADRTelemetry !== "undefined" && ADRTelemetry.bindGame) ADRTelemetry.bindGame(this);
     this.analytics.attachSupabase();
     this.analytics.log(this.state, "session_start", {
       director: this.directorName,
@@ -863,7 +989,7 @@
   }
 
   Game.prototype.persistSave = function (force) {
-    var existing = force ? null : readSaveRaw();
+    var existing = force ? null : readSaveRaw({ silent: true });
     if (existing && existing.state) {
       var prev = existing.state;
       var blank = this.state.fire === 0 && this.state.game_time_sec < 0.5 && !(this.state.stores && this.state.stores.wood);
@@ -923,6 +1049,31 @@
         error: result.error || null,
         origin: origin
       });
+      if (result.ok) {
+        if (call.tool === "change_npc_mood") {
+          self.analytics.log(self.state, "npc_interact", {
+            npc: (call.args || {}).npc,
+            mood: (call.args || {}).mood,
+            origin: origin,
+            moods: deepClone(self.state.npc_moods)
+          });
+        }
+        if (call.tool === "narrate" || call.tool === "spawn_event") {
+          self.analytics.log(self.state, "dialogue", {
+            tool: call.tool,
+            event_id: (call.args || {}).event_id || null,
+            text: call.tool === "narrate" ? String((call.args || {}).text || "").slice(0, 160) : null,
+            origin: origin
+          });
+        }
+        if (call.tool === "unlock_area") {
+          self.analytics.log(self.state, "unlock", {
+            area: (call.args || {}).area,
+            origin: origin,
+            unlocked: deepClone(self.state.unlocked)
+          });
+        }
+      }
     });
     this.emit();
   };
@@ -939,7 +1090,7 @@
         tools: TOOL_SCHEMA,
         allowed_tools: TOOL_NAMES
       };
-      this.analytics.log(this.state, "director_think", { director: "llm" });
+      this.analytics.log(this.state, "director_think", { director: "llm" }, "debug");
       var headers = { "Content-Type": "application/json" };
       if (this.config.llm_api_key) headers.Authorization = "Bearer " + this.config.llm_api_key;
       var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
@@ -960,8 +1111,13 @@
       });
       return;
     }
-    this.analytics.log(this.state, "director_think", { director: "rule" });
-    this.applyCalls(this.rule.think(this.state), "rule");
+    var calls = this.rule.think(this.state);
+    this.analytics.log(this.state, "director_think", {
+      director: "rule",
+      call_count: calls ? calls.length : 0,
+      tools: (calls || []).map(function (c) { return c && c.tool; })
+    }, "debug");
+    if (calls && calls.length) this.applyCalls(calls, "rule");
   };
 
   Game.prototype.act = function (action, args) {
@@ -1051,6 +1207,13 @@
           // @pacing kind=interval id=pop_timer_span value=150s phase=village
           if (s.pop_timer == null) s.pop_timer = s.game_time_sec + 30 + Math.random() * 150;
         }
+        this.analytics.log(s, "build", {
+          kind: kind,
+          cost: cost,
+          have: s.buildings[kind],
+          buildings: deepClone(s.buildings),
+          path: Object.keys(s.buildings).filter(function (k) { return s.buildings[k] > 0; })
+        });
         break;
       case "travel":
         if (!s.unlocked[args.area] && args.area !== "room") return { ok: false, error: "locked" };
@@ -1137,6 +1300,11 @@
         }
         break;
       case "event_choice":
+        this.analytics.log(s, "dialogue_choice", {
+          event_id: s.active_event ? s.active_event.id : null,
+          scene: s.active_event ? s.active_event.scene : null,
+          button: args.button
+        });
         this._resolveEvent(args.button);
         break;
       case "combat":
@@ -1159,11 +1327,30 @@
         break;
       case "restart":
         var oldA = this.analytics;
+        var prevCtx = (typeof ADRSaveTelemetry !== "undefined" && ADRSaveTelemetry.previousSaveContext)
+          ? ADRSaveTelemetry.previousSaveContext()
+          : null;
         oldA.log(s, "session_end", { reason: "restart" });
+        if (typeof ADRSaveTelemetry !== "undefined" && ADRSaveTelemetry.onNewGame) {
+          ADRSaveTelemetry.onNewGame({ overwritten: true });
+        }
         clearSave();
+        if (typeof ADRTelemetry !== "undefined" && ADRTelemetry.rotateSession) ADRTelemetry.rotateSession();
         this.state = createState();
         this.rule = new RuleDirector();
+        if (typeof ADRTelemetry !== "undefined" && ADRTelemetry.bindGame) ADRTelemetry.bindGame(this);
         this.analytics.log(this.state, "session_start", { director: this.directorName, restart: true });
+        this.analytics.log(this.state, "new_game_start", {
+          overwritten: !!(prevCtx && prevCtx.save_id),
+          previous_save_id: prevCtx && prevCtx.save_id || null,
+          previous_phase: prevCtx && prevCtx.phase || s.phase,
+          previous_play_time_sec: prevCtx && prevCtx.play_time_sec != null ? prevCtx.play_time_sec : s.game_time_sec,
+          previous_last_action: (prevCtx && prevCtx.last_action) || oldA.recentActions[oldA.recentActions.length - 1] || null,
+          previous_last_save_at: prevCtx && prevCtx.saved_at || null,
+          recent_actions: oldA.recentActions.slice(),
+          last_phase: s.phase
+        });
+        oldA.recentActions = [];
         this.persistSave();
         break;
       case "quit":
@@ -1174,6 +1361,10 @@
         return { ok: false, error: "unknown_action" };
     }
     this.analytics.log(s, "player_action", { action: action, args: args, note: note });
+    if (typeof ADRTelemetry !== "undefined" && ADRTelemetry.playTone) {
+      var tones = { light_fire: 196, stoke_fire: 220, gather_wood: 165, build: 262, travel: 147, embark: 311 };
+      if (tones[action]) ADRTelemetry.playTone(action, { freq: tones[action], sec: 0.06 });
+    }
     s.phase = derivePhase(s);
     this.directorTick();
     this.emit();
