@@ -12,7 +12,8 @@
   <link rel="stylesheet" href="assets/pixel/pixel-icons.css" />
 </head>
 <body class="style-text">
-  <div id="app">
+  <main id="app">
+    <h1 class="visually-hidden">小黑屋</h1>
     <div id="wrapper">
       <div id="notifications"></div>
       <div id="header"></div>
@@ -28,9 +29,9 @@
       <button type="button" id="btn-export" data-icon="export">导出遥测.</button>
       <button type="button" id="btn-restart" data-icon="restart">重开.</button>
       <button type="button" id="btn-classic" data-icon="classic">原版.</button>
-      <span id="director-label">导演：规则</span>
+      <span id="director-label" role="status">导演：规则</span>
     </div>
-  </div>
+  </main>
   <div id="overlay"></div>
   <div id="toast"></div>
   <div id="phase-wipe" hidden></div>
