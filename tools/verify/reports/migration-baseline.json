@@ -1,15 +1,15 @@
 {
   "pass": false,
   "gate": {
-    "missing": 38,
-    "no_producer": 4,
+    "missing": 9,
+    "no_producer": 0,
     "numeric_mismatch": 0,
     "allowlist": 0
   },
   "counts": {
-    "present": 257,
-    "missing": 38,
-    "no_producer": 4,
+    "present": 290,
+    "missing": 9,
+    "no_producer": 0,
     "mismatch": 0,
     "no_zh": 0,
     "no_save": 0
@@ -23,9 +23,9 @@
       "total": 10
     },
     "tool/weapon/upgrade": {
-      "present": 14,
+      "present": 15,
       "missing": 0,
-      "no_producer": 1,
+      "no_producer": 0,
       "mismatch": 0,
       "total": 15
     },
@@ -44,8 +44,8 @@
       "total": 13
     },
     "item/resource": {
-      "present": 9,
-      "missing": 7,
+      "present": 16,
+      "missing": 0,
       "no_producer": 0,
       "mismatch": 0,
       "total": 16
@@ -100,9 +100,9 @@
       "total": 12
     },
     "fabricator": {
-      "present": 0,
-      "missing": 6,
-      "no_producer": 3,
+      "present": 9,
+      "missing": 0,
+      "no_producer": 0,
       "mismatch": 0,
       "total": 9
     },
@@ -114,8 +114,8 @@
       "total": 5
     },
     "later phase": {
-      "present": 3,
-      "missing": 2,
+      "present": 4,
+      "missing": 1,
       "no_producer": 0,
       "mismatch": 0,
       "total": 5
@@ -177,8 +177,8 @@
       "total": 1
     },
     "notification": {
-      "present": 95,
-      "missing": 16,
+      "present": 110,
+      "missing": 1,
       "no_producer": 0,
       "mismatch": 0,
       "total": 111
@@ -235,9 +235,9 @@
       "total": 11
     },
     "8": {
-      "present": 3,
-      "missing": 29,
-      "no_producer": 4,
+      "present": 36,
+      "missing": 0,
+      "no_producer": 0,
       "mismatch": 0,
       "total": 36
     },
@@ -309,9 +309,9 @@
     {
       "batch": 8,
       "title": "Fabricator and blueprints",
-      "pass": false,
+      "pass": true,
       "kind": "story",
-      "detail": "batch incomplete: 33 of 36 not present"
+      "detail": "executioner salvage + blueprint redeem + fabricator unlock/crafts + persist"
     },
     {
       "batch": 9,
@@ -329,125 +329,6 @@
     }
   ],
   "gaps": [
-    {
-      "id": "tool/weapon/upgrade:laser rifle",
-      "status": "no_producer",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "in ITEMS, nothing yields it"
-    },
-    {
-      "id": "item/resource:disruptor blueprint",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "item/resource:fleet beacon",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "item/resource:glowstone blueprint",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "item/resource:hypo blueprint",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "item/resource:kinetic armour blueprint",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "item/resource:plasma rifle blueprint",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "item/resource:stim blueprint",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "fabricator:energy blade",
-      "status": "no_producer",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "in ITEMS, nothing yields it"
-    },
-    {
-      "id": "fabricator:fluid recycler",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "fabricator:cargo drone",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "fabricator:kinetic armour",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "fabricator:disruptor",
-      "status": "no_producer",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "in ITEMS, nothing yields it"
-    },
-    {
-      "id": "fabricator:hypo",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "fabricator:stim",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "fabricator:plasma rifle",
-      "status": "no_producer",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "in ITEMS, nothing yields it"
-    },
-    {
-      "id": "fabricator:glowstone",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
     {
       "id": "executioner:A Ravaged Battleship",
       "status": "missing",
@@ -484,13 +365,6 @@
       "note": "missing"
     },
     {
-      "id": "later phase:fabricator",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
       "id": "later phase:ending/prestige/score",
       "status": "missing",
       "batch": 9,
@@ -515,111 +389,6 @@
       "id": "notification:craft:hut: no more room for huts.",
       "status": "missing",
       "batch": "core",
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:fabricator:energy blade: the blade hums, charged particles sparking and f",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:fabricator:fluid recycler: fluid recycler",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:fabricator:fluid recycler: water out, water in. waste not, want not.",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:fabricator:cargo drone: cargo drone",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:fabricator:cargo drone: the workhorse of the wanderer fleet.",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:fabricator:kinetic armour: kinetic armour",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:fabricator:kinetic armour: wanderer soldiers succeed by subverting the enem",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:fabricator:disruptor: somtimes it is best not to fight.",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:fabricator:hypo: hypo",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:fabricator:hypo: a handful of hypos. life in a vial.",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:fabricator:stim: stim",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:fabricator:stim: sometimes it is best to fight without restraint.",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:fabricator:plasma rifle: the peak of wanderer weapons technology, sleek a",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:fabricator:glowstone: glow stone",
-      "status": "missing",
-      "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:fabricator:glowstone: a smooth, perfect sphere. its light is inextingu",
-      "status": "missing",
-      "batch": 8,
       "numeric": "skip",
       "note": "missing"
     }
