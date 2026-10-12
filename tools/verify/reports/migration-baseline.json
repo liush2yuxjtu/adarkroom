@@ -1,14 +1,14 @@
 {
   "pass": false,
   "gate": {
-    "missing": 165,
+    "missing": 153,
     "no_producer": 0,
     "numeric_mismatch": 1,
     "allowlist": 0
   },
   "counts": {
-    "present": 134,
-    "missing": 165,
+    "present": 146,
+    "missing": 153,
     "no_producer": 0,
     "mismatch": 1,
     "no_zh": 0,
@@ -51,29 +51,29 @@
       "total": 16
     },
     "event:room": {
-      "present": 2,
-      "missing": 6,
+      "present": 8,
+      "missing": 0,
       "no_producer": 0,
       "mismatch": 0,
       "total": 8
     },
     "event:outside": {
-      "present": 2,
-      "missing": 4,
+      "present": 6,
+      "missing": 0,
       "no_producer": 0,
       "mismatch": 0,
       "total": 6
     },
     "event:global": {
-      "present": 0,
-      "missing": 1,
+      "present": 1,
+      "missing": 0,
       "no_producer": 0,
       "mismatch": 0,
       "total": 1
     },
     "event:marketing": {
-      "present": 0,
-      "missing": 1,
+      "present": 1,
+      "missing": 0,
       "no_producer": 0,
       "mismatch": 0,
       "total": 1
@@ -207,8 +207,8 @@
       "total": 12
     },
     "4": {
-      "present": 0,
-      "missing": 12,
+      "present": 12,
+      "missing": 0,
       "no_producer": 0,
       "mismatch": 0,
       "total": 12
@@ -281,9 +281,9 @@
     {
       "batch": 4,
       "title": "Room / outside / global / marketing events",
-      "pass": false,
+      "pass": true,
       "kind": "story",
-      "detail": "batch incomplete: 12 of 12 not present"
+      "detail": "room/outside/global/marketing events + triggers + persist"
     },
     {
       "batch": 5,
@@ -382,90 +382,6 @@
       "id": "item/resource:stim blueprint",
       "status": "missing",
       "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "event:room:The Beggar",
-      "status": "missing",
-      "batch": 4,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "event:room:The Shady Builder",
-      "status": "missing",
-      "batch": 4,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "event:room:The Mysterious Wanderer",
-      "status": "missing",
-      "batch": 4,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "event:room:The Scout",
-      "status": "missing",
-      "batch": 4,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "event:room:The Master",
-      "status": "missing",
-      "batch": 4,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "event:room:The Sick Man",
-      "status": "missing",
-      "batch": 4,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "event:outside:Fire",
-      "status": "missing",
-      "batch": 4,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "event:outside:Sickness",
-      "status": "missing",
-      "batch": 4,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "event:outside:Plague",
-      "status": "missing",
-      "batch": 4,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "event:outside:A Military Raid",
-      "status": "missing",
-      "batch": 4,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "event:global:The Thief",
-      "status": "missing",
-      "batch": 4,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "event:marketing:Penrose",
-      "status": "missing",
-      "batch": 4,
       "numeric": "skip",
       "note": "missing"
     },
