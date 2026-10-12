@@ -315,7 +315,19 @@ export const EVENT_ALIASES = {
   "A Ruined Trap": "ruined_trap",
   "A Beast Attack": "beast_attack",
   "An Old House": "old_house",
-  "A Snarling Beast": "snarling_beast"
+  "A Snarling Beast": "snarling_beast",
+  "The Beggar": "beggar",
+  "The Shady Builder": "shady_builder",
+  "The Mysterious Wanderer": "mysterious_wanderer",
+  "The Scout": "scout",
+  "The Master": "master",
+  "The Sick Man": "sick_man",
+  "Fire": "fire",
+  "Sickness": "sickness",
+  "Plague": "plague",
+  "A Military Raid": "military_raid",
+  "The Thief": "thief",
+  "Penrose": "penrose"
 };
 export const LANDMARK_IDS = {
   HOUSE: "old_house", CAVE: "cave", TOWN: "town", CITY: "city", OUTPOST: "outpost", SHIP: "ship",

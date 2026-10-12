@@ -8,7 +8,7 @@
  *   node tools/verify/story.mjs [--runs 5]
  */
 import { fileURLToPath } from "node:url";
-import { makeSandbox, loadEvents } from "./lib/engine-sandbox.mjs";
+import { makeSandbox, loadEvents, tickGame } from "./lib/engine-sandbox.mjs";
 import { emptySuite, ok, fail, summarize } from "./lib/report.mjs";
 
 export const PHASES = ["room_fire", "stranger", "forest", "village", "path", "world", "slice_complete"];
@@ -41,7 +41,7 @@ export function playthrough({ maxGameSec = 9000, seed = 1 } = {}) {
     const sp = events[e.id];
     const sc = e.scene && sp.scenes && sp.scenes[e.scene] ? sp.scenes[e.scene] : sp;
     const okb = (sc.buttons || []).filter((x) => afford(x.cost)).map((x) => x.id);
-    const pick = ["take", "enter", "buy_compass", "goodbye", "leave", "back", "home", "ignore", "wait", "mourn"].find((x) => okb.includes(x)) || okb[0];
+    const pick = ["take", "enter", "buy_compass", "goodbye", "leave", "back", "home", "ignore", "wait", "mourn", "deny", "end", "bye", "heal", "spare", "nothing"].find((x) => okb.includes(x)) || okb[0];
     if (pick) A("event_choice", { button: pick });
   }
   function tick(sec) {
@@ -164,6 +164,143 @@ export function workshopPlaythrough() {
     hp: sb.ADR.getMaxHealth(s),
     hasTorchNote,
     hasRifleNote
+  };
+}
+
+/** Headless batch-4 room / outside / global / marketing events. */
+export function villageEventsPlaythrough() {
+  const sb = makeSandbox({ seed: 4 });
+  const events = loadEvents();
+  const g = new sb.ADR.Game({ director: "rule", time_scale: 1, stuck_minutes: 99 }, events);
+  const s = g.state;
+  s.builder_level = 4;
+  s.temperature = 4;
+  s.fire = 4;
+  s.wood_initialized = true;
+  s.unlocked.outside = true;
+  s.unlocked.world = true;
+  s.location = "room";
+  Object.assign(s.stores, {
+    wood: 2000, fur: 2000, scales: 80, teeth: 80, cloth: 0,
+    medicine: 8, cured_meat: 120, torch: 2
+  });
+  s.buildings.hut = 6;
+  s.population = 20;
+  const spawned = {};
+  const spawn = (id) => {
+    s.active_event = null;
+    const r = g.applyCalls([{ tool: "spawn_event", args: { event_id: id } }], "test");
+    spawned[id] = !!(s.active_event && s.active_event.id === id);
+    return r;
+  };
+  spawn("beggar");
+  const furBefore = s.stores.fur;
+  const scalesBefore = s.stores.scales || 0;
+  const teethBefore = s.stores.teeth || 0;
+  const clothBefore = s.stores.cloth || 0;
+  g.act("event_choice", { button: "give50" });
+  const beggarRewarded = (
+    s.stores.scales === scalesBefore + 20
+    || s.stores.teeth === teethBefore + 20
+    || s.stores.cloth === clothBefore + 20
+  ) && s.stores.fur === furBefore - 50;
+  g.act("event_choice", { button: "leave" });
+
+  spawn("shady_builder");
+  const hutsBefore = s.buildings.hut;
+  const woodBefore = s.stores.wood;
+  g.act("event_choice", { button: "build" });
+  const shadyPaid = s.stores.wood === woodBefore - 300;
+  const shadyEnded = s.active_event && (s.active_event.scene === "steal" || s.active_event.scene === "built");
+  if (s.active_event) g.act("event_choice", { button: "end" });
+  const shadyOk = shadyPaid && shadyEnded && (s.buildings.hut === hutsBefore || s.buildings.hut === hutsBefore + 1);
+
+  spawn("mysterious_wanderer");
+  const wWood = s.stores.wood;
+  g.act("event_choice", { button: "wood100" });
+  const wandererPaid = s.stores.wood === wWood - 100;
+  tickGame(sb, g, 61);
+  const wandererNote = s.notifications.some((n) => /神秘的流浪者回来了/.test(n.text || ""));
+  if (s.active_event) g.act("event_choice", { button: "leave" });
+
+  spawn("scout");
+  const scoutFur = s.stores.fur;
+  g.act("event_choice", { button: "buyMap" });
+  const scoutPaid = s.stores.fur === scoutFur - 200 && (s.flags.map_pieces || 0) >= 1;
+  g.act("event_choice", { button: "leave" });
+
+  spawn("master");
+  g.act("event_choice", { button: "agree" });
+  g.act("event_choice", { button: "evasion" });
+  const masterLearned = !!s.flags.learned_evasive && !s.active_event;
+
+  spawn("sick_man");
+  const medBefore = s.stores.medicine;
+  g.act("event_choice", { button: "help" });
+  const sickPaid = s.stores.medicine === medBefore - 1;
+  if (s.active_event) g.act("event_choice", { button: "bye" });
+
+  s.location = "outside";
+  s.population = 55;
+  s.buildings.hut = 8;
+  spawn("fire");
+  const hutsAfterFire = s.buildings.hut;
+  const fireDestroyedHut = hutsAfterFire === 7;
+  if (s.active_event) g.act("event_choice", { button: "mourn" });
+
+  s.population = 20;
+  spawn("sickness");
+  g.act("event_choice", { button: "heal" });
+  const sicknessHealed = !s.active_event || s.active_event.scene === "healed";
+  if (s.active_event) g.act("event_choice", { button: "end" });
+
+  s.population = 55;
+  spawn("plague");
+  g.act("event_choice", { button: "heal" });
+  if (s.active_event) g.act("event_choice", { button: "end" });
+  const plagueResolved = !s.active_event;
+
+  s.flags.city_cleared = true;
+  spawn("military_raid");
+  const raidBullets = (s.stores.bullets || 0) >= 10;
+  if (s.active_event) g.act("event_choice", { button: "end" });
+
+  s.flags.thieves = 1;
+  s.flags.stolen = { wood: 40, fur: 20 };
+  const woodAtThief = s.stores.wood;
+  spawn("thief");
+  g.act("event_choice", { button: "kill" });
+  if (s.active_event) g.act("event_choice", { button: "leave" });
+  const thiefReturned = s.flags.thieves === 2 && s.stores.wood === woodAtThief + 40;
+
+  s.location = "room";
+  spawn("penrose");
+  g.act("event_choice", { button: "give_in" });
+  const penroseFlag = !!s.flags.marketing_penrose && !s.active_event;
+
+  const needed = [
+    "beggar", "shady_builder", "mysterious_wanderer", "scout", "master",
+    "sick_man", "fire", "sickness", "plague", "military_raid", "thief", "penrose"
+  ];
+  const hydrated = sb.ADR.hydrateState(JSON.parse(JSON.stringify(s)));
+  return {
+    spawned,
+    allSpawned: needed.every((id) => spawned[id]),
+    beggarRewarded,
+    shadyOk,
+    wandererPaid,
+    wandererNote,
+    scoutPaid,
+    masterLearned,
+    sickPaid,
+    fireDestroyedHut,
+    sicknessHealed,
+    plagueResolved,
+    raidBullets,
+    thiefReturned,
+    penroseFlag,
+    persistThieves: hydrated.flags.thieves === 2,
+    persistPenrose: !!hydrated.flags.marketing_penrose
   };
 }
 

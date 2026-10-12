@@ -1296,6 +1296,7 @@
     var acts = document.createElement("div");
     acts.className = "modal-actions";
     (scene.buttons || spec.buttons || []).forEach(function (b) {
+      if (ADR.buttonAvailable && !ADR.buttonAvailable(game.state, b)) return;
       var disabled = false;
       if (b.cost) {
         disabled = Object.keys(b.cost).some(function (k) { return (game.state.stores[k] || 0) < b.cost[k]; });
@@ -1309,7 +1310,12 @@
         label: label,
         icon: /ignore|goodbye/.test(b.id) ? "no" : (b.cost ? Object.keys(b.cost)[0] : "ok"),
         disabled: disabled,
-        onClick: function () { game.act("event_choice", { button: b.id }); }
+        onClick: function () {
+          if (b.link && typeof window !== "undefined" && window.open) {
+            try { window.open(b.link, "_blank", "noopener"); } catch (e) { /* ignore */ }
+          }
+          game.act("event_choice", { button: b.id });
+        }
       });
     });
     modal.appendChild(acts);
