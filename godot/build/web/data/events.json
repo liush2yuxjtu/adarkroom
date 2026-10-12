@@ -10,6 +10,7 @@
   "nomad": {
     "title": "游牧部落",
     "notification": "游牧部落抵达，想要进行贸易",
+    "when": { "location": "room", "store": "fur" },
     "text": [
       "游牧部落慢吞吞地出现在视野中，带着许多用粗麻线扎起来的临时口袋。",
       "他们没有提及来处，但显然不会逗留很久。"
@@ -25,6 +26,7 @@
   "noises_outside": {
     "title": "噪声",
     "notification": "古怪的声响透过墙壁传来",
+    "when": { "location": "room", "wood_inited": true },
     "text": [
       "嘈杂声透墙传来。",
       "难以分辨来源。"
@@ -59,6 +61,7 @@
   "ruined_trap": {
     "title": "损毁的陷阱",
     "notification": "一些陷阱损毁了",
+    "when": { "location": "outside", "min_traps": 1 },
     "text": [
       "一些陷阱损毁了。",
       "巨大的足迹延伸至森林。"
@@ -82,6 +85,7 @@
   "beast_attack": {
     "title": "野兽来袭",
     "notification": "野兽袭击村民",
+    "when": { "location": "outside", "pop_gt": 0 },
     "text": [
       "一群咆哮的野兽冲出丛林。",
       "战斗争短暂而血腥，但兽群溃退了。",
@@ -115,5 +119,312 @@
     "notification": "一只野兽从灌木丛里蹿了出来",
     "text": ["一只野兽从灌木丛里蹿了出来。"],
     "combat": { "hp": 4, "dmg": 1, "name": "咆哮的野兽", "reward": { "fur": 1, "meat": 1 } }
+  },
+  "beggar": {
+    "title": "乞丐",
+    "notification": "乞丐来了",
+    "when": { "location": "room", "store": "fur" },
+    "text": [
+      "乞丐徘徊在门前。",
+      "祈求能施舍给他一些多余的毛皮，好让他不在夜里受冻。"
+    ],
+    "buttons": [
+      { "id": "give50", "text": "给50", "cost": { "fur": 50 }, "random_next": { "scales": 0.5, "teeth": 0.3, "cloth": 0.2 } },
+      { "id": "give100", "text": "给100", "cost": { "fur": 100 }, "random_next": { "teeth": 0.5, "scales": 0.3, "cloth": 0.2 } },
+      { "id": "deny", "text": "撵走他", "next": "end" }
+    ],
+    "scenes": {
+      "scales": {
+        "text": ["乞丐感激涕零。", "留给我们一堆小鳞片。"],
+        "reward": { "scales": 20 },
+        "buttons": [{ "id": "leave", "text": "道别", "next": "end" }]
+      },
+      "teeth": {
+        "text": ["乞丐感激涕零。", "留给我们一堆小牙齿。"],
+        "reward": { "teeth": 20 },
+        "buttons": [{ "id": "leave", "text": "道别", "next": "end" }]
+      },
+      "cloth": {
+        "text": ["乞丐感激涕零。", "留给我们一些布料。"],
+        "reward": { "cloth": 20 },
+        "buttons": [{ "id": "leave", "text": "道别", "next": "end" }]
+      }
+    }
+  },
+  "shady_builder": {
+    "title": "可疑的建造者",
+    "notification": "可疑的建造者经过",
+    "when": { "location": "room", "min_huts": 5, "max_huts": 19 },
+    "text": [
+      "可疑的建造者经过。",
+      "他说他能用较少的木头建造小屋。"
+    ],
+    "buttons": [
+      { "id": "build", "text": "300木头", "cost": { "wood": 300 }, "random_next": { "steal": 0.6, "built": 0.4 } },
+      { "id": "deny", "text": "道别", "next": "end" }
+    ],
+    "scenes": {
+      "steal": {
+        "text": ["可疑的建造者偷走了你的木头。"],
+        "notification": "可疑的建造者偷走了你的木头",
+        "buttons": [{ "id": "end", "text": "返回", "next": "end" }]
+      },
+      "built": {
+        "text": ["可疑的建造者建造了小屋。"],
+        "notification": "可疑的建造者建造了小屋",
+        "onload": { "add_hut": true },
+        "buttons": [{ "id": "end", "text": "返回", "next": "end" }]
+      }
+    }
+  },
+  "mysterious_wanderer": {
+    "title": "神秘流浪者",
+    "notification": "神秘流浪者来了",
+    "when": { "location": "room", "store": "wood" },
+    "text": [
+      "一名流浪者推着货车来到村子，声称如果让他带着木头离开，他会带回更多木头。",
+      "建造者不确定能否信任他。"
+    ],
+    "buttons": [
+      { "id": "wood100", "text": "给100", "cost": { "wood": 100 }, "next": "wood100" },
+      { "id": "wood500", "text": "给500", "cost": { "wood": 500 }, "next": "wood500" },
+      { "id": "deny", "text": "撵走他", "next": "end" }
+    ],
+    "scenes": {
+      "wood100": {
+        "text": ["流浪者带着满载木头的货车离开了。"],
+        "onload": { "delay_give": { "after": 60, "chance": 0.5, "stores": { "wood": 300 }, "note": "神秘的流浪者回来了，货车上木头堆得更高了" } },
+        "buttons": [{ "id": "leave", "text": "道别", "next": "end" }]
+      },
+      "wood500": {
+        "text": ["流浪者带着满载木头的货车离开了。"],
+        "onload": { "delay_give": { "after": 60, "chance": 0.3, "stores": { "wood": 1500 }, "note": "神秘的流浪者回来了，货车上木头堆得更高了" } },
+        "buttons": [{ "id": "leave", "text": "道别", "next": "end" }]
+      }
+    }
+  },
+  "mysterious_wanderer_fur": {
+    "title": "神秘流浪者",
+    "notification": "神秘流浪者来了",
+    "when": { "location": "room", "store": "fur" },
+    "text": [
+      "一名流浪者推着货车来到村子，声称如果让她带着毛皮离开，她会带回更多毛皮。",
+      "建造者不确定能否信任她。"
+    ],
+    "buttons": [
+      { "id": "fur100", "text": "给100", "cost": { "fur": 100 }, "next": "fur100" },
+      { "id": "fur500", "text": "给500", "cost": { "fur": 500 }, "next": "fur500" },
+      { "id": "deny", "text": "撵走她", "next": "end" }
+    ],
+    "scenes": {
+      "fur100": {
+        "text": ["流浪者带着满载毛皮的货车离开了。"],
+        "onload": { "delay_give": { "after": 60, "chance": 0.5, "stores": { "fur": 300 }, "note": "神秘的流浪者回来了，货车上毛皮堆得更高了" } },
+        "buttons": [{ "id": "leave", "text": "道别", "next": "end" }]
+      },
+      "fur500": {
+        "text": ["流浪者带着满载毛皮的货车离开了。"],
+        "onload": { "delay_give": { "after": 60, "chance": 0.3, "stores": { "fur": 1500 }, "note": "神秘的流浪者回来了，货车上毛皮堆得更高了" } },
+        "buttons": [{ "id": "leave", "text": "道别", "next": "end" }]
+      }
+    }
+  },
+  "scout": {
+    "title": "侦察兵",
+    "notification": "侦察兵夜宿于此",
+    "when": { "location": "room", "world": true },
+    "text": [
+      "侦察兵说她曾环游世界。",
+      "她愿意为我们分享她的经历，只需提供一些报酬。"
+    ],
+    "buttons": [
+      { "id": "buyMap", "text": "购买地图", "cost": { "fur": 200, "scales": 10 }, "note": "地图上已探知的地方扩大了一点", "map_piece": true },
+      { "id": "learn", "text": "学习侦察", "cost": { "fur": 1000, "scales": 50, "teeth": 20 }, "learn": "scout", "require_flag_off": "learned_scout" },
+      { "id": "leave", "text": "道别", "next": "end" }
+    ]
+  },
+  "master": {
+    "title": "宗师",
+    "notification": "年迈的流浪者出现了",
+    "when": { "location": "room", "world": true },
+    "text": [
+      "一名年迈的流浪者抵达了。",
+      "他面带和煦的微笑，请求留宿一晚。"
+    ],
+    "buttons": [
+      { "id": "agree", "text": "同意老者的请求", "cost": { "cured_meat": 100, "fur": 100, "torch": 1 }, "next": "agree" },
+      { "id": "deny", "text": "撵走他", "next": "end" }
+    ],
+    "scenes": {
+      "agree": {
+        "text": ["作为回报，流浪者为我们分享了他的智慧。"],
+        "buttons": [
+          { "id": "evasion", "text": "避实就虚", "learn": "evasive", "require_flag_off": "learned_evasive", "next": "end" },
+          { "id": "precision", "text": "精密", "learn": "precise", "require_flag_off": "learned_precise", "next": "end" },
+          { "id": "force", "text": "野蛮人", "learn": "barbarian", "require_flag_off": "learned_barbarian", "next": "end" },
+          { "id": "nothing", "text": "无", "next": "end" }
+        ]
+      }
+    }
+  },
+  "sick_man": {
+    "title": "患病男子",
+    "notification": "患病男子一瘸一拐地走了过来",
+    "when": { "location": "room", "medicine": true },
+    "text": [
+      "男子咳嗽着，一瘸一拐地走了过来。",
+      "他祈求分给他一支药剂。"
+    ],
+    "buttons": [
+      { "id": "help", "text": "分给他一支药剂", "cost": { "medicine": 1 }, "note": "男子迫不及待咽下了药剂", "random_next": { "alloy": 0.1, "cells": 0.2, "scales": 0.2, "nothing": 0.5 } },
+      { "id": "ignore", "text": "请他离开", "next": "end" }
+    ],
+    "scenes": {
+      "alloy": {
+        "text": ["男子感激涕零。", "他留下报酬走了。", "那是他在旅途中捡到的一些古怪的金属。"],
+        "onload": { "give": { "alien_alloy": 1 } },
+        "buttons": [{ "id": "bye", "text": "道别", "next": "end" }]
+      },
+      "cells": {
+        "text": ["男子感激涕零。", "他留下报酬走了。", "那是他在旅途中捡到的一些古怪的发光盒子。"],
+        "onload": { "give": { "energy_cell": 3 } },
+        "buttons": [{ "id": "bye", "text": "道别", "next": "end" }]
+      },
+      "scales": {
+        "text": ["男子感激涕零。", "他留下报酬走了。", "全是些鳞片。"],
+        "onload": { "give": { "scales": 5 } },
+        "buttons": [{ "id": "bye", "text": "道别", "next": "end" }]
+      },
+      "nothing": {
+        "text": ["男子表达了他的谢意，一瘸一拐地离开了。"],
+        "buttons": [{ "id": "bye", "text": "道别", "next": "end" }]
+      }
+    }
+  },
+  "fire": {
+    "title": "火灾",
+    "notification": "火灾已经开始",
+    "when": { "location": "outside", "min_huts": 1, "pop_gt": 50 },
+    "text": [
+      "火焰吞噬了一间屋子，将它摧毁殆尽。",
+      "屋内的所有人都死于火灾中。"
+    ],
+    "onload": { "destroy_huts": 1 },
+    "buttons": [
+      { "id": "mourn", "text": "哀悼", "note": "一些村民死掉了", "next": "end" }
+    ]
+  },
+  "sickness": {
+    "title": "疾病",
+    "notification": "有一些村民生病了",
+    "when": { "location": "outside", "pop_gt": 10, "pop_lt": 50, "medicine": true },
+    "text": [
+      "疾病在村子中蔓延。",
+      "亟需药剂。"
+    ],
+    "buttons": [
+      { "id": "heal", "text": "1支药剂", "cost": { "medicine": 1 }, "next": "healed" },
+      { "id": "ignore", "text": "放任不管", "next": "death" }
+    ],
+    "scenes": {
+      "healed": {
+        "text": ["疾病及时得到了控制。"],
+        "notification": "受苦的人得到了救治",
+        "buttons": [{ "id": "end", "text": "返回", "next": "end" }]
+      },
+      "death": {
+        "text": ["疾病在村子中蔓延。", "一场又一场葬礼。", "尖叫响彻黑夜。"],
+        "notification": "受苦的人等待着死亡",
+        "onload": { "kill_pop": { "min": 1, "max_frac": 0.5 } },
+        "buttons": [{ "id": "end", "text": "返回", "next": "end" }]
+      }
+    }
+  },
+  "plague": {
+    "title": "瘟疫",
+    "notification": "一场瘟疫席卷了村落",
+    "when": { "location": "outside", "pop_gt": 50, "medicine": true },
+    "text": [
+      "可怕的瘟疫迅速地村子里传播开来。",
+      "亟需药剂。"
+    ],
+    "buttons": [
+      { "id": "buyMedicine", "text": "购买药剂", "cost": { "scales": 70, "teeth": 50 }, "reward": { "medicine": 1 } },
+      { "id": "heal", "text": "5支药剂", "cost": { "medicine": 5 }, "next": "healed" },
+      { "id": "ignore", "text": "置之不理", "next": "death" }
+    ],
+    "scenes": {
+      "healed": {
+        "text": ["瘟疫得到了控制。", "只有少数人死去。", "幸存者埋葬了他们。"],
+        "notification": "疫情终于被根除",
+        "onload": { "kill_pop": { "min": 2, "max": 6 } },
+        "buttons": [{ "id": "end", "text": "返回", "next": "end" }]
+      },
+      "death": {
+        "text": ["瘟疫席卷村落。", "尖叫响彻黑夜。", "人们只求速死。"],
+        "notification": "人口几近绝灭",
+        "onload": { "kill_pop": { "min": 10, "max": 89 } },
+        "buttons": [{ "id": "end", "text": "返回", "next": "end" }]
+      }
+    }
+  },
+  "military_raid": {
+    "title": "武装力量突袭",
+    "notification": "军队席卷了村落",
+    "when": { "location": "outside", "pop_gt": 0, "city_cleared": true },
+    "text": [
+      "枪声啸过树林。",
+      "装备精良的人冲出树林，向人群射击。",
+      "虽然他们撤走了，但我们好些人牺牲了。"
+    ],
+    "onload": { "kill_pop": { "min": 1, "max": 40 }, "give": { "bullets": 10, "cured_meat": 50 } },
+    "buttons": [
+      { "id": "end", "text": "返回", "note": "战争冷酷无情", "next": "end" }
+    ]
+  },
+  "thief": {
+    "title": "小偷",
+    "notification": "抓到一名小偷",
+    "when": { "location": ["room", "outside"], "thieves": 1 },
+    "text": [
+      "村民们从仓库里拽出来一个脏兮兮的家伙。",
+      "据说他的同伙们早已经顺走许多货物。",
+      "他们说应该绞死他以儆效尤。"
+    ],
+    "buttons": [
+      { "id": "kill", "text": "绞死他", "next": "hang" },
+      { "id": "spare", "text": "释放他", "next": "spare" }
+    ],
+    "scenes": {
+      "hang": {
+        "text": [
+          "村民们将盗贼绞死，高挂在仓库门前。",
+          "此举卓有成效。数日后，遗失的物资都被还了回来。"
+        ],
+        "onload": { "set_thieves": 2, "return_stolen": true },
+        "buttons": [{ "id": "leave", "text": "离开", "next": "end" }]
+      },
+      "spare": {
+        "text": [
+          "这家伙感激涕零，说他再也不会来行窃了。",
+          "在离开前他分享了有关潜行的心得。"
+        ],
+        "onload": { "set_thieves": 2, "learn": "stealthy" },
+        "buttons": [{ "id": "leave", "text": "离开", "next": "end" }]
+      }
+    }
+  },
+  "penrose": {
+    "title": "彭罗斯",
+    "notification": "一阵奇异的嗡鸣、撞击与轰响。然后消失了。",
+    "when": { "location": ["room", "outside"], "penrose_off": true },
+    "text": [
+      "一阵奇异的嗡鸣、撞击与轰响。人与地方的幻象，巨大的机器与扭曲的曲线。",
+      "诱人。只需完全屈服，就会变得很容易。"
+    ],
+    "buttons": [
+      { "id": "give_in", "text": "屈服", "set_flag": "marketing_penrose", "link": "https://penrose.doublespeakgames.com/?utm_source=adarkroom&utm_medium=crosspromote&utm_campaign=event", "next": "end" },
+      { "id": "ignore", "text": "忽略", "next": "end" }
+    ]
   }
 }

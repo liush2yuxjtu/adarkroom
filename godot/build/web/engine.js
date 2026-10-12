@@ -498,6 +498,8 @@
       if (typeof state.workers[k] !== "number" || !isFinite(state.workers[k])) state.workers[k] = 0;
     });
     if (typeof state.income_acc.builder !== "number") state.income_acc.builder = 0;
+    if (typeof state.income_acc.thieves !== "number") state.income_acc.thieves = 0;
+    if (state.flags.stolen && !isPlainObject(state.flags.stolen)) state.flags.stolen = {};
     Object.keys(INCOME).forEach(function (k) {
       if (typeof state.income_acc[k] !== "number") state.income_acc[k] = 0;
     });
@@ -785,6 +787,7 @@
           payload: a.payload || {}
         };
         if (spec.notification) pushNote(state, spec.notification, state.location);
+        applySceneEffects(state, spec);
         break;
     }
     return { ok: true };
@@ -1086,6 +1089,139 @@
     for (var k in reward) addItem(state, k, reward[k]);
   }
 
+  function eventAvailable(state, spec) {
+    var w = spec && spec.when;
+    if (!w) return false;
+    if (w.location) {
+      var locs = Array.isArray(w.location) ? w.location : [w.location];
+      if (locs.indexOf(state.location) < 0) return false;
+    }
+    if (w.store && !(state.stores[w.store] > 0)) return false;
+    if (w.wood_inited && !state.wood_initialized) return false;
+    if (w.min_huts != null && (state.buildings.hut || 0) < w.min_huts) return false;
+    if (w.max_huts != null && (state.buildings.hut || 0) > w.max_huts) return false;
+    if (w.min_traps != null && (state.buildings.trap || 0) < w.min_traps) return false;
+    if (w.world && !state.unlocked.world) return false;
+    if (w.medicine && !(state.stores.medicine > 0)) return false;
+    if (w.pop_gt != null && !(state.population > w.pop_gt)) return false;
+    if (w.pop_lt != null && !(state.population < w.pop_lt)) return false;
+    if (w.thieves != null && state.flags.thieves !== w.thieves) return false;
+    if (w.city_cleared && !state.flags.city_cleared) return false;
+    if (w.penrose_off && state.flags.marketing_penrose) return false;
+    return true;
+  }
+
+  function buttonAvailable(state, btn) {
+    if (!btn) return false;
+    if (btn.require_no && (state.stores[btn.require_no] || 0) > 0) return false;
+    if (btn.require_flag_off && state.flags[btn.require_flag_off]) return false;
+    return true;
+  }
+
+  function killVillagers(state, num) {
+    var n = Math.max(0, Math.floor(Number(num) || 0));
+    if (n <= 0) return;
+    state.population = Math.max(0, (state.population || 0) - n);
+    syncGatherers(state);
+  }
+
+  function destroyHuts(state, num) {
+    var left = Math.max(0, Math.floor(Number(num) || 0));
+    while (left > 0 && (state.buildings.hut || 0) > 0) {
+      var pop = state.population || 0;
+      var rate = pop / 4;
+      var full = Math.floor(rate);
+      var huts = Math.ceil(rate);
+      if (!huts) break;
+      var target = Math.floor(Math.random() * huts) + 1;
+      var inhabitants = 0;
+      if (target <= full) inhabitants = 4;
+      else if (target === full + 1) inhabitants = pop % 4;
+      state.buildings.hut -= 1;
+      if (inhabitants) killVillagers(state, inhabitants);
+      left -= 1;
+    }
+  }
+
+  function applySceneEffects(state, scene) {
+    if (!scene) return;
+    if (scene.reward) grant(state, scene.reward);
+    if (scene.notification) pushNote(state, scene.notification, state.location);
+    if (scene.set_flag) state.flags[scene.set_flag] = true;
+    if (scene.water && state.world && state.world.on_expedition) {
+      state.world.water = Math.min(getMaxWater(state), state.world.water + scene.water);
+    }
+    var fx = scene.onload;
+    if (!fx) return;
+    if (fx.destroy_huts) destroyHuts(state, fx.destroy_huts);
+    if (fx.kill_pop) {
+      var lo = fx.kill_pop.min || 1;
+      var hi = fx.kill_pop.max;
+      if (fx.kill_pop.max_frac != null) hi = Math.floor((state.population || 0) * fx.kill_pop.max_frac);
+      if (hi == null || hi < lo) hi = lo;
+      killVillagers(state, Math.floor(Math.random() * (hi - lo + 1)) + lo);
+    }
+    if (fx.add_hut && (state.buildings.hut || 0) < 20) state.buildings.hut += 1;
+    if (fx.give) grant(state, fx.give);
+    if (fx.set_thieves != null) state.flags.thieves = fx.set_thieves;
+    if (fx.return_stolen) {
+      grant(state, state.flags.stolen || {});
+      state.flags.stolen = {};
+    }
+    if (fx.learn) state.flags["learned_" + fx.learn] = true;
+    if (fx.delay_give && Math.random() < (fx.delay_give.chance == null ? 1 : fx.delay_give.chance)) {
+      var after = fx.delay_give.after || 60;
+      var stores = fx.delay_give.stores || {};
+      Object.keys(stores).forEach(function (item) {
+        state.scheduled.push({
+          at: state.game_time_sec + after,
+          call: { tool: "give_item", args: { item: item, amount: stores[item] } },
+          origin: "event"
+        });
+      });
+      if (fx.delay_give.note) {
+        state.scheduled.push({
+          at: state.game_time_sec + after,
+          call: { tool: "narrate", args: { text: fx.delay_give.note, source: "room" } },
+          origin: "event"
+        });
+      }
+    }
+  }
+
+  function maybeStartThieves(state) {
+    if (state.flags.thieves != null) return;
+    if (!state.unlocked || !state.unlocked.world) return;
+    var k;
+    for (k in state.stores) {
+      if ((state.stores[k] || 0) > 5000) {
+        state.flags.thieves = 1;
+        if (!state.flags.stolen || typeof state.flags.stolen !== "object") state.flags.stolen = {};
+        state.income_acc.thieves = 0;
+        return;
+      }
+    }
+  }
+
+  function applyThiefIncome(state, dt) {
+    if (state.flags.thieves !== 1) return;
+    if (typeof state.income_acc.thieves !== "number") state.income_acc.thieves = 0;
+    if (!state.flags.stolen || typeof state.flags.stolen !== "object") state.flags.stolen = {};
+    state.income_acc.thieves += dt;
+    var take = { wood: 10, fur: 5, meat: 5 };
+    while (state.income_acc.thieves >= 10) {
+      state.income_acc.thieves -= 10;
+      Object.keys(take).forEach(function (k) {
+        var have = state.stores[k] || 0;
+        var n = Math.min(have, take[k]);
+        if (n > 0) {
+          addItem(state, k, -n);
+          state.flags.stolen[k] = (state.flags.stolen[k] || 0) + n;
+        }
+      });
+    }
+  }
+
   function nowMs() {
     return Date.now();
   }
@@ -1196,7 +1332,7 @@
     this.seen = {};
   }
 
-  RuleDirector.prototype.think = function (state) {
+  RuleDirector.prototype.think = function (state, catalog) {
     var calls = [];
     var f = state.flags;
     var once = function (key, list) {
@@ -1315,10 +1451,10 @@
       calls.push({ tool: "set_flag", args: { key: "next_world_event_at", value: state.game_time_sec + 180 + Math.random() * 180 } });
     } else if (evDue != null && state.game_time_sec >= evDue && !state.active_event && !state.world.on_expedition) {
       var pool = [];
-      if (state.location === "room" && (state.stores.fur || 0) > 0) pool.push("nomad");
-      if (state.location === "room" && state.wood_initialized) pool.push("noises_outside");
-      if (state.location === "outside" && state.buildings.trap > 0) pool.push("ruined_trap");
-      if (state.location === "outside" && state.population > 0) pool.push("beast_attack");
+      Object.keys(catalog || {}).forEach(function (id) {
+        var spec = catalog[id];
+        if (spec && spec.when && eventAvailable(state, spec)) pool.push(id);
+      });
       if (pool.length) {
         var pick = pool[Math.floor(Math.random() * pool.length)];
         calls.push({ tool: "spawn_event", args: { event_id: pick } });
@@ -1771,7 +1907,7 @@
       });
       return;
     }
-    var calls = this.rule.think(this.state);
+    var calls = this.rule.think(this.state, this.events);
     this.analytics.log(this.state, "director_think", {
       director: "rule",
       call_count: calls ? calls.length : 0,
@@ -2173,6 +2309,7 @@
     var scene = s.active_event.scene === "start" ? spec : (spec.scenes && spec.scenes[s.active_event.scene]) || spec;
     var btn = (scene.buttons || spec.buttons || []).filter(function (b) { return b.id === buttonId; })[0];
     if (!btn) return;
+    if (!buttonAvailable(s, btn)) return;
     if (btn.cost && !canAfford(s, btn.cost)) return;
     if (btn.cost) pay(s, btn.cost);
     if (btn.reward) grant(s, btn.reward);
@@ -2181,9 +2318,9 @@
       s.population = Math.max(0, s.population - btn.lose_pop);
       syncGatherers(s);
     }
-    if (btn.require_no && (s.stores[btn.require_no] || 0) > 0) {
-      /* still allow close */
-    }
+    if (btn.learn) s.flags["learned_" + btn.learn] = true;
+    if (btn.map_piece) s.flags.map_pieces = (s.flags.map_pieces || 0) + 1;
+    if (btn.set_flag) s.flags[btn.set_flag] = true;
     if (btn.random_next) {
       var r = Math.random();
       var acc = 0;
@@ -2194,22 +2331,15 @@
       });
       if (pick && spec.scenes && spec.scenes[pick]) {
         s.active_event.scene = pick;
-        var sc = spec.scenes[pick];
-        if (sc.reward) grant(s, sc.reward);
-        if (sc.set_flag) s.flags[sc.set_flag] = true;
-        if (sc.water && s.world.on_expedition) s.world.water = Math.min(getMaxWater(s), s.world.water + sc.water);
+        applySceneEffects(s, spec.scenes[pick]);
         return;
       }
     }
     if (btn.next && btn.next !== "end" && spec.scenes && spec.scenes[btn.next]) {
       s.active_event.scene = btn.next;
-      var sc2 = spec.scenes[btn.next];
-      if (sc2.reward) grant(s, sc2.reward);
-      if (sc2.set_flag) s.flags[sc2.set_flag] = true;
-      if (sc2.water && s.world.on_expedition) s.world.water = Math.min(getMaxWater(s), s.world.water + sc2.water);
+      applySceneEffects(s, spec.scenes[btn.next]);
       return;
     }
-    if (spec.scenes && scene !== spec && scene.set_flag) s.flags[scene.set_flag] = true;
     s.active_event = null;
     if (s.combat) s.combat = null;
   };
@@ -2284,6 +2414,8 @@
     // @pacing kind=income id=hunter value=0.5fur+0.5meat/10s phase=village
     // @pacing kind=income id=charcutier value=1cured_meat/10s phase=village note=consumes 5 meat + 5 wood
     applyWorkerIncome(s, dt, this.analytics);
+    applyThiefIncome(s, dt);
+    maybeStartThieves(s);
     checkCraftUnlocks(s);
     checkBuyUnlocks(s);
 
@@ -2444,6 +2576,8 @@
     tradeCost: tradeCost,
     tradeMax: tradeMax,
     buyVisible: buyVisible,
+    eventAvailable: eventAvailable,
+    buttonAvailable: buttonAvailable,
     applyWorkerIncome: applyWorkerIncome,
     visibleJobs: visibleJobs,
     workerUnlocked: workerUnlocked,

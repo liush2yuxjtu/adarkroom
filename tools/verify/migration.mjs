@@ -13,7 +13,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { emptySuite, ok, fail, summarize, writeJson } from "./lib/report.mjs";
 import { makeSandbox } from "./lib/engine-sandbox.mjs";
-import { playthrough, workshopPlaythrough, tradingPlaythrough } from "./story.mjs";
+import { playthrough, workshopPlaythrough, tradingPlaythrough, villageEventsPlaythrough } from "./story.mjs";
 import { runParity } from "./parity.mjs";
 import {
   ROOT,
@@ -227,6 +227,25 @@ function reachabilityBatches(parityRows) {
         kind: "story",
         detail: okc
           ? "trading post buy menu + seen-unlock + compass max 1"
+          : JSON.stringify(play)
+      });
+      continue;
+    }
+    if (String(id) === "4" || id === 4) {
+      const play = villageEventsPlaythrough();
+      const okc = !!(
+        play.allSpawned && play.beggarRewarded && play.shadyOk && play.wandererPaid
+        && play.scoutPaid && play.masterLearned && play.sickPaid && play.fireDestroyedHut
+        && play.sicknessHealed && play.plagueResolved && play.raidBullets
+        && play.thiefReturned && play.penroseFlag && play.persistThieves && play.persistPenrose
+      );
+      out.push({
+        batch: 4,
+        title: meta.title,
+        pass: okc && gaps.length === 0,
+        kind: "story",
+        detail: okc
+          ? "room/outside/global/marketing events + triggers + persist"
           : JSON.stringify(play)
       });
       continue;
