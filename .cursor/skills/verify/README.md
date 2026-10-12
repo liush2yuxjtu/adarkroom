@@ -126,11 +126,13 @@ Standard checklist, run **on demand before each PR merge**. Not a surface. Pick 
 | 3 Cooldown bar | Cooldown UI / `.cd` / disabled button | Full-height overlay, width shrinking, opacity 1, countdown number, screenshot |
 | 4 Telemetry write | `playtest_events` / new event / sink | New row for this session via service/read key; anon is insert-only |
 | 5 Mapping | every pre-merge diff | File types → steps → surfaces (below) |
-| 6 Playwright multi-viewport UI audit | UI / layout / CSS / responsive / visual-style diff | 1280×800, 390×844, 1920×1080: layout, spacing, WCAG 4.5:1 contrast, tap targets ≥44px, alignment, no `x<0` clip, no horizontal scroll, no console/`requestfailed`; numbered issues + screenshots, then P0–P5 |
+| 6 Playwright multi-viewport UI audit | UI / layout / CSS / responsive / visual-style diff | **1280×800, 1024×768, 390×844, 1920×1080**: layout, spacing, WCAG 4.5:1 contrast, tap targets ≥44px, alignment, no `x<0` clip, no horizontal scroll; classify `realFailures` vs paired `ERR_ABORTED`+2xx (not every `requestfailed` is a drop); confirm the verify-script URL; numbered issues + screenshots, then P0–P5; **stop rounds when no new issues** |
 
 **Mapping (how steps feed surfaces).** A font change → step 1 **plus** `aesthetic-community-consensus`. A telemetry change → step 4 **plus** `pr-telemetry-required`. A UI/layout change → step 6 **plus** `verification-scope-mismatch`. For `verification-scope-mismatch`, run the matching step on the code that **actually runs live**. Pacing analyzer files have no checklist step; `game-pacing-intent` auto-calls the tool and then `art-style-boredom-mitigation`. Game work opened against `dot-pi` → `wrong-repo-pr`. Any UI/art/interaction proposal → `original-intent-check` first.
 
 **Worked example (commit `5e3b891`).** Live export `godot/build/web`: font weight 500 loaded; cooldown overlay 39px tall at about 93% width; button opacity 1; save restored after reload.
+
+**Worked example (2026-10-12 12-issue UI audit, PR #7 / `2361374`).** P0-1 notification clip at 1280/≥1024; P0-2 no mobile; P0-10 telemetry `requestfailed` was CORS preflight + keepalive paired `ERR_ABORTED`+201 (same-origin `/api/playtest_events` rewrite); P1-3 ×N dedup; P1-4 `#4a4a4a` 8.86:1; P1-8 44px touch; P2-5, P2-6, P3-7, P3-12, P4-11, P5-9 deferred. Always test 1024; stop rounds when no new issues.
 
 Recipe: [`references/concrete-verification-steps.md`](references/concrete-verification-steps.md).
 
