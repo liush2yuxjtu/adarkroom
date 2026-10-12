@@ -131,6 +131,7 @@ Standard checklist, run **on demand before each PR merge**. Not a surface. Pick 
 | 8 Screenshot diff | UI / visual-style | Widths **360, 390, 768, 1024, 1280, 1440, 1920** × pixel/text vs `tools/verify/baselines/`. `--update` rewrites baselines |
 | 9 Accessibility | UI controls / color / tap | axe-core; contrast 4.5:1 (3:1 large); tap 44px mobile / 24px desktop incl. `#btn-style`; names; Tab focus visible |
 | 10 Extreme cases | save / stores / notifications / robustness | Long text, resources 0, 1e9, corrupt saves (invalid JSON, missing fields, wrong types). `save_corrupt` + `save_recover` |
+| Content parity | Adding original buildings / workers / items / events | `node tools/verify/run.mjs --only parity` (opt-in). Rows must flip to `present`. See [`references/content-parity.md`](references/content-parity.md) |
 
 **Mapping (how steps feed surfaces).** A font change → step 1 **plus** `aesthetic-community-consensus`. A telemetry change → step 4 **plus** `pr-telemetry-required`. A UI/layout change → steps **6 + 7 + 8 + 9** **plus** `verification-scope-mismatch`. Save/corrupt/extremes → **2 + 10**. For `verification-scope-mismatch`, run the matching step on the code that **actually runs live**. Pacing analyzer files have no checklist step; `game-pacing-intent` auto-calls the tool and then `art-style-boredom-mitigation`. Game work opened against `dot-pi` → `wrong-repo-pr`. Any UI/art/interaction proposal → `original-intent-check` first.
 

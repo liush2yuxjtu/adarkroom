@@ -8,7 +8,7 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
 
-  var ITEMS = ["wood", "fur", "meat", "scales", "teeth", "cloth", "bait", "charm", "compass", "cured_meat"];
+  var ITEMS = ["wood", "fur", "meat", "scales", "teeth", "cloth", "bait", "charm", "compass", "cured_meat", "leather", "iron", "coal", "steel", "sulphur", "bullets"];
   var AREAS = ["room", "outside", "path", "world"];
   var NPCS = ["builder", "nomad", "villagers"];
   var MOODS = ["unknown", "collapsed", "shivering", "sleeping", "helping", "neutral", "wary", "grateful"];
@@ -16,7 +16,57 @@
   var TEMP = ["寒冷刺骨", "很冷", "很宜人", "暖和", "很热"];
   var ITEM_CN = {
     wood: "木头", fur: "毛皮", meat: "肉", scales: "鳞片", teeth: "牙齿",
-    cloth: "布料", bait: "诱饵", charm: "符咒", compass: "罗盘", cured_meat: "熏肉"
+    cloth: "布料", bait: "诱饵", charm: "符咒", compass: "罗盘", cured_meat: "熏肉",
+    leather: "皮革", iron: "铁", coal: "煤", steel: "钢", sulphur: "硫磺", bullets: "子弹"
+  };
+  var BUILDING_CN = {
+    trap: "陷阱", cart: "货车", hut: "小屋", lodge: "狩猎小屋", trading_post: "贸易站",
+    tannery: "制革屋", smokehouse: "熏肉房", workshop: "工坊", steelworks: "炼钢坊", armoury: "军械坊",
+    iron_mine: "铁矿", coal_mine: "煤矿", sulphur_mine: "硫磺矿"
+  };
+  var WORKER_CN = {
+    gatherer: "伐木者", hunter: "猎人", trapper: "陷阱师", tanner: "皮革师", charcutier: "熏肉师",
+    iron_miner: "铁矿工人", coal_miner: "煤矿工人", sulphur_miner: "硫磺矿工",
+    steelworker: "炼钢工人", armourer: "军械工人"
+  };
+  var BUILDABLE = ["trap", "cart", "hut", "lodge", "trading_post", "tannery", "smokehouse", "workshop", "steelworks", "armoury"];
+  var BUILDING_KEYS = ["trap", "cart", "hut", "lodge", "trading_post", "tannery", "smokehouse", "workshop", "steelworks", "armoury", "iron_mine", "coal_mine", "sulphur_mine"];
+  var WORKER_KEYS = ["gatherer", "hunter", "trapper", "tanner", "charcutier", "iron_miner", "coal_miner", "sulphur_miner", "steelworker", "armourer"];
+  var JOB_BUILDING = {
+    hunter: "lodge", trapper: "lodge", tanner: "tannery", charcutier: "smokehouse",
+    iron_miner: "iron_mine", coal_miner: "coal_mine", sulphur_miner: "sulphur_mine",
+    steelworker: "steelworks", armourer: "armoury"
+  };
+  /* Faithful copy of script/outside.js _INCOME (delay 10s). Keys are snake_case. */
+  var INCOME = {
+    gatherer: { delay: 10, stores: { wood: 1 } },
+    hunter: { delay: 10, stores: { fur: 0.5, meat: 0.5 } },
+    trapper: { delay: 10, stores: { meat: -1, bait: 1 } },
+    tanner: { delay: 10, stores: { fur: -5, leather: 1 } },
+    charcutier: { delay: 10, stores: { meat: -5, wood: -5, cured_meat: 1 } },
+    iron_miner: { delay: 10, stores: { cured_meat: -1, iron: 1 } },
+    coal_miner: { delay: 10, stores: { cured_meat: -1, coal: 1 } },
+    sulphur_miner: { delay: 10, stores: { cured_meat: -1, sulphur: 1 } },
+    steelworker: { delay: 10, stores: { iron: -1, coal: -1, steel: 1 } },
+    armourer: { delay: 10, stores: { steel: -1, sulphur: -1, bullets: 1 } }
+  };
+  var BUILD_AVAILABLE = {
+    lodge: "villagers could help hunt, given the means",
+    trading_post: "a trading post would make commerce easier",
+    tannery: "builder says leather could be useful. says the villagers could make it.",
+    smokehouse: "should cure the meat, or it'll spoil. builder says she can fix something up.",
+    workshop: "builder says she could make finer things, if she had the tools",
+    steelworks: "builder says the villagers could make steel, given the tools",
+    armoury: "builder says it'd be useful to have a steady source of bullets"
+  };
+  var BUILD_DONE = {
+    lodge: "the hunting lodge stands in the forest, a ways out of town",
+    trading_post: "now the nomads have a place to set up shop, they might stick around a while",
+    tannery: "tannery goes up quick, on the edge of the village",
+    smokehouse: "builder finishes the smokehouse. she looks hungry.",
+    workshop: "workshop's finally ready. builder's excited to get to it",
+    steelworks: "a haze falls over the village as the steelworks fires up",
+    armoury: "armoury's done, welcoming back the weapons of the past."
   };
   var TOOL_NAMES = ["spawn_event", "give_item", "change_npc_mood", "narrate", "unlock_area", "set_flag"];
 
@@ -78,7 +128,38 @@
     "the thirst becomes unbearable": "口渴难耐",
     "*** EVENT ***": "*** 消息 ***",
     "a stranger arrives in the night": "陌生人在夜里抵达",
-    "and": "以及"
+    "and": "以及",
+    "lodge": "狩猎小屋",
+    "villagers could help hunt, given the means": "假如工具齐备，村民也能帮忙狩猎",
+    "the hunting lodge stands in the forest, a ways out of town": "狩猎小屋已经矗立在林中，距离村子不远",
+    "trading post": "贸易站",
+    "a trading post would make commerce easier": "贸易站让贸易变得更加便捷",
+    "now the nomads have a place to set up shop, they might stick around a while": "现在游牧部落有地方安营扎寨设立商铺了，他们也许会多逗留一段时间",
+    "tannery": "制革屋",
+    "builder says leather could be useful. says the villagers could make it.": "建造者说皮革会很有用，而且村民也会做",
+    "tannery goes up quick, on the edge of the village": "制革屋很快在村子一角建立了起来",
+    "smokehouse": "熏肉房",
+    "should cure the meat, or it'll spoil. builder says she can fix something up.": "应该把肉熏一下，否则会腐坏掉。建造者说她能搞定这个。",
+    "builder finishes the smokehouse. she looks hungry.": "建造者造好了熏肉房。她看起来饥肠辘辘。",
+    "workshop": "工坊",
+    "builder says she could make finer things, if she had the tools": "建造者说如果她有工具的话能做出一些更精良的东西",
+    "workshop's finally ready. builder's excited to get to it": "工坊终于建好了，建造者激动不已",
+    "steelworks": "炼钢坊",
+    "builder says the villagers could make steel, given the tools": "建造者说给村民工具的话他们就能帮忙炼钢",
+    "a haze falls over the village as the steelworks fires up": "炼钢坊开工后，一缕黑烟飘向村庄上空",
+    "armoury": "军械坊",
+    "builder says it'd be useful to have a steady source of bullets": "建造者说拥有稳定的弹药来源很有必要",
+    "armoury's done, welcoming back the weapons of the past.": "军械坊建好了，欢迎使用这些过时的武器",
+    "gatherer": "伐木者",
+    "hunter": "猎人",
+    "trapper": "陷阱师",
+    "tanner": "皮革师",
+    "charcutier": "熏肉师",
+    "iron miner": "铁矿工人",
+    "coal miner": "煤矿工人",
+    "sulphur miner": "硫磺矿工",
+    "steelworker": "炼钢工人",
+    "armourer": "军械工人"
   };
 
   function t(key) {
@@ -114,9 +195,10 @@
       npc_moods: { builder: "unknown", nomad: "neutral", villagers: "neutral" },
       stores: emptyStores(),
       wood_initialized: false,
-      buildings: { trap: 0, cart: 0, hut: 0 },
+      buildings: { trap: 0, cart: 0, hut: 0, lodge: 0, trading_post: 0, tannery: 0, smokehouse: 0, workshop: 0, steelworks: 0, armoury: 0, iron_mine: 0, coal_mine: 0, sulphur_mine: 0 },
       population: 0,
-      workers: { gatherer: 0 },
+      workers: { gatherer: 0, hunter: 0, trapper: 0, tanner: 0, charcutier: 0, iron_miner: 0, coal_miner: 0, sulphur_miner: 0, steelworker: 0, armourer: 0 },
+      seen: {},
       unlocked: { room: true, outside: false, path: false, world: false },
       location: "room",
       phase: "room_dark",
@@ -124,7 +206,7 @@
       notifications: [],
       cooldowns: {},
       cooldown_ends_at: {},
-      income_acc: { builder: 0, gatherer: 0 },
+      income_acc: { builder: 0, gatherer: 0, hunter: 0, trapper: 0, tanner: 0, charcutier: 0, iron_miner: 0, coal_miner: 0, sulphur_miner: 0, steelworker: 0, armourer: 0 },
       pop_timer: null,
       event_timer: null,
       scheduled: [],
@@ -150,7 +232,7 @@
 
   var SAVE_KEY = "adr.save.v1";
   var SAVE_VERSION = 1;
-  var OBJECT_KEYS = ["stores", "buildings", "unlocked", "npc_moods", "workers", "outfit", "income_acc", "world", "flags", "cooldowns", "cooldown_ends_at"];
+  var OBJECT_KEYS = ["stores", "buildings", "unlocked", "npc_moods", "workers", "outfit", "income_acc", "world", "flags", "cooldowns", "cooldown_ends_at", "seen"];
   var ARRAY_KEYS = ["notifications", "scheduled"];
   var NUMBER_KEYS = ["fire", "temperature", "game_time_sec", "builder_level", "population"];
 
@@ -316,7 +398,29 @@
     });
     base.phase = derivePhase(base);
     adoptCooldowns(base, 1);
-    return base;
+    return migrateState(base);
+  }
+
+  function migrateState(state) {
+    if (!isPlainObject(state.seen)) state.seen = {};
+    ITEMS.forEach(function (k) {
+      if (typeof state.stores[k] !== "number" || !isFinite(state.stores[k])) state.stores[k] = 0;
+      if (state.stores[k] > 0) state.seen[k] = true;
+    });
+    if (state.wood_initialized) state.seen.wood = true;
+    BUILDING_KEYS.forEach(function (k) {
+      if (typeof state.buildings[k] !== "number" || !isFinite(state.buildings[k])) state.buildings[k] = 0;
+    });
+    WORKER_KEYS.forEach(function (k) {
+      if (typeof state.workers[k] !== "number" || !isFinite(state.workers[k])) state.workers[k] = 0;
+    });
+    if (typeof state.income_acc.builder !== "number") state.income_acc.builder = 0;
+    Object.keys(INCOME).forEach(function (k) {
+      if (typeof state.income_acc[k] !== "number") state.income_acc[k] = 0;
+    });
+    unlockWorkersForBuildings(state);
+    syncGatherers(state);
+    return state;
   }
 
   function decodeImport(b64) {
@@ -502,6 +606,10 @@
     if (ITEMS.indexOf(item) < 0) return;
     if (item === "wood") state.wood_initialized = true;
     state.stores[item] = Math.max(0, (state.stores[item] || 0) + amount);
+    if (amount > 0) {
+      if (!state.seen) state.seen = {};
+      state.seen[item] = true;
+    }
   }
 
   function visualSig(state) {
@@ -511,6 +619,10 @@
       state.location, state.fire, state.temperature, state.builder_level,
       state.stores.wood, state.stores.fur, state.stores.meat, state.stores.compass,
       state.buildings.trap, state.buildings.cart, state.buildings.hut,
+      state.buildings.lodge, state.buildings.smokehouse, state.buildings.tannery,
+      state.buildings.trading_post, state.buildings.workshop, state.buildings.steelworks, state.buildings.armoury,
+      JSON.stringify(state.workers),
+      state.stores.leather, state.stores.cured_meat, state.stores.iron, state.stores.coal, state.stores.steel, state.stores.sulphur,
       state.population, state.unlocked.outside ? 1 : 0, state.unlocked.path ? 1 : 0,
       state.notifications.length, n0 ? n0.text : "", n0 ? (n0.count || 1) : "",
       ev ? ev.id : "", ev ? ev.scene : "",
@@ -615,6 +727,20 @@
     return { drops: drops, msgs: msgs, baitUsed: extra };
   }
 
+  function buildingMax(kind) {
+    if (kind === "trap") return 10;
+    if (kind === "hut") return 20;
+    if (kind === "cart") return 1;
+    if (kind === "lodge") return 1;
+    if (kind === "trading_post") return 1;
+    if (kind === "tannery") return 1;
+    if (kind === "smokehouse") return 1;
+    if (kind === "workshop") return 1;
+    if (kind === "steelworks") return 1;
+    if (kind === "armoury") return 1;
+    return 0;
+  }
+
   function buildingCost(kind, count) {
     // @pacing kind=cost id=trap_base value=10 phase=forest
     // @pacing kind=cost id=trap_step value=10 phase=forest
@@ -624,7 +750,133 @@
     // @pacing kind=cost id=hut_base value=100 phase=forest min=240s max=900s note=first hut vs gather+builder income
     // @pacing kind=cost id=hut_step value=50 phase=forest
     if (kind === "hut") return { wood: 100 + count * 50 };
+    // @pacing kind=cost id=lodge value=200wood+10fur+5meat phase=village
+    if (kind === "lodge") return { wood: 200, fur: 10, meat: 5 };
+    // @pacing kind=cost id=trading_post value=400wood+100fur phase=village
+    if (kind === "trading_post") return { wood: 400, fur: 100 };
+    // @pacing kind=cost id=tannery value=500wood+50fur phase=village
+    if (kind === "tannery") return { wood: 500, fur: 50 };
+    // @pacing kind=cost id=smokehouse value=600wood+50meat phase=village
+    if (kind === "smokehouse") return { wood: 600, meat: 50 };
+    // @pacing kind=cost id=workshop value=800wood+100leather+10scales phase=village
+    if (kind === "workshop") return { wood: 800, leather: 100, scales: 10 };
+    // @pacing kind=cost id=steelworks value=1500wood+100iron+100coal phase=village
+    if (kind === "steelworks") return { wood: 1500, iron: 100, coal: 100 };
+    // @pacing kind=cost id=armoury value=3000wood+100steel+50sulphur phase=village
+    if (kind === "armoury") return { wood: 3000, steel: 100, sulphur: 50 };
     return null;
+  }
+
+  function assignedWorkers(state) {
+    var n = 0;
+    WORKER_KEYS.forEach(function (k) {
+      if (k === "gatherer") return;
+      n += state.workers[k] || 0;
+    });
+    return n;
+  }
+
+  function syncGatherers(state) {
+    var extra = assignedWorkers(state) - (state.population || 0);
+    if (extra > 0) {
+      Object.keys(JOB_BUILDING).forEach(function (job) {
+        if (extra <= 0) return;
+        var n = state.workers[job] || 0;
+        if (n <= 0) return;
+        var cut = Math.min(n, extra);
+        state.workers[job] = n - cut;
+        extra -= cut;
+      });
+    }
+    state.workers.gatherer = Math.max(0, (state.population || 0) - assignedWorkers(state));
+    return state.workers.gatherer;
+  }
+
+  function unlockWorkersForBuildings(state) {
+    Object.keys(JOB_BUILDING).forEach(function (job) {
+      var b = JOB_BUILDING[job];
+      if ((state.buildings[b] || 0) > 0) {
+        if (typeof state.workers[job] !== "number") state.workers[job] = 0;
+      }
+    });
+  }
+
+  function workerUnlocked(state, job) {
+    if (job === "gatherer") return (state.population || 0) > 0;
+    var b = JOB_BUILDING[job];
+    return !!(b && (state.buildings[b] || 0) > 0);
+  }
+
+  function visibleJobs(state) {
+    var out = [];
+    if ((state.population || 0) > 0) out.push("gatherer");
+    Object.keys(JOB_BUILDING).forEach(function (job) {
+      if (workerUnlocked(state, job)) out.push(job);
+    });
+    return out;
+  }
+
+  function craftVisible(state, kind) {
+    if (state.flags["craft_unlocked_" + kind] || (state.buildings[kind] || 0) > 0) return true;
+    var cost = buildingCost(kind, state.buildings[kind] || 0);
+    if (!cost) return false;
+    if ((state.stores.wood || 0) < (cost.wood || 0) * 0.5) return false;
+    for (var k in cost) {
+      if (k === "wood") continue;
+      if (!(state.stores[k] > 0)) return false;
+    }
+    return true;
+  }
+
+  function checkCraftUnlocks(state) {
+    if (state.builder_level < 4) return;
+    BUILDABLE.forEach(function (kind) {
+      if (state.flags["craft_unlocked_" + kind] || state.flags["craft_hint_" + kind]) return;
+      if (!craftVisible(state, kind)) return;
+      state.flags["craft_unlocked_" + kind] = true;
+      var msg = BUILD_AVAILABLE[kind];
+      if (msg) pushNote(state, t(msg), "room");
+    });
+  }
+
+  function applyWorkerIncome(state, dt, analytics) {
+    var produced = {};
+    Object.keys(INCOME).forEach(function (job) {
+      var spec = INCOME[job];
+      var n = job === "gatherer" ? (state.workers.gatherer || 0) : (state.workers[job] || 0);
+      if (n <= 0) return;
+      if (typeof state.income_acc[job] !== "number") state.income_acc[job] = 0;
+      state.income_acc[job] += dt;
+      if (state.income_acc[job] < spec.delay) return;
+      var ticks = Math.floor(state.income_acc[job] / spec.delay);
+      state.income_acc[job] -= ticks * spec.delay;
+      var t0;
+      for (t0 = 0; t0 < ticks; t0++) {
+        var okApply = true;
+        var k;
+        for (k in spec.stores) {
+          if ((state.stores[k] || 0) + spec.stores[k] * n < 0) {
+            okApply = false;
+            break;
+          }
+        }
+        if (!okApply) continue;
+        for (k in spec.stores) {
+          addItem(state, k, spec.stores[k] * n);
+          produced[k] = (produced[k] || 0) + spec.stores[k] * n;
+        }
+        if (analytics && spec.stores.cured_meat > 0 && !state.flags.cured_meat_produced && (state.stores.cured_meat || 0) > 0) {
+          state.flags.cured_meat_produced = true;
+          analytics.log(state, "cured_meat_first", {
+            workers: n,
+            source: job,
+            cured_meat: state.stores.cured_meat,
+            stores: deepClone(state.stores)
+          });
+        }
+      }
+    });
+    return produced;
   }
 
   function canAfford(state, cost) {
@@ -1121,6 +1373,7 @@
       this.log(state, "resource_snapshot", {
         stores: deepClone(state.stores),
         buildings: deepClone(state.buildings),
+        workers: deepClone(state.workers),
         fire: state.fire,
         population: state.population,
         temperature: state.temperature,
@@ -1132,6 +1385,7 @@
       this.log(state, "resource_snapshot", {
         stores: deepClone(state.stores),
         buildings: deepClone(state.buildings),
+        workers: deepClone(state.workers),
         fire: state.fire,
         population: state.population,
         temperature: state.temperature,
@@ -1350,7 +1604,7 @@
     args = args || {};
     var s = this.state;
     var note = null;
-    if (s.active_event && action !== "event_choice" && action !== "combat" && action !== "export_telemetry" && action !== "set_director" && action !== "set_timescale" && action !== "travel") {
+    if (s.active_event && action !== "event_choice" && action !== "combat" && action !== "export_telemetry" && action !== "set_director" && action !== "set_timescale" && action !== "travel" && action !== "assign_worker") {
       return { ok: false, error: "event_open" };
     }
     switch (action) {
@@ -1437,12 +1691,14 @@
           return { ok: false, error: "too_cold" };
         }
         var kind = args.kind;
-        var max = kind === "trap" ? 10 : kind === "hut" ? 20 : 1;
-        if (s.buildings[kind] >= max) return { ok: false, error: "max" };
-        var cost = buildingCost(kind, s.buildings[kind]);
+        var max = buildingMax(kind);
+        if (!max) return { ok: false, error: "unknown_building" };
+        if ((s.buildings[kind] || 0) >= max) return { ok: false, error: "max" };
+        var cost = buildingCost(kind, s.buildings[kind] || 0);
         if (!cost || !canAfford(s, cost)) return { ok: false, error: "cost" };
         pay(s, cost);
-        s.buildings[kind] += 1;
+        s.buildings[kind] = (s.buildings[kind] || 0) + 1;
+        s.flags["craft_unlocked_" + kind] = true;
         if (kind === "trap") pushNote(s, t("more traps to catch more creatures"), "room");
         if (kind === "cart") pushNote(s, t("the rickety cart will carry more wood from the forest"), "room");
         if (kind === "hut") {
@@ -1451,6 +1707,9 @@
           // @pacing kind=interval id=pop_timer_span value=150s phase=village
           if (s.pop_timer == null) s.pop_timer = s.game_time_sec + 30 + Math.random() * 150;
         }
+        if (BUILD_DONE[kind]) pushNote(s, t(BUILD_DONE[kind]), "room");
+        unlockWorkersForBuildings(s);
+        syncGatherers(s);
         this.analytics.log(s, "build", {
           kind: kind,
           cost: cost,
@@ -1463,6 +1722,34 @@
         if (!s.unlocked[args.area] && args.area !== "room") return { ok: false, error: "locked" };
         if (s.world.on_expedition) return { ok: false, error: "away" };
         s.location = args.area;
+        break;
+      case "assign_worker":
+        var job = args.job;
+        var delta = args.delta | 0;
+        if (!job || !INCOME[job] || job === "gatherer") return { ok: false, error: "job" };
+        if (!workerUnlocked(s, job)) return { ok: false, error: "locked" };
+        syncGatherers(s);
+        if (delta > 0) {
+          var free = s.workers.gatherer || 0;
+          var take = Math.min(delta, free);
+          if (take <= 0) return { ok: false, error: "no_gatherers" };
+          s.workers[job] = (s.workers[job] || 0) + take;
+        } else if (delta < 0) {
+          var haveJob = s.workers[job] || 0;
+          var give = Math.min(-delta, haveJob);
+          if (give <= 0) return { ok: false, error: "none" };
+          s.workers[job] = haveJob - give;
+        } else {
+          return { ok: false, error: "delta" };
+        }
+        syncGatherers(s);
+        this.analytics.log(s, "worker_assign", {
+          job: job,
+          delta: delta,
+          workers: deepClone(s.workers),
+          population: s.population,
+          buildings: deepClone(s.buildings)
+        });
         break;
       case "pack":
         var item = args.item;
@@ -1649,7 +1936,10 @@
     if (btn.cost) pay(s, btn.cost);
     if (btn.reward) grant(s, btn.reward);
     if (btn.note) pushNote(s, btn.note, s.location);
-    if (btn.lose_pop) s.population = Math.max(0, s.population - btn.lose_pop);
+    if (btn.lose_pop) {
+      s.population = Math.max(0, s.population - btn.lose_pop);
+      syncGatherers(s);
+    }
     if (btn.require_no && (s.stores[btn.require_no] || 0) > 0) {
       /* still allow close */
     }
@@ -1748,16 +2038,12 @@
         addItem(s, "wood", 2 * n);
       }
     }
-    var g = s.workers.gatherer || (s.population > 0 ? s.population : 0);
-    if (g > 0) {
-      s.income_acc.gatherer += dt;
-      // @pacing kind=income id=gatherer_wood value=1/10s phase=village note=per worker
-      if (s.income_acc.gatherer >= 10) {
-        var gn = Math.floor(s.income_acc.gatherer / 10);
-        s.income_acc.gatherer -= gn * 10;
-        addItem(s, "wood", g * gn);
-      }
-    }
+    syncGatherers(s);
+    // @pacing kind=income id=gatherer_wood value=1/10s phase=village note=per worker
+    // @pacing kind=income id=hunter value=0.5fur+0.5meat/10s phase=village
+    // @pacing kind=income id=charcutier value=1cured_meat/10s phase=village note=consumes 5 meat + 5 wood
+    applyWorkerIncome(s, dt, this.analytics);
+    checkCraftUnlocks(s);
 
     if (s.pop_timer != null && s.game_time_sec >= s.pop_timer) {
       var cap = s.buildings.hut * 4;
@@ -1766,7 +2052,7 @@
         var add = Math.max(1, Math.floor(space / 2) + Math.floor(Math.random() * Math.max(1, space - Math.floor(space / 2))));
         add = Math.min(add, space);
         s.population += add;
-        s.workers.gatherer = s.population;
+        syncGatherers(s);
         if (add === 1) pushNote(s, t("a stranger arrives in the night"), "outside");
         else if (add <= 3) pushNote(s, "一户饱经风雨的人家住进一栋小屋。", "outside");
         else pushNote(s, "一群瘦骨嶙峋，风尘仆仆的人抵达了。", "outside");
@@ -1816,14 +2102,14 @@
     var s = this.state;
     if (s.builder_level < 4) return [];
     var out = [];
-    ["trap", "cart", "hut"].forEach(function (kind) {
-      var n = s.buildings[kind];
-      var max = kind === "trap" ? 10 : kind === "hut" ? 20 : 1;
+    BUILDABLE.forEach(function (kind) {
+      var n = s.buildings[kind] || 0;
+      var max = buildingMax(kind);
       var cost = buildingCost(kind, n);
-      var woodNeed = cost.wood || 0;
+      if (!cost || !max) return;
       // @pacing kind=threshold id=craft_visible_ratio value=0.5 phase=forest
-      var show = (s.stores.wood || 0) >= woodNeed * 0.5;
-      if (show) out.push({ kind: kind, cost: cost, have: n, max: max, can: canAfford(s, cost) && n < max && s.temperature > 1 });
+      if (!craftVisible(s, kind)) return;
+      out.push({ kind: kind, cost: cost, have: n, max: max, can: canAfford(s, cost) && n < max && s.temperature > 1 });
     });
     return out;
   };
@@ -1831,6 +2117,11 @@
   return {
     ITEMS: ITEMS,
     ITEM_CN: ITEM_CN,
+    BUILDING_CN: BUILDING_CN,
+    WORKER_CN: WORKER_CN,
+    INCOME: INCOME,
+    BUILDABLE: BUILDABLE,
+    JOB_BUILDING: JOB_BUILDING,
     FIRE: FIRE,
     TEMP: TEMP,
     TOOL_SCHEMA: TOOL_SCHEMA,
@@ -1851,6 +2142,12 @@
     writeSave: writeSave,
     clearSave: clearSave,
     buildingCost: buildingCost,
+    buildingMax: buildingMax,
+    applyWorkerIncome: applyWorkerIncome,
+    visibleJobs: visibleJobs,
+    workerUnlocked: workerUnlocked,
+    syncGatherers: syncGatherers,
+    migrateState: migrateState,
     terrainAt: terrainAt,
     hutTitle: hutTitle,
     roomTitle: roomTitle,

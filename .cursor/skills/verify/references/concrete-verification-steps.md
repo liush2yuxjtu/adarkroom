@@ -443,9 +443,18 @@ Any change to `godot/build/web/engine.js`, `telemetry.js`, `save-telemetry.js`, 
 ```bash
 node tools/verify/telemetry.mjs
 node tools/verify/story.mjs --runs 5
+node tools/verify/income.mjs
 ```
 
-Both must exit 0. Details and the bug each check guards: [`telemetry-and-story-checks.md`](telemetry-and-story-checks.md).
+All three must exit 0. Details and the bug each check guards: [`telemetry-and-story-checks.md`](telemetry-and-story-checks.md).
+
+Content parity (`tools/verify/parity.mjs`) is **opt-in** while original-content gaps remain:
+
+```bash
+node tools/verify/run.mjs --only parity
+```
+
+See [`content-parity.md`](content-parity.md). Do not add it to the default `run.mjs` list until green.
 
 ## Worked example: 2026-10-12 12-issue audit
 

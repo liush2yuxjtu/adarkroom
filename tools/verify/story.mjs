@@ -56,29 +56,55 @@ export function playthrough({ maxGameSec = 9000, seed = 1 } = {}) {
 
   A("light_fire");
   tick(50);
-  for (let i = 0; i < 20000 && S().game_time_sec < maxGameSec * 0.66 && !S().unlocked.path; i++) {
+  const village = { lodge: false, smokehouse: false, charcutier: false, cured_meat: 0, packed: 0 };
+  function villageActs() {
     warm();
     if (S().unlocked.outside) { A("travel", { area: "outside" }); A("gather_wood"); }
     if (S().buildings.trap > 0) A("check_traps");
     if (S().builder_level === 3) A("travel", { area: "room" });
-    const w = S().stores.wood || 0, b = S().buildings;
+    const w = S().stores.wood || 0, b = S().buildings, st = S().stores;
     if (S().builder_level >= 4) {
       if (b.trap < 1 && w >= 10) A("build", { kind: "trap" });
       else if (b.cart < 1 && w >= 30) A("build", { kind: "cart" });
-      else if (b.hut < 1 && w >= 100) { A("travel", { area: "room" }); A("build", { kind: "hut" }); }
-      else if (b.trap < 4 && b.hut >= 1 && w >= 10 + 10 * b.trap) A("build", { kind: "trap" });
+      else if (b.hut < 2 && w >= 100 + 50 * (b.hut || 0)) { A("travel", { area: "room" }); A("build", { kind: "hut" }); }
+      else if (b.trap < 6 && w >= 10 + 10 * b.trap) A("build", { kind: "trap" });
+      else if ((b.lodge || 0) < 1 && w >= 200 && (st.fur || 0) >= 10 && (st.meat || 0) >= 5) {
+        A("travel", { area: "room" }); A("build", { kind: "lodge" });
+      } else if ((b.smokehouse || 0) < 1 && w >= 600 && (st.meat || 0) >= 50) {
+        A("travel", { area: "room" }); A("build", { kind: "smokehouse" });
+      }
     }
+    if ((S().buildings.smokehouse || 0) >= 1 && (S().workers.charcutier || 0) < 1) {
+      if ((S().workers.gatherer || 0) < 1 && (S().workers.hunter || 0) > 0) {
+        A("assign_worker", { job: "hunter", delta: -1 });
+      }
+      if ((S().workers.gatherer || 0) > 0) A("assign_worker", { job: "charcutier", delta: 1 });
+    } else if ((S().buildings.lodge || 0) >= 1 && (S().workers.hunter || 0) < Math.max(1, (S().population || 0) - 1) && (S().workers.gatherer || 0) > 1) {
+      A("assign_worker", { job: "hunter", delta: 1 });
+    }
+    if ((S().buildings.lodge || 0) >= 1) village.lodge = true;
+    if ((S().buildings.smokehouse || 0) >= 1) village.smokehouse = true;
+    if ((S().workers.charcutier || 0) >= 1) village.charcutier = true;
+    village.cured_meat = S().stores.cured_meat || 0;
+  }
+  for (let i = 0; i < 20000 && S().game_time_sec < maxGameSec * 0.55 && (S().buildings.hut || 0) < 1; i++) {
+    villageActs();
     tick(1);
   }
-  while ((S().stores.meat || 0) < 6 && S().game_time_sec < maxGameSec) {
-    warm();
-    A("travel", { area: "outside" });
-    A("check_traps");
-    A("gather_wood");
+  for (let i = 0; i < 30000 && S().game_time_sec < maxGameSec * 0.88 && village.cured_meat <= 0; i++) {
+    villageActs();
+    tick(1);
+  }
+  while ((S().stores.meat || 0) + (S().stores.cured_meat || 0) < 2 && S().game_time_sec < maxGameSec) {
+    villageActs();
     tick(2);
   }
   A("travel", { area: "path" });
-  A("pack", { item: "meat", amount: S().stores.meat || 0 });
+  if ((S().stores.cured_meat || 0) > 0) {
+    A("pack", { item: "cured_meat", amount: S().stores.cured_meat || 0 });
+  }
+  if ((S().stores.meat || 0) > 0) A("pack", { item: "meat", amount: S().stores.meat || 0 });
+  village.packed = S().outfit.cured_meat || 0;
   A("embark");
   const mv = (dx, dy) => { A("world_move", { dx, dy }); let k = 0; while (S().active_event && k++ < 40) resolve(); };
   for (const [dx, dy] of [[1, 0], [1, 0], [1, 0], [0, -1], [0, -1], [0, 1], [0, 1], [-1, 0], [-1, 0], [-1, 0]]) {
@@ -93,7 +119,8 @@ export function playthrough({ maxGameSec = 9000, seed = 1 } = {}) {
     visited_old_house: !!S().flags.visited_old_house,
     hp: S().world.hp,
     game_time_sec: Math.round(S().game_time_sec),
-    unexpected_errors: errors
+    unexpected_errors: errors,
+    village
   };
 }
 
@@ -116,7 +143,19 @@ export function runStory({ runs = 5 } = {}) {
       const check = { id: `run${r}:${ph}`, trigger: TRIGGERS[ph], expected: "reached", actual: hit ? `reached @${hit.t}s via ${hit.via}` : `not reached (final ${res.final})` };
       if (hit) ok(suite, check); else fail(suite, { ...check, detail: JSON.stringify(res) });
     }
-    const bad = Object.keys(res.unexpected_errors).filter((k) => !/^(build:cost|embark:no_food|combat:|world_move:event_open|pack:)/.test(k));
+    const v = res.village || {};
+    const extra = [
+      { id: `run${r}:lodge`, ok: !!v.lodge, trigger: "200 wood + 10 fur + 5 meat, warm room", expected: "lodge built" },
+      { id: `run${r}:smokehouse`, ok: !!v.smokehouse, trigger: "600 wood + 50 meat after lodge", expected: "smokehouse built" },
+      { id: `run${r}:charcutier`, ok: !!v.charcutier, trigger: "assign_worker charcutier +1", expected: "charcutier >= 1" },
+      { id: `run${r}:cured_meat`, ok: (v.cured_meat || 0) > 0, trigger: "charcutier income 1/10s", expected: "stores.cured_meat > 0" },
+      { id: `run${r}:cured_meat_pack`, ok: (v.packed || 0) > 0, trigger: "pack cured_meat then embark", expected: "outfit.cured_meat > 0" }
+    ];
+    for (const c of extra) {
+      const check = { id: c.id, trigger: c.trigger, expected: c.expected, actual: c.ok ? "reached" : JSON.stringify(v) };
+      if (c.ok) ok(suite, check); else fail(suite, { ...check, detail: JSON.stringify(res) });
+    }
+    const bad = Object.keys(res.unexpected_errors).filter((k) => !/^(build:cost|embark:no_food|combat:|world_move:event_open|pack:|assign_worker:)/.test(k));
     if (bad.length) suite.warnings.push({ id: `run${r}:errors`, detail: res.unexpected_errors });
   }
   return suite;

@@ -42,5 +42,11 @@ Drives the rule director with a deterministic player script. Per run, per node:
 | path | hut >= 1 and fur >= 1, compass event, take |
 | world | path unlocked + packed meat, embark |
 | slice_complete | visit old_house (8,3), return home alive |
+| lodge | village + 200 wood / 10 fur / 5 meat, warm room → build lodge |
+| smokehouse | lodge + 600 wood / 50 meat → build smokehouse |
+| charcutier | assign a villager to charcutier |
+| cured_meat | charcutier income raises `stores.cured_meat` above 0; it can be packed for embark |
 
 FAIL = any node not reached. Gameplay numbers are not touched by this check.
+
+Worker incomes (`tools/verify/income.mjs`) tick `INCOME` in isolation and assert the original `_INCOME` rates (hunter 0.5 fur+meat / 10s, charcutier 1 cured meat per 5 meat + 5 wood / 10s, skip when inputs are short).
