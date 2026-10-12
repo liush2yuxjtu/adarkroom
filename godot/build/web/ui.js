@@ -1122,7 +1122,7 @@
             var wy2 = y0 + y;
             if (wx2 < 0 || wy2 < 0 || wx2 >= s.size || wy2 >= s.size) row += " ";
             else if (wx2 === s.x && wy2 === s.y) row += "@";
-            else if (s.landmarks[wx2 + "," + wy2]) row += "H";
+            else if (s.landmarks[wx2 + "," + wy2]) row += ({ old_house: "H", cave: "V", town: "O", city: "Y", outpost: "P", ship: "W", borehole: "B", battlefield: "F", swamp: "M", cache: "U", executioner: "X", ironmine: "I", coalmine: "C", sulphurmine: "S" }[s.landmarks[wx2 + "," + wy2]] || "H");
             else if (!s.visited[wx2 + "," + wy2]) row += " ";
             else {
               var ter2 = ADR.terrainAt(wx2, wy2, s.size);
@@ -1304,7 +1304,7 @@
       return;
     }
     var spec = ev.spec;
-    var scene = ev.scene === "start" ? spec : (spec.scenes && spec.scenes[ev.scene]) || spec;
+    var scene = (ADR.currentScene && ADR.currentScene(ev)) || (ev.scene === "start" ? spec : (spec.scenes && spec.scenes[ev.scene]) || spec);
     if (isPixel()) {
       var evIcon = pxIconEl(eventIcon(ev.id));
       evIcon.classList.add("px-event-icon");
@@ -1328,7 +1328,11 @@
       if (ADR.buttonAvailable && !ADR.buttonAvailable(game.state, b)) return;
       var disabled = false;
       if (b.cost) {
-        disabled = Object.keys(b.cost).some(function (k) { return (game.state.stores[k] || 0) < b.cost[k]; });
+        disabled = Object.keys(b.cost).some(function (k) {
+          var have = (game.state.stores[k] || 0);
+          if (game.state.world && game.state.world.on_expedition) have += (game.state.outfit[k] || 0);
+          return have < b.cost[k];
+        });
       }
       if (b.require_no && (game.state.stores[b.require_no] || 0) > 0) disabled = true;
       var label = b.text;

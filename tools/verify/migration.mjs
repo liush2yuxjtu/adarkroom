@@ -13,7 +13,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { emptySuite, ok, fail, summarize, writeJson } from "./lib/report.mjs";
 import { makeSandbox } from "./lib/engine-sandbox.mjs";
-import { playthrough, workshopPlaythrough, tradingPlaythrough, villageEventsPlaythrough, worldCombatPlaythrough } from "./story.mjs";
+import { playthrough, workshopPlaythrough, tradingPlaythrough, villageEventsPlaythrough, worldCombatPlaythrough, landmarksPlaythrough } from "./story.mjs";
 import { runParity } from "./parity.mjs";
 import {
   ROOT,
@@ -260,6 +260,26 @@ function reachabilityBatches(parityRows) {
         kind: "story",
         detail: okc
           ? "world RADIUS 30 + weapons/perks/encounters + persist"
+          : JSON.stringify(play)
+      });
+      continue;
+    }
+    if (String(id) === "6" || id === 6) {
+      const play = landmarksPlaythrough();
+      const okc = !!(
+        play.allPlaced && play.allEvents && play.storyPathClean && play.allSpawned
+        && play.outpostWater && play.swampPerk && play.ironFlag && play.coalFlag
+        && play.sulphurFlag && play.cityCleared && play.shipFlag && play.houseVisited
+        && play.executionerStart && play.minesBuilt && play.noShipArea
+        && play.persistLandmarks && play.persistCity && play.persistIronMine && play.persistShip
+      );
+      out.push({
+        batch: 6,
+        title: meta.title,
+        pass: okc && gaps.length === 0,
+        kind: "story",
+        detail: okc
+          ? "landmarks placed + setpiece scenes + mine/city/ship flags + persist"
           : JSON.stringify(play)
       });
       continue;
