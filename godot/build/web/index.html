@@ -9,8 +9,9 @@
   <link rel="preload" as="font" type="font/woff2" href="https://cdn.jsdelivr.net/fontsource/fonts/jetbrains-mono@5.2.5/latin-400-normal.woff2" crossorigin />
   <link rel="preload" as="font" type="font/woff2" href="fonts/NotoSansSC-Regular-subset.woff2" crossorigin />
   <link rel="stylesheet" href="adr.css" />
+  <link rel="stylesheet" href="assets/pixel/pixel-icons.css" />
 </head>
-<body>
+<body class="style-text">
   <div id="app">
     <div id="wrapper">
       <div id="notifications"></div>
@@ -21,16 +22,17 @@
       <div id="stores" style="display:none"></div>
     </div>
     <div id="menu">
-      <button type="button" id="btn-hyper">加速.</button>
-      <button type="button" id="btn-settings">设置.</button>
-      <button type="button" id="btn-export">导出遥测.</button>
-      <button type="button" id="btn-restart">重开.</button>
-      <button type="button" id="btn-classic">原版.</button>
+      <button type="button" id="btn-hyper" data-icon="fast">加速.</button>
+      <button type="button" id="btn-settings" data-icon="settings">设置.</button>
+      <button type="button" id="btn-export" data-icon="export">导出遥测.</button>
+      <button type="button" id="btn-restart" data-icon="restart">重开.</button>
+      <button type="button" id="btn-classic" data-icon="classic">原版.</button>
       <span id="director-label">导演：规则</span>
     </div>
   </div>
   <div id="overlay"></div>
   <div id="toast"></div>
+  <div id="phase-wipe" hidden></div>
   <script src="telemetry-config.js"></script>
   <script src="sinks/supabase.js"></script>
   <script src="telemetry.js"></script>
