@@ -6,14 +6,18 @@ var notes: VBoxContainer
 var header: HBoxContainer
 var body: VBoxContainer
 var stores: VBoxContainer
-var font: SystemFont
+var font: FontFile
+var cjk_font: FontFile
 
 func _ready() -> void:
-	font = SystemFont.new()
-	font.font_names = PackedStringArray([
-		"Noto Serif CJK SC", "Noto Sans CJK SC", "Source Han Serif SC",
-		"Songti SC", "SimSun", "Microsoft YaHei", "WenQuanYi Micro Hei", "serif"
-	])
+	font = FontFile.new()
+	if font.load_dynamic_font("res://fonts/JetBrainsMono-Regular.ttf") != OK:
+		push_warning("JetBrains Mono missing")
+	cjk_font = FontFile.new()
+	if cjk_font.load_dynamic_font("res://fonts/NotoSansSC-Regular-subset.otf") != OK:
+		push_warning("Noto Sans SC subset missing")
+	else:
+		font.fallbacks = [cjk_font]
 	theme = Theme.new()
 	theme.default_font = font
 	theme.default_font_size = 16

@@ -8,7 +8,7 @@
 | Drive | `scripts/verify_live.py`: real mouse down → 80 ms → up at the `生火` button centre |
 | Text | `小黑屋`, `醒来。头在痛。眼前模糊。去生火吧。` present |
 | Result | `#panel-room h1` stayed `小黑屋` (expected `生火间`); JS `.click()` on the same button changed it to `生火间` |
-| Console / network | 0 runtime exceptions, 0 failed requests, 0 4xx/5xx; only warning: `OTS parsing error: FFTM: misaligned table` on `fonts/wqy-microhei.ttc` |
+| Console / network | 0 runtime exceptions, 0 failed requests, 0 4xx/5xx. (Older deploys warned `OTS parsing error: FFTM` on `fonts/wqy-microhei.ttc`; that file is gone.) |
 | CDP | `elementFromPoint` = the button itself (no overlay); `getEventListeners` = `click`; button node detached within 2 animation frames; `#panel-room` childList mutations 61–244 per second while idle |
 | Telemetry (localStorage) | `session_start`, `director_think`, `director_tool` only; no `player_action` |
 | Menu | `加速.` changes state (static button); `设置.` modal is wiped on the next frame by `renderEvent()` |
