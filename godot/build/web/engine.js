@@ -147,6 +147,158 @@
     };
   }
 
+  var SAVE_KEY = "adr.save.v1";
+  var SAVE_VERSION = 1;
+  var OBJECT_KEYS = ["stores", "buildings", "unlocked", "npc_moods", "workers", "outfit", "income_acc", "world", "flags", "cooldowns"];
+  var ARRAY_KEYS = ["notifications", "scheduled"];
+
+  function readSaveRaw() {
+    if (typeof localStorage === "undefined") return null;
+    try {
+      var raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return null;
+      var doc = JSON.parse(raw);
+      if (!doc || doc.v !== SAVE_VERSION || !doc.state || typeof doc.state !== "object") return null;
+      return doc;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function writeSave(state) {
+    if (typeof localStorage === "undefined") return;
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify({
+        v: SAVE_VERSION,
+        saved_at: new Date().toISOString(),
+        state: deepClone(state)
+      }));
+    } catch (e) { /* quota / private mode */ }
+  }
+
+  function clearSave() {
+    if (typeof localStorage === "undefined") return;
+    try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ }
+  }
+
+  function hydrateState(saved) {
+    var base = createState();
+    if (!saved || typeof saved !== "object") return base;
+    Object.keys(base).forEach(function (k) {
+      if (saved[k] === undefined) return;
+      if (OBJECT_KEYS.indexOf(k) >= 0) {
+        base[k] = Object.assign({}, base[k], saved[k]);
+        if (k === "world") {
+          base.world.visited = (saved.world && saved.world.visited) || {};
+          base.world.landmarks = (saved.world && saved.world.landmarks) || base.world.landmarks;
+        }
+      } else if (ARRAY_KEYS.indexOf(k) >= 0) {
+        base[k] = Array.isArray(saved[k]) ? saved[k] : base[k];
+      } else {
+        base[k] = saved[k];
+      }
+    });
+    base.phase = derivePhase(base);
+    return base;
+  }
+
+  function decodeImport(b64) {
+    if (!b64) return null;
+    try {
+      var pad = b64.replace(/-/g, "+").replace(/_/g, "/");
+      while (pad.length % 4) pad += "=";
+      var json = typeof atob === "function" ? atob(pad) : Buffer.from(pad, "base64").toString("utf8");
+      var doc = JSON.parse(json);
+      if (doc && doc.state) return hydrateState(doc.state);
+      return hydrateState(doc);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function telemetryBuffer() {
+    if (typeof localStorage === "undefined") return [];
+    try {
+      var parsed = JSON.parse(localStorage.getItem("adr.telemetry") || "[]");
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function rebuildFromTelemetry(sessionId) {
+    var evs = telemetryBuffer().filter(function (e) { return e && e.session_id === sessionId; });
+    if (!evs.length) return null;
+    evs.sort(function (a, b) {
+      return String(a.occurred_at || "").localeCompare(String(b.occurred_at || ""));
+    });
+    var state = createState();
+    state.session_id = sessionId;
+    evs.forEach(function (e) {
+      if (typeof e.game_time_sec === "number") state.game_time_sec = e.game_time_sec;
+      var p = e.payload || {};
+      if (e.event_name === "resource_snapshot") {
+        if (p.stores) Object.assign(state.stores, p.stores);
+        if (p.buildings) Object.assign(state.buildings, p.buildings);
+        if (p.fire != null) state.fire = p.fire;
+        if (p.population != null) state.population = p.population;
+        if ((state.stores.wood || 0) > 0 || state.fire > 0) state.wood_initialized = true;
+      }
+      if (e.event_name === "player_action") {
+        var act = p.action;
+        if (act === "gather_wood" || act === "check_traps" || act === "build") state.unlocked.outside = true;
+        if (act === "embark" || act === "world_move") {
+          state.unlocked.path = true;
+          state.unlocked.world = true;
+        }
+        if (act === "travel" && p.args && p.args.area) {
+          if (p.args.area === "outside") state.unlocked.outside = true;
+          if (p.args.area === "path") state.unlocked.path = true;
+          state.location = p.args.area;
+        }
+      }
+      if (e.event_name === "director_tool") {
+        if (p.tool === "unlock_area" && p.args && p.args.area) state.unlocked[p.args.area] = true;
+        if (p.tool === "set_flag" && p.args && p.args.key != null) {
+          state.flags[p.args.key] = p.args.value;
+          if (p.args.key === "builder_level" && typeof p.args.value === "number") {
+            state.builder_level = p.args.value;
+          }
+        }
+        if (p.tool === "change_npc_mood" && p.args && p.args.npc) {
+          state.npc_moods[p.args.npc] = p.args.mood;
+        }
+        if (p.tool === "narrate" && p.args && p.args.text) {
+          pushNote(state, p.args.text, p.args.source);
+        }
+      }
+      if (e.event_name === "slice_complete") state.slice_complete = true;
+    });
+    if (state.unlocked.outside && state.builder_level < 1) state.builder_level = 1;
+    if ((state.buildings.trap || 0) > 0 || (state.buildings.hut || 0) > 0) {
+      state.unlocked.outside = true;
+      state.builder_level = Math.max(state.builder_level, 4);
+    }
+    state.flags.wake_line = true;
+    state.phase = derivePhase(state);
+    if (state.phase === "forest" && state.location === "room") state.location = "outside";
+    return state;
+  }
+
+  function parseBootQuery() {
+    if (typeof location === "undefined" || !location.search) return {};
+    try {
+      var q = new URLSearchParams(location.search);
+      return {
+        fresh: q.get("fresh") === "1" || q.get("fresh") === "true",
+        restore: q.get("restore") || "",
+        importB64: q.get("import") || ""
+      };
+    } catch (e) {
+      return {};
+    }
+  }
+
   function directorState(state) {
     return {
       fire: state.fire,
@@ -655,17 +807,58 @@
   function Game(config, events) {
     this.config = config || {};
     this.events = events || {};
-    this.state = createState();
     this.timeScale = this.config.time_scale || 1;
     this.directorName = this.config.director || "rule";
     this.rule = new RuleDirector();
     this.analytics = new Analytics(this.config);
     this.listeners = [];
     this._llmBusy = false;
+    this._saveDirty = false;
+    this._lastSaveAt = 0;
+    this.state = createState();
+    var boot = parseBootQuery();
+    var restored = false;
+    if (!boot.fresh) {
+      if (boot.importB64) restored = this.applyImportedSave(boot.importB64);
+      else if (boot.restore) restored = this.restoreFromTelemetry(boot.restore);
+      else restored = this.loadPersistedSave();
+    }
     this.analytics.attachSupabase();
-    this.analytics.log(this.state, "session_start", { director: this.directorName });
+    this.analytics.log(this.state, "session_start", {
+      director: this.directorName,
+      restored: restored,
+      save_key: SAVE_KEY
+    });
+    this.persistSave();
     this.directorTick();
   }
+
+  Game.prototype.persistSave = function () {
+    writeSave(this.state);
+    this._saveDirty = false;
+    this._lastSaveAt = Date.now();
+  };
+
+  Game.prototype.loadPersistedSave = function () {
+    var doc = readSaveRaw();
+    if (!doc) return false;
+    this.state = hydrateState(doc.state);
+    return true;
+  };
+
+  Game.prototype.applyImportedSave = function (b64) {
+    var next = decodeImport(b64);
+    if (!next) return false;
+    this.state = next;
+    return true;
+  };
+
+  Game.prototype.restoreFromTelemetry = function (sessionId) {
+    var next = rebuildFromTelemetry(sessionId);
+    if (!next) return false;
+    this.state = next;
+    return true;
+  };
 
   Game.prototype.on = function (fn) {
     this.listeners.push(fn);
@@ -918,9 +1111,11 @@
       case "restart":
         var oldA = this.analytics;
         oldA.log(s, "session_end", { reason: "restart" });
+        clearSave();
         this.state = createState();
         this.rule = new RuleDirector();
         this.analytics.log(this.state, "session_start", { director: this.directorName, restart: true });
+        this.persistSave();
         break;
       case "quit":
         this.analytics.log(s, "quit", {});
@@ -933,6 +1128,7 @@
     s.phase = derivePhase(s);
     this.directorTick();
     this.emit();
+    if (action !== "quit") this.persistSave();
     return { ok: true };
   };
 
@@ -1115,6 +1311,8 @@
     s.phase = derivePhase(s);
     this.analytics.tickChecks(s);
     if (visualSig(s) !== beforeSig) this.emit();
+    this._saveDirty = true;
+    if (Date.now() - this._lastSaveAt >= 3000) this.persistSave();
     if (this.hud) this.hud();
   };
 
@@ -1148,6 +1346,13 @@
     RuleDirector: RuleDirector,
     Analytics: Analytics,
     Game: Game,
+    SAVE_KEY: SAVE_KEY,
+    SAVE_VERSION: SAVE_VERSION,
+    hydrateState: hydrateState,
+    rebuildFromTelemetry: rebuildFromTelemetry,
+    readSaveRaw: readSaveRaw,
+    writeSave: writeSave,
+    clearSave: clearSave,
     buildingCost: buildingCost,
     terrainAt: terrainAt,
     hutTitle: hutTitle,

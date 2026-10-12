@@ -4,6 +4,8 @@ class_name GameLoop
 
 signal acted
 
+var _last_save_at: float = -999.0
+
 func act(action: String, args: Dictionary = {}) -> Dictionary:
 	var s := GameState
 	match action:
@@ -110,12 +112,17 @@ func act(action: String, args: Dictionary = {}) -> Dictionary:
 			s.active_event = null
 		"restart":
 			Analytics.log_event("session_end", { "reason": "restart" })
+			s.clear_save()
 			s.reset()
 			Analytics.log_event("session_start", { "director": DirectorHost.director_name, "restart": true })
+			s.save_game()
 		_:
 			return { "ok": false, "error": "unknown" }
 	Analytics.log_event("player_action", { "action": action, "args": args })
 	s.notify_changed()
+	if action != "restart":
+		s.save_game()
+		_last_save_at = s.game_time_sec
 	DirectorHost._think()
 	acted.emit()
 	return { "ok": true }
@@ -170,6 +177,9 @@ func tick(dt_real: float) -> void:
 	s.phase = s.derive_phase()
 	Analytics.tick_checks()
 	s.notify_changed()
+	if s.game_time_sec - _last_save_at >= 3.0:
+		s.save_game()
+		_last_save_at = s.game_time_sec
 
 func _go_home(success: bool) -> void:
 	var s := GameState
