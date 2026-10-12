@@ -13,7 +13,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { emptySuite, ok, fail, summarize, writeJson } from "./lib/report.mjs";
 import { makeSandbox } from "./lib/engine-sandbox.mjs";
-import { playthrough, workshopPlaythrough, tradingPlaythrough, villageEventsPlaythrough, worldCombatPlaythrough, landmarksPlaythrough, shipSpacePlaythrough, fabricatorPlaythrough } from "./story.mjs";
+import { playthrough, workshopPlaythrough, tradingPlaythrough, villageEventsPlaythrough, worldCombatPlaythrough, landmarksPlaythrough, shipSpacePlaythrough, fabricatorPlaythrough, endingPlaythrough } from "./story.mjs";
 import { runParity } from "./parity.mjs";
 import {
   ROOT,
@@ -136,6 +136,17 @@ function numericForRow(row, spec, ADR) {
       ? { status: "match", detail: String(spec.shipNums[name]) }
       : { status: "mismatch", detail: `original ${spec.shipNums[name]} remake ${rem}` };
   }
+  if (row.category === "score" && spec.scoreFactors && spec.scoreFactors.length) {
+    if (row.status !== "present") return { status: "skip", detail: row.status };
+    const rem = ADR.SCORE_FACTORS;
+    if (!rem || rem.length !== spec.scoreFactors.length) {
+      return { status: "mismatch", detail: `original ${JSON.stringify(spec.scoreFactors)} remake ${JSON.stringify(rem)}` };
+    }
+    const okf = rem.every((n, i) => n === spec.scoreFactors[i]);
+    return okf
+      ? { status: "match", detail: JSON.stringify(spec.scoreFactors) }
+      : { status: "mismatch", detail: `original ${JSON.stringify(spec.scoreFactors)} remake ${JSON.stringify(rem)}` };
+  }
   if (row.category === "space" && spec.spaceNums[name] != null) {
     if (row.status !== "present") return { status: "skip", detail: row.status };
     const rem = ADR[name];
@@ -163,7 +174,7 @@ function chineseForRow(row, spec, zhMap, ADR, remakeEvents) {
   const id = snake(name.replace(/ \(punch\)$/, ""));
   const remakeLabel = zhMap[id] || (ADR.STRINGS && ADR.STRINGS[name]);
   const origZh = spec.zh[name] || spec.zh[name.replace(/ \(punch\)$/, "")];
-  if (row.category === "setpiece event" || row.category === "landmark/setpiece") {
+  if (row.category === "setpiece event" || row.category === "landmark/setpiece" || row.category === "executioner") {
     const alias = EVENT_ALIASES[name] || LANDMARK_IDS[name] || snake(name.replace(/^(the|an?) /i, ""));
     const ev = remakeEvents && remakeEvents[alias];
     if (ev && hasCjk(ev.title)) return { status: "ok", detail: ev.title };
@@ -352,6 +363,26 @@ function reachabilityBatches(parityRows) {
         kind: "story",
         detail: okc
           ? "executioner salvage + blueprint redeem + fabricator unlock/crafts + persist"
+          : JSON.stringify(play)
+      });
+      continue;
+    }
+    if (String(id) === "9" || id === 9) {
+      const play = endingPlaythrough();
+      const okc = !!(
+        play.allEvents && play.introEnter && play.deviceOpen && play.antechamber
+        && play.engFlag && play.martialFlag && play.medFlag && play.commandGated
+        && play.commandOpen && play.beacon && play.factorsOk && play.scoreAlloy
+        && play.scoreBeacon && play.scoreHull && play.endingOnEscape
+        && play.prestigeSaved && play.prestigeCollect && play.persistPrevious
+      );
+      out.push({
+        batch: 9,
+        title: meta.title,
+        pass: okc && gaps.length === 0,
+        kind: "story",
+        detail: okc
+          ? "executioner wings + ending score + prestige save/collect + persist"
           : JSON.stringify(play)
       });
       continue;

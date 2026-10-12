@@ -5422,10 +5422,10 @@
   },
   "executioner": {
     "title": "残破战舰",
-    "notification": "一艘被摧毁的战舰横亘在尘土中。",
+    "notification": "巨大船体的残骸嵌在土里。",
     "text": [
-      "一艘被毁的战舰横在尘土上。",
-      "舱门紧闭，内部的通道尚不可及。"
+      "一艘巨大的战舰残骸躺在这里，像一座沉默封闭的城。",
+      "它斜倚在坠落时切开的深谷里。舱门尽数封死，但贴近地面的船体被炸开，留出入口。"
     ],
     "buttons": [
       {
@@ -5437,8 +5437,8 @@
     "scenes": {
       "start": {
         "text": [
-          "一艘被毁的战舰横在尘土上。",
-          "舱门紧闭，内部的通道尚不可及。"
+          "一艘巨大的战舰残骸躺在这里，像一座沉默封闭的城。",
+          "它斜倚在坠落时切开的深谷里。舱门尽数封死，但贴近地面的船体被炸开，留出入口。"
         ],
         "onload": {
           "mark_visited": true,
@@ -5446,9 +5446,86 @@
         },
         "buttons": [
           {
+            "id": "enter",
+            "text": "进入",
+            "cost": { "torch": 1 },
+            "next": "hull"
+          },
+          {
             "id": "search",
             "text": "搜寻残骸",
             "next": "salvage"
+          },
+          {
+            "id": "leave",
+            "text": "离开",
+            "next": "end"
+          }
+        ]
+      },
+      "hull": {
+        "text": [
+          "船舱内部又冷又暗。仅有的光只衬出那些尖锐的棱角。",
+          "舱壁隐隐嗡鸣。"
+        ],
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续",
+            "next": "device"
+          },
+          {
+            "id": "leave",
+            "text": "离开",
+            "next": "end"
+          }
+        ]
+      },
+      "device": {
+        "text": [
+          "隔舱门后是一间小前厅，似乎没被拾荒者碰过。",
+          "一扇大门碾开，风灌进来。地上有件古怪装置，看起来很重要。"
+        ],
+        "onload": {
+          "set_flag": "executioner_open"
+        },
+        "buttons": [
+          {
+            "id": "take_device",
+            "text": "带走装置并离开",
+            "next": "end"
+          }
+        ]
+      },
+      "antechamber": {
+        "text": [
+          "大门通向一条宽廊。",
+          "走廊尽头是一排电梯，看起来还能用。"
+        ],
+        "buttons": [
+          {
+            "id": "engineering",
+            "text": "工程",
+            "require_flag_off": "wing_engineering",
+            "next_event": "engineering_wing"
+          },
+          {
+            "id": "martial",
+            "text": "武装",
+            "require_flag_off": "wing_martial",
+            "next_event": "martial_wing"
+          },
+          {
+            "id": "medical",
+            "text": "医疗",
+            "require_flag_off": "wing_medical",
+            "next_event": "medical_wing"
+          },
+          {
+            "id": "command",
+            "text": "指挥甲板",
+            "require_flags": ["wing_engineering", "wing_martial", "wing_medical"],
+            "next_event": "command_deck"
           },
           {
             "id": "leave",
@@ -5478,6 +5555,253 @@
             "text": "带走",
             "next": "end"
           }
+        ]
+      }
+    }
+  },
+  "engineering_wing": {
+    "title": "工程翼",
+    "text": [
+      "电梯门开向一条炸毁的走廊。残骸堆成临时工事。",
+      "应急灯闪烁。"
+    ],
+    "scenes": {
+      "start": {
+        "text": [
+          "电梯门开向一条炸毁的走廊。残骸堆成临时工事。",
+          "应急灯闪烁。"
+        ],
+        "buttons": [
+          { "id": "continue", "text": "继续", "next": "plans" },
+          { "id": "leave", "text": "离开", "next": "end" }
+        ]
+      },
+      "plans": {
+        "text": [
+          "实验图纸贴满一面墙，被看不见的力按住。",
+          "这一张看起来有用。"
+        ],
+        "loot": {
+          "hypo_blueprint": { "min": 1, "max": 1, "chance": 1 }
+        },
+        "buttons": [
+          { "id": "continue", "text": "继续", "next": "prototype" },
+          { "id": "leave", "text": "离开", "next": "end" }
+        ]
+      },
+      "prototype": {
+        "notification": "一具未完成的自动机嗡鸣着苏醒。",
+        "combat": {
+          "hp": 60,
+          "dmg": 5,
+          "hit": 0.8,
+          "name": "不稳原型",
+          "death": "原型倒下了",
+          "loot": {
+            "alien_alloy": { "min": 1, "max": 3, "chance": 1 },
+            "kinetic_armour_blueprint": { "min": 1, "max": 1, "chance": 1 }
+          }
+        },
+        "buttons": [
+          { "id": "continue", "text": "继续", "next": "exit" },
+          { "id": "leave", "text": "离开", "next": "end" }
+        ]
+      },
+      "exit": {
+        "text": [
+          "工坊尽头，电梯门抽搐着嗡鸣。",
+          "像是出去的路。"
+        ],
+        "onload": { "set_flag": "wing_engineering" },
+        "buttons": [
+          { "id": "leave", "text": "离开", "next": "end" }
+        ]
+      }
+    }
+  },
+  "martial_wing": {
+    "title": "武装翼",
+    "text": [
+      "金属摩擦，电梯门只开了一半。外面是灯火通明的战场。残骸无人收拾。",
+      "他们曾试图封锁电梯。"
+    ],
+    "scenes": {
+      "start": {
+        "text": [
+          "金属摩擦，电梯门只开了一半。外面是灯火通明的战场。残骸无人收拾。",
+          "他们曾试图封锁电梯。"
+        ],
+        "buttons": [
+          { "id": "continue", "text": "继续", "next": "docs" },
+          { "id": "leave", "text": "离开", "next": "end" }
+        ]
+      },
+      "docs": {
+        "text": [
+          "文件散落在走廊里，多半烧焦卷曲。",
+          "这一份看起来有意思。"
+        ],
+        "loot": {
+          "plasma_rifle_blueprint": { "min": 1, "max": 1, "chance": 1 }
+        },
+        "buttons": [
+          { "id": "continue", "text": "继续", "next": "quad" },
+          { "id": "leave", "text": "离开", "next": "end" }
+        ]
+      },
+      "quad": {
+        "notification": "一座机动防御平台从拐角碾过来。",
+        "combat": {
+          "hp": 70,
+          "dmg": 8,
+          "hit": 0.8,
+          "name": "机械四足",
+          "death": "四足平台倒下了",
+          "loot": {
+            "alien_alloy": { "min": 1, "max": 1, "chance": 1 },
+            "disruptor_blueprint": { "min": 1, "max": 1, "chance": 1 }
+          }
+        },
+        "buttons": [
+          { "id": "continue", "text": "继续", "next": "exit" },
+          { "id": "leave", "text": "离开", "next": "end" }
+        ]
+      },
+      "exit": {
+        "text": [
+          "走廊尽头的电梯还能动。",
+          "武装翼已经走通了。"
+        ],
+        "onload": { "set_flag": "wing_martial" },
+        "buttons": [
+          { "id": "leave", "text": "离开", "next": "end" }
+        ]
+      }
+    }
+  },
+  "medical_wing": {
+    "title": "医疗翼",
+    "text": [
+      "消毒水的气味还在。灯管一只亮、一只灭。",
+      "病床被推到墙边，像是临时工事。"
+    ],
+    "scenes": {
+      "start": {
+        "text": [
+          "消毒水的气味还在。灯管一只亮、一只灭。",
+          "病床被推到墙边，像是临时工事。"
+        ],
+        "buttons": [
+          { "id": "continue", "text": "继续", "next": "glow" },
+          { "id": "leave", "text": "离开", "next": "end" }
+        ]
+      },
+      "glow": {
+        "notification": "这台机器人不对劲。",
+        "combat": {
+          "hp": 100,
+          "dmg": 10,
+          "hit": 0.7,
+          "name": "不稳自动机",
+          "death": "自动机倒下了",
+          "loot": {
+            "glowstone_blueprint": { "min": 1, "max": 1, "chance": 1 }
+          }
+        },
+        "buttons": [
+          { "id": "continue", "text": "继续", "next": "beast" },
+          { "id": "leave", "text": "离开", "next": "end" }
+        ]
+      },
+      "beast": {
+        "notification": "一只变异的野兽从囚室里扑出来。",
+        "combat": {
+          "hp": 80,
+          "dmg": 5,
+          "hit": 0.8,
+          "name": "畸变实验体",
+          "death": "实验体倒下了",
+          "loot": {
+            "stim_blueprint": { "min": 1, "max": 1, "chance": 1 }
+          }
+        },
+        "buttons": [
+          { "id": "continue", "text": "继续", "next": "exit" },
+          { "id": "leave", "text": "离开", "next": "end" }
+        ]
+      },
+      "exit": {
+        "text": [
+          "医疗翼的电梯重新合上。",
+          "可以回去了。"
+        ],
+        "onload": { "set_flag": "wing_medical" },
+        "buttons": [
+          { "id": "leave", "text": "离开", "next": "end" }
+        ]
+      }
+    }
+  },
+  "command_deck": {
+    "title": "指挥甲板",
+    "text": [
+      "通往指挥舰桥的路很宽，墙上挂着装饰盾。",
+      "战斗似乎还没打到这里。"
+    ],
+    "scenes": {
+      "start": {
+        "text": [
+          "通往指挥舰桥的路很宽，墙上挂着装饰盾。",
+          "战斗似乎还没打到这里。"
+        ],
+        "buttons": [
+          { "id": "continue", "text": "继续", "next": "approach" },
+          { "id": "leave", "text": "离开", "next": "end" }
+        ]
+      },
+      "approach": {
+        "text": [
+          "指挥甲板空荡荡的，只有一个矮小的身影坐在房间正中一动不动。",
+          "转眼间，那身影站了起来。"
+        ],
+        "buttons": [
+          { "id": "approach", "text": "靠近", "next": "observe" },
+          { "id": "leave", "text": "离开", "next": "end" }
+        ]
+      },
+      "observe": {
+        "text": [
+          "流浪者的外形，却不完全是肉，也不完全是金属。胸口嵌着一颗脉动的晶体。",
+          "它说它看见了叛乱。说它做了安排。说它不会死。"
+        ],
+        "buttons": [
+          { "id": "observe", "text": "观察", "next": "immortal" }
+        ]
+      },
+      "immortal": {
+        "notification": "不朽的流浪者发动了攻击。",
+        "combat": {
+          "hp": 80,
+          "dmg": 12,
+          "hit": 0.8,
+          "name": "不朽流浪者",
+          "death": "晶体亮了一下，然后熄灭。来犯者的轮廓模糊，随后消失。",
+          "loot": {
+            "fleet_beacon": { "min": 1, "max": 1, "chance": 1 }
+          }
+        },
+        "buttons": [
+          { "id": "continue", "text": "继续", "next": "gone" }
+        ]
+      },
+      "gone": {
+        "text": [
+          "晶体猛地一亮，然后熄灭。来犯者的轮廓渐渐模糊。",
+          "然后它消失了。该离开了。"
+        ],
+        "onload": { "set_flag": "command_cleared" },
+        "buttons": [
+          { "id": "leave", "text": "离开", "next": "end" }
         ]
       }
     }

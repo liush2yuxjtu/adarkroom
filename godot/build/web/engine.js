@@ -163,6 +163,18 @@
   var BASE_ASTEROID_DELAY = 500;
   var BASE_ASTEROID_SPEED = 1500;
   var FTB_SPEED = 60000;
+  /* Faithful copy of script/prestige.js storesMap + script/scoring.js factor (batch 9). */
+  var PRESTIGE_STORES = [
+    { id: "wood", type: "g" }, { id: "fur", type: "g" }, { id: "meat", type: "g" },
+    { id: "iron", type: "g" }, { id: "coal", type: "g" }, { id: "sulphur", type: "g" },
+    { id: "steel", type: "g" }, { id: "cured_meat", type: "g" }, { id: "scales", type: "g" },
+    { id: "teeth", type: "g" }, { id: "leather", type: "g" }, { id: "bait", type: "g" },
+    { id: "torch", type: "g" }, { id: "cloth", type: "g" }, { id: "bone_spear", type: "w" },
+    { id: "iron_sword", type: "w" }, { id: "steel_sword", type: "w" }, { id: "bayonet", type: "w" },
+    { id: "rifle", type: "w" }, { id: "laser_rifle", type: "w" }, { id: "bullets", type: "a" },
+    { id: "energy_cell", type: "a" }, { id: "grenade", type: "a" }, { id: "bolas", type: "a" }
+  ];
+  var SCORE_FACTORS = [1, 1.5, 1, 2, 2, 3, 3, 2, 2, 2, 2, 1.5, 1, 1, 10, 30, 50, 100, 150, 150, 3, 3, 5, 4];
   var SPACE_WIDTH = 700;
   var SPACE_HEIGHT = 700;
   var ASTEROID_GLYPHS = ["#", "$", "%", "&", "H"];
@@ -426,7 +438,29 @@
     "a smooth, perfect sphere. its light is inextinguishable.": "一颗光滑完美的球体。它的光无法熄灭",
     "the familiar hum of wanderer machinery coming to life. finally, real tools.": "熟悉的流浪者机械嗡鸣苏醒了。终于，真正的工具",
     "builder knows the strange device when she sees it. takes it for herself real quick. doesn’t ask where it came from.": "建造者一眼认出那件古怪装置。她很快据为己有。也不问从哪来的",
-    "blueprints feed into the fabricator data port. possibilities grow.": "蓝图送进制造机数据口。可能性在增长"
+    "blueprints feed into the fabricator data port. possibilities grow.": "蓝图送进制造机数据口。可能性在增长",
+    "A Ravaged Battleship": "残破战舰",
+    "Engineering Wing": "工程翼",
+    "Martial Wing": "武装翼",
+    "Medical Wing": "医疗翼",
+    "Command Deck": "指挥甲板",
+    "engineering": "工程",
+    "martial": "武装",
+    "medical": "医疗",
+    "command deck": "指挥甲板",
+    "enter": "进入",
+    "continue": "继续",
+    "take device and leave": "带走装置并离开",
+    "score for this game: {0}": "本局得分: {0}",
+    "total score: {0}": "总分: {0}",
+    "expanded story. alternate ending. behind the scenes commentary. get the app.": "扩展故事。另一结局。幕后解说。下载应用。",
+    "the world fades": "世界淡去",
+    "the air is running out.": "空气快用完了。",
+    "the capsule is cold.": "舱体很冷。",
+    "the beacon pulses gently as the ship glides through space.\ncoordinates are locked. nothing to do but wait.": "信标轻轻脉动，飞船滑过太空。坐标已锁定。只能等待。",
+    "wait": "等待",
+    "ending": "终局",
+    "restart.": "重启"
   };
 
   function t(key) {
@@ -502,13 +536,16 @@
         outposts_used: {},
         seen_danger: false
       },
-      slice_complete: false
+      slice_complete: false,
+      previous: { stores: null, score: 0 },
+      playStats: { score: 0 },
+      ending: false
     };
   }
 
   var SAVE_KEY = "adr.save.v1";
   var SAVE_VERSION = 1;
-  var OBJECT_KEYS = ["stores", "buildings", "unlocked", "npc_moods", "workers", "outfit", "income_acc", "world", "flags", "cooldowns", "cooldown_ends_at", "seen", "perks", "spaceShip", "blueprints"];
+  var OBJECT_KEYS = ["stores", "buildings", "unlocked", "npc_moods", "workers", "outfit", "income_acc", "world", "flags", "cooldowns", "cooldown_ends_at", "seen", "perks", "spaceShip", "blueprints", "previous", "playStats"];
   var ARRAY_KEYS = ["notifications", "scheduled"];
   var NUMBER_KEYS = ["fire", "temperature", "game_time_sec", "builder_level", "population", "punches"];
 
@@ -753,6 +790,11 @@
     if (state.flags.world_executioner && state.world && !state.world.on_expedition) {
       state.unlocked.fabricator = true;
     }
+    if (!isPlainObject(state.previous)) state.previous = { stores: null, score: 0 };
+    if (typeof state.previous.score !== "number" || !isFinite(state.previous.score)) state.previous.score = 0;
+    if (!isPlainObject(state.playStats)) state.playStats = { score: 0 };
+    if (typeof state.playStats.score !== "number" || !isFinite(state.playStats.score)) state.playStats.score = 0;
+    if (typeof state.ending !== "boolean") state.ending = !!state.ending || !!state.flags.ending;
     if (state.location === "space" && (!state.space || !state.space.active)) {
       state.location = state.unlocked.ship ? "ship" : "path";
     }
@@ -985,7 +1027,9 @@
       state.space ? state.space.altitude : "",
       state.space ? state.space.hull : "",
       state.space ? (state.space.asteroids || []).length : 0,
-      state.flags.space_escaped ? 1 : 0
+      state.flags.space_escaped ? 1 : 0,
+      state.ending ? 1 : 0,
+      state.previous ? state.previous.score : 0
     ].join("|");
   }
 
@@ -1050,14 +1094,18 @@
         if (state.active_event) return { ok: false, error: "event already open" };
         var spec = events[a.event_id];
         if (!spec) return { ok: false, error: "missing event" };
+        var startName = "start";
+        if (a.event_id === "executioner" && state.flags.executioner_open && spec.scenes && spec.scenes.antechamber) {
+          startName = "antechamber";
+        }
         state.active_event = {
           id: a.event_id,
-          scene: "start",
+          scene: startName,
           spec: spec,
           payload: a.payload || {}
         };
         if (spec.notification) pushNote(state, spec.notification, state.location);
-        var startScene = (spec.scenes && spec.scenes.start) ? spec.scenes.start : spec;
+        var startScene = (spec.scenes && spec.scenes[startName]) ? spec.scenes[startName] : spec;
         applySceneEffects(state, startScene);
         if (startScene.combat || spec.combat) beginCombat(state, startScene.combat ? startScene : spec);
         break;
@@ -1257,6 +1305,84 @@
     return redeemed;
   }
 
+  function prestigeRandGen(storeType) {
+    var amount;
+    if (storeType === "g") amount = Math.floor(Math.random() * 10);
+    else if (storeType === "w") amount = Math.floor(Math.floor(Math.random() * 10) / 2);
+    else if (storeType === "a") amount = Math.ceil(Math.random() * 10 * Math.ceil(Math.random() * 10));
+    else return 1;
+    return amount !== 0 ? amount : 1;
+  }
+
+  function prestigeGetStores(state, reduce) {
+    var stores = [];
+    PRESTIGE_STORES.forEach(function (s) {
+      var n = state.stores[s.id] || 0;
+      stores.push(Math.floor(n / (reduce ? prestigeRandGen(s.type) : 1)));
+    });
+    return stores;
+  }
+
+  function getMaxHull(state) {
+    ensureSpaceShip(state);
+    return state.spaceShip.hull || 0;
+  }
+
+  function calculateScore(state) {
+    var scoreUnadded = prestigeGetStores(state, false);
+    var fullScore = 0;
+    var i;
+    for (i = 0; i < SCORE_FACTORS.length; i++) {
+      fullScore += (scoreUnadded[i] || 0) * SCORE_FACTORS[i];
+    }
+    fullScore += (state.stores.alien_alloy || 0) * 10;
+    fullScore += (state.stores.fleet_beacon || 0) * 500;
+    fullScore += getMaxHull(state) * 50;
+    return Math.floor(fullScore);
+  }
+
+  function totalScore(state) {
+    return ((state.previous && state.previous.score) || 0) + calculateScore(state);
+  }
+
+  function prestigeGet(state) {
+    return {
+      stores: state.previous && state.previous.stores,
+      score: state.previous && state.previous.score
+    };
+  }
+
+  function prestigeSet(state, prestige) {
+    if (!state.previous) state.previous = { stores: null, score: 0 };
+    if (prestige && prestige.stores != null) state.previous.stores = prestige.stores;
+    if (prestige && prestige.score != null) state.previous.score = prestige.score;
+    return state.previous;
+  }
+
+  function prestigeSave(state) {
+    if (!state.previous) state.previous = { stores: null, score: 0 };
+    state.previous.stores = prestigeGetStores(state, true);
+    state.previous.score = totalScore(state);
+    if (!state.playStats) state.playStats = { score: 0 };
+    state.playStats.score = calculateScore(state);
+    return state.previous;
+  }
+
+  function prestigeCollect(state) {
+    var prev = state.previous && state.previous.stores;
+    if (!prev || !prev.length) return false;
+    PRESTIGE_STORES.forEach(function (s, i) {
+      var n = prev[i] || 0;
+      if (n) addItem(state, s.id, n);
+    });
+    state.previous.stores = [];
+    return true;
+  }
+
+  function formatScore(template, n) {
+    return t(template).replace("{0}", String(n));
+  }
+
   function assignedWorkers(state) {
     var n = 0;
     WORKER_KEYS.forEach(function (k) {
@@ -1452,6 +1578,13 @@
     if (!btn) return false;
     if (btn.require_no && (state.stores[btn.require_no] || 0) > 0) return false;
     if (btn.require_flag_off && state.flags[btn.require_flag_off]) return false;
+    if (btn.require_flag && !state.flags[btn.require_flag]) return false;
+    if (btn.require_flags) {
+      var need = Array.isArray(btn.require_flags) ? btn.require_flags : [btn.require_flags];
+      for (var i = 0; i < need.length; i++) {
+        if (!state.flags[need[i]]) return false;
+      }
+    }
     return true;
   }
 
@@ -1537,6 +1670,7 @@
       pushNote(state, t("water replenished"), "world");
     }
     if (fx.city_cleared) state.flags.city_cleared = true;
+    if (fx.set_flag) state.flags[fx.set_flag] = true;
     if (fx.world_flag) {
       state.flags["world_" + fx.world_flag] = true;
       if (state.world) state.world[fx.world_flag] = true;
@@ -1790,7 +1924,19 @@
     state.space.active = false;
     state.space.asteroids = [];
     state.flags.space_escaped = true;
+    state.flags.ending = true;
+    state.ending = true;
+    prestigeSave(state);
+    state.location = "ending";
     pushNote(state, t("Space"), "space");
+    pushNote(state, formatScore("score for this game: {0}", calculateScore(state)), "ending");
+    pushNote(state, formatScore("total score: {0}", prestigeGet(state).score || 0), "ending");
+    if ((state.stores.fleet_beacon || 0) > 0) {
+      pushNote(state, t("the beacon pulses gently as the ship glides through space.\ncoordinates are locked. nothing to do but wait."), "ending");
+    } else {
+      pushNote(state, t("the air is running out."), "ending");
+      pushNote(state, t("the capsule is cold."), "ending");
+    }
   }
 
   function tickSpace(state, dt) {
@@ -2908,9 +3054,13 @@
         if (typeof ADRSaveTelemetry !== "undefined" && ADRSaveTelemetry.onNewGame) {
           ADRSaveTelemetry.onNewGame({ overwritten: true });
         }
+        var keptPrestige = prestigeGet(s);
+        if (s.flags.ending || s.ending) prestigeSave(s), keptPrestige = prestigeGet(s);
         clearSave();
         if (typeof ADRTelemetry !== "undefined" && ADRTelemetry.rotateSession) ADRTelemetry.rotateSession();
         this.state = migrateState(createState());
+        prestigeSet(this.state, keptPrestige);
+        prestigeCollect(this.state);
         this.rule = new RuleDirector();
         if (typeof ADRTelemetry !== "undefined" && ADRTelemetry.bindGame) ADRTelemetry.bindGame(this);
         this.analytics.syncPhase(this.state);
@@ -3091,6 +3241,12 @@
         this._enterEventScene(pick);
         return;
       }
+    }
+    if (btn.next_event && this.events && this.events[btn.next_event]) {
+      s.active_event = null;
+      if (s.combat) s.combat = null;
+      executeTool(s, { tool: "spawn_event", args: { event_id: btn.next_event } }, { events: this.events });
+      return;
     }
     if (btn.next && btn.next !== "end" && spec.scenes && spec.scenes[btn.next]) {
       this._enterEventScene(btn.next);
@@ -3479,6 +3635,16 @@
     cooldownReady: cooldownReady,
     setCooldown: setCooldown,
     syncCooldowns: syncCooldowns,
-    adoptCooldowns: adoptCooldowns
+    adoptCooldowns: adoptCooldowns,
+    PRESTIGE_STORES: PRESTIGE_STORES,
+    SCORE_FACTORS: SCORE_FACTORS,
+    prestigeGetStores: prestigeGetStores,
+    prestigeGet: prestigeGet,
+    prestigeSet: prestigeSet,
+    prestigeSave: prestigeSave,
+    prestigeCollect: prestigeCollect,
+    calculateScore: calculateScore,
+    totalScore: totalScore,
+    getMaxHull: getMaxHull
   };
 });
