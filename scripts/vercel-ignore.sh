@@ -5,8 +5,8 @@
 set -u
 
 LIVE_BRANCH="cursor/godot-chinese-remake-5c3a"
-# Manual preview for this re-audit PR only; git.deploymentEnabled still blocks webhooks.
-PREVIEW_BRANCH="cursor/pixel-reaudit-ui-062f"
+# Manual preview for the in-game style-toggle work branch; git.deploymentEnabled still blocks webhooks.
+PREVIEW_BRANCH="cursor/style-toggle-ingame-c653"
 REF="${VERCEL_GIT_COMMIT_REF:-}"
 
 if [[ "$REF" != "main" && "$REF" != "$LIVE_BRANCH" && "$REF" != "$PREVIEW_BRANCH" ]]; then
