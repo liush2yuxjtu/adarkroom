@@ -14,6 +14,8 @@
  *   session-start-first         every session's first engine event is session_start (synthetic if missing)
  *   automation-flagged          payload.is_automation is true under navigator.webdriver / headless UA, false otherwise
  *   cap-keeps-milestones        the per-session event cap drops UI noise but keeps milestone events
+ *   worker-assign-logged        assign_worker writes worker_assign {job, delta, workers, population}
+ *   cured-meat-first-logged     first charcutier yield writes cured_meat_first {source, cured_meat}
  */
 import { fileURLToPath } from "node:url";
 import { makeSandbox, loadEvents, bufferOf, tickGame } from "./lib/engine-sandbox.mjs";
@@ -182,6 +184,44 @@ export function runTelemetry() {
     const keptAct = tail.includes("player_action");
     const droppedHover = !tail.includes("button_hover_enter");
     return { pass: keptPhase && keptAct && droppedHover, detail: `tail=${tail.join(",")}` };
+  });
+
+  check(suite, "worker-assign-logged", () => {
+    const sb = makeSandbox();
+    const g = newGame(sb);
+    g.state.builder_level = 4;
+    g.state.population = 4;
+    g.state.buildings.lodge = 1;
+    g.state.buildings.hut = 1;
+    sb.ADR.syncGatherers(g.state);
+    const r = g.act("assign_worker", { job: "hunter", delta: 2 });
+    const ev = bufferOf(sb, g).filter((e) => e.event_name === "worker_assign");
+    const p = ev[0] && ev[0].payload;
+    return {
+      pass: r.ok && ev.length === 1 && p.job === "hunter" && p.delta === 2 && p.workers && p.workers.hunter === 2 && p.population === 4,
+      detail: `ok=${r.ok} n=${ev.length} payload=${JSON.stringify(p && { job: p.job, delta: p.delta, hunter: p.workers && p.workers.hunter, pop: p.population })}`
+    };
+  });
+
+  check(suite, "cured-meat-first-logged", () => {
+    const sb = makeSandbox();
+    const g = newGame(sb);
+    g.state.builder_level = 4;
+    g.state.population = 2;
+    g.state.buildings.smokehouse = 1;
+    g.state.buildings.hut = 1;
+    g.state.stores.meat = 20;
+    g.state.stores.wood = 20;
+    g.state.stores.cured_meat = 0;
+    g.state.workers.charcutier = 1;
+    sb.ADR.syncGatherers(g.state);
+    tickGame(sb, g, 10);
+    const ev = bufferOf(sb, g).filter((e) => e.event_name === "cured_meat_first");
+    const p = ev[0] && ev[0].payload;
+    return {
+      pass: ev.length === 1 && p.source === "charcutier" && p.cured_meat >= 1 && g.state.stores.cured_meat >= 1,
+      detail: `n=${ev.length} cured=${g.state.stores.cured_meat} payload=${JSON.stringify(p && { source: p.source, cured_meat: p.cured_meat })}`
+    };
   });
 
   return suite;

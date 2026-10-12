@@ -14,6 +14,9 @@
   var PX_ICON = {
     fire: "stoke", gather: "gather", traps: "trap",
     "build-trap": "trap", "build-cart": "cart", "build-hut": "hut",
+    "build-lodge": "hut", "build-trading_post": "trade", "build-tannery": "fur",
+    "build-smokehouse": "cured_meat", "build-workshop": "settings",
+    "build-steelworks": "spark", "build-armoury": "spark",
     north: "north", west: "west", east: "east", south: "south",
     embark: "embark", punch: "punch", flee: "flee"
   };
@@ -688,7 +691,7 @@
         var n = game.state.stores[k] || 0;
         if (n <= 0 && k !== "wood") return;
         if (k === "wood" && !game.state.wood_initialized) return;
-        var icon = k === "cured_meat" ? "cured_meat" : k;
+        var icon = ({ cured_meat: "cured_meat", leather: "fur", iron: "spark", coal: "spark", steel: "spark", sulphur: "spark", bullets: "spark" }[k]) || k;
         html += '<div class="store-row" role="group" aria-label="' + (ADR.ITEM_CN[k] || k) + " " + n + '">';
         html += '<span class="px-icon px-' + icon + '" aria-hidden="true"></span>';
         html += '<span class="px-caption px-store-n">' + formatStoreN(n) + "</span></div>";
@@ -793,7 +796,7 @@
       }
     });
     ADR.Game.prototype.visibleCrafts.call(game).forEach(function (c) {
-      var name = { trap: "陷阱", cart: "货车", hut: "小屋" }[c.kind];
+      var name = (ADR.BUILDING_CN && ADR.BUILDING_CN[c.kind]) || { trap: "陷阱", cart: "货车", hut: "小屋" }[c.kind] || c.kind;
       var cost = Object.keys(c.cost).map(function (k) {
         return (ADR.ITEM_CN[k] || k) + c.cost[k];
       }).join(" ");
@@ -844,14 +847,135 @@
       });
     }
     keepButtons($("out-btns"), keys);
+    renderWorkers();
     var hint = $("out-hint");
     if (game.state.population > 0 && !isPixel()) {
-      hint.textContent = "伐木者 " + (game.state.workers.gatherer || 0) + " · " + ADR.t("pop ") + game.state.population;
+      hint.textContent = ADR.t("pop ") + game.state.population + " / " + ((game.state.buildings.hut || 0) * 4);
       hint.style.display = "";
     } else {
       hint.textContent = "";
       hint.style.display = "none";
     }
+  }
+
+  function renderWorkers() {
+    var panel = $("panel-outside");
+    if (!panel) return;
+    var host = $("workers");
+    if (!host) {
+      host = document.createElement("div");
+      host.id = "workers";
+      host.className = "workers";
+      var hint = $("out-hint");
+      if (hint && hint.parentNode) hint.parentNode.insertBefore(host, hint);
+      else panel.appendChild(host);
+    }
+    var jobs = typeof ADR.visibleJobs === "function" ? ADR.visibleJobs(game.state) : [];
+    if (!jobs.length) {
+      host.style.display = "none";
+      host.innerHTML = "";
+      delete host.dataset.html;
+      return;
+    }
+    host.style.display = "";
+    host.setAttribute("role", "group");
+    host.setAttribute("aria-label", "村民工作");
+    var gatherers = game.state.workers.gatherer || 0;
+    var existing = {};
+    [].slice.call(host.querySelectorAll(".worker-row")).forEach(function (row) {
+      existing[row.dataset.job] = row;
+    });
+    jobs.forEach(function (job) {
+      var n = job === "gatherer" ? gatherers : (game.state.workers[job] || 0);
+      var label = (ADR.WORKER_CN && ADR.WORKER_CN[job]) || ADR.t(job) || job;
+      var row = existing[job];
+      if (!row) {
+        row = document.createElement("div");
+        row.className = "worker-row";
+        row.dataset.job = job;
+        row.setAttribute("role", "group");
+        host.appendChild(row);
+      }
+      row.setAttribute("aria-label", label + " " + n);
+      if (isPixel()) {
+        if (row.dataset.mode !== "pixel") {
+          row.innerHTML = "";
+          row.dataset.mode = "pixel";
+          var ic = document.createElement("span");
+          ic.className = "px-icon px-person";
+          ic.setAttribute("aria-hidden", "true");
+          row.appendChild(ic);
+          var cap = document.createElement("span");
+          cap.className = "px-caption worker-name";
+          cap.textContent = label;
+          row.appendChild(cap);
+          var cnt = document.createElement("span");
+          cnt.className = "px-caption worker-count";
+          cnt.textContent = String(n);
+          row.appendChild(cnt);
+          if (job !== "gatherer") {
+            [-1, 1].forEach(function (d) {
+              var b = document.createElement("button");
+              b.type = "button";
+              b.className = "worker-btn px-btn";
+              b.dataset.delta = String(d);
+              b.setAttribute("aria-label", (d > 0 ? "分配 " : "撤下 ") + label);
+              b.appendChild(pxIconEl(d > 0 ? "plus" : "minus"));
+              b.addEventListener("click", function () {
+                game.act("assign_worker", { job: job, delta: d });
+              });
+              row.appendChild(b);
+            });
+          }
+        } else {
+          var countEl = row.querySelector(".worker-count");
+          if (countEl) countEl.textContent = String(n);
+        }
+      } else if (row.dataset.mode !== "text") {
+        row.innerHTML = "";
+        row.dataset.mode = "text";
+        var name = document.createElement("span");
+        name.className = "worker-name";
+        name.textContent = label;
+        row.appendChild(name);
+        var count = document.createElement("span");
+        count.className = "worker-count";
+        count.textContent = String(n);
+        row.appendChild(count);
+        if (job !== "gatherer") {
+          [
+            { d: -10, t: "−10" },
+            { d: -1, t: "−" },
+            { d: 1, t: "+" },
+            { d: 10, t: "+10" }
+          ].forEach(function (spec) {
+            var b = document.createElement("button");
+            b.type = "button";
+            b.className = "worker-btn";
+            b.dataset.delta = String(spec.d);
+            b.textContent = spec.t;
+            b.setAttribute("aria-label", (spec.d > 0 ? "分配 " : "撤下 ") + Math.abs(spec.d) + " 名" + label);
+            b.addEventListener("click", function () {
+              game.act("assign_worker", { job: job, delta: spec.d });
+            });
+            row.appendChild(b);
+          });
+        }
+      } else {
+        var c2 = row.querySelector(".worker-count");
+        if (c2) c2.textContent = String(n);
+      }
+      var canUp = gatherers > 0;
+      var canDown = n > 0;
+      [].slice.call(row.querySelectorAll(".worker-btn")).forEach(function (b) {
+        var d = Number(b.dataset.delta) || 0;
+        b.disabled = d > 0 ? !canUp : !canDown;
+      });
+      delete existing[job];
+    });
+    Object.keys(existing).forEach(function (job) {
+      if (existing[job].parentNode) existing[job].parentNode.removeChild(existing[job]);
+    });
   }
 
   function renderPath() {

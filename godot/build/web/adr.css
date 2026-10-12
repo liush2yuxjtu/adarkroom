@@ -334,6 +334,84 @@ body.style-pixel #btn-style {
 
 .hint { color: #555; font-size: 14px; margin-top: 8px; }
 
+.workers {
+  margin-top: 16px;
+  max-width: min(340px, calc(100% - 16px));
+}
+
+.worker-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  min-height: 44px;
+  margin-bottom: 4px;
+}
+
+.worker-name {
+  flex: 1 1 72px;
+  min-width: 4em;
+}
+
+.worker-count {
+  min-width: 2ch;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.worker-btn {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 8px;
+  border: 1px solid #111;
+  background: #fff;
+  color: #111;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 16px;
+}
+
+.worker-btn:hover:not([disabled]) {
+  background: #111;
+  color: #fff;
+}
+
+.worker-btn[disabled] {
+  cursor: default;
+  color: #4a4a4a;
+  border-color: #8a8a8a;
+}
+
+body.style-pixel .workers {
+  margin-top: 12px;
+}
+
+body.style-pixel .worker-row {
+  gap: 4px 6px;
+}
+
+body.style-pixel .worker-name,
+body.style-pixel .worker-count {
+  color: #1c1612;
+  font-size: 14px;
+}
+
+body.style-pixel .worker-btn {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 2px solid #111;
+  background: #f3f1ea;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+body.style-pixel .worker-btn:hover:not([disabled]) {
+  background: #fff6c8;
+  color: inherit;
+}
+
 #settings-form label { display: block; margin: 8px 0 4px; }
 #settings-form input, #settings-form select {
   width: 100%;
