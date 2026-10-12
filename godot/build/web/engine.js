@@ -123,6 +123,7 @@
       flags: {},
       notifications: [],
       cooldowns: {},
+      cooldown_ends_at: {},
       income_acc: { builder: 0, gatherer: 0 },
       pop_timer: null,
       event_timer: null,
@@ -149,7 +150,7 @@
 
   var SAVE_KEY = "adr.save.v1";
   var SAVE_VERSION = 1;
-  var OBJECT_KEYS = ["stores", "buildings", "unlocked", "npc_moods", "workers", "outfit", "income_acc", "world", "flags", "cooldowns"];
+  var OBJECT_KEYS = ["stores", "buildings", "unlocked", "npc_moods", "workers", "outfit", "income_acc", "world", "flags", "cooldowns", "cooldown_ends_at"];
   var ARRAY_KEYS = ["notifications", "scheduled"];
 
   function readSaveRaw(opts) {
@@ -264,6 +265,7 @@
       }
     });
     base.phase = derivePhase(base);
+    adoptCooldowns(base, 1);
     return base;
   }
 
@@ -581,12 +583,88 @@
     for (var k in reward) addItem(state, k, reward[k]);
   }
 
+  function nowMs() {
+    return Date.now();
+  }
+
+  function cooldownLeft(state, id, timeScale) {
+    var scale = timeScale > 0 ? timeScale : 1;
+    var end = state.cooldown_ends_at && state.cooldown_ends_at[id];
+    if (end) return Math.max(0, ((Number(end) - nowMs()) / 1000) * scale);
+    return Math.max(0, Number(state.cooldowns && state.cooldowns[id]) || 0);
+  }
+
   function cooldownReady(state, id) {
+    var end = state.cooldown_ends_at && state.cooldown_ends_at[id];
+    if (end) return Number(end) <= nowMs();
     return !state.cooldowns[id] || state.cooldowns[id] <= 0;
   }
 
-  function setCooldown(state, id, sec) {
+  function setCooldown(state, id, sec, timeScale) {
+    var scale = timeScale > 0 ? timeScale : 1;
+    if (!state.cooldowns) state.cooldowns = {};
+    if (!state.cooldown_ends_at) state.cooldown_ends_at = {};
+    var wallSec = sec / scale;
+    state.cooldown_ends_at[id] = nowMs() + wallSec * 1000;
     state.cooldowns[id] = sec;
+  }
+
+  function syncCooldowns(state, timeScale) {
+    var scale = timeScale > 0 ? timeScale : 1;
+    if (!state.cooldowns) state.cooldowns = {};
+    if (!state.cooldown_ends_at) state.cooldown_ends_at = {};
+    var ids = {};
+    Object.keys(state.cooldowns).forEach(function (k) { ids[k] = true; });
+    Object.keys(state.cooldown_ends_at).forEach(function (k) { ids[k] = true; });
+    Object.keys(ids).forEach(function (id) {
+      var left = cooldownLeft(state, id, scale);
+      if (left <= 0) {
+        delete state.cooldowns[id];
+        delete state.cooldown_ends_at[id];
+      } else {
+        state.cooldowns[id] = left;
+      }
+    });
+  }
+
+  function adoptCooldowns(state, timeScale) {
+    var scale = timeScale > 0 ? timeScale : 1;
+    if (!state.cooldowns) state.cooldowns = {};
+    if (!state.cooldown_ends_at) state.cooldown_ends_at = {};
+    var now = nowMs();
+    Object.keys(state.cooldowns).forEach(function (id) {
+      if (state.cooldown_ends_at[id]) return;
+      var left = Number(state.cooldowns[id]) || 0;
+      if (left > 0) state.cooldown_ends_at[id] = now + (left / scale) * 1000;
+    });
+    syncCooldowns(state, scale);
+  }
+
+  function rescaleCooldownEnds(state, oldScale, newScale) {
+    var from = oldScale > 0 ? oldScale : 1;
+    var to = newScale > 0 ? newScale : 1;
+    if (from === to) return;
+    var now = nowMs();
+    Object.keys(state.cooldown_ends_at || {}).forEach(function (id) {
+      var leftGame = Math.max(0, ((Number(state.cooldown_ends_at[id]) - now) / 1000) * from);
+      if (leftGame <= 0) {
+        delete state.cooldown_ends_at[id];
+        delete state.cooldowns[id];
+        return;
+      }
+      state.cooldown_ends_at[id] = now + (leftGame / to) * 1000;
+      state.cooldowns[id] = leftGame;
+    });
+  }
+
+  function cooldownSnapshot(state, timeScale) {
+    var remaining = {};
+    var ends = {};
+    ["stoke", "gather", "traps"].forEach(function (id) {
+      remaining[id] = Math.round(cooldownLeft(state, id, timeScale) * 10) / 10;
+      ends[id] = (state.cooldown_ends_at && state.cooldown_ends_at[id]) || 0;
+    });
+    return { remaining: remaining, ends_at: ends, wall_now: nowMs() };
   }
 
   function outsideTitle(state) {
@@ -988,7 +1066,31 @@
     this.directorTick();
   }
 
+  Game.prototype.cooldownLeft = function (id) {
+    return cooldownLeft(this.state, id, this.timeScale);
+  };
+
+  Game.prototype.syncCooldowns = function () {
+    syncCooldowns(this.state, this.timeScale);
+    return cooldownSnapshot(this.state, this.timeScale);
+  };
+
+  Game.prototype.logCooldownVisibility = function (visibility, extra) {
+    extra = extra || {};
+    var snap = cooldownSnapshot(this.state, this.timeScale);
+    this.analytics.log(this.state, "cooldown_visibility", {
+      visibility: visibility,
+      remaining: snap.remaining,
+      ends_at: snap.ends_at,
+      wall_now: snap.wall_now,
+      hidden_ms: extra.hidden_ms || 0,
+      source: extra.source || "visibilitychange"
+    });
+    return snap;
+  };
+
   Game.prototype.persistSave = function (force) {
+    syncCooldowns(this.state, this.timeScale);
     var existing = force ? null : readSaveRaw({ silent: true });
     if (existing && existing.state) {
       var prev = existing.state;
@@ -1152,7 +1254,13 @@
           s.fire = Math.min(4, s.fire + 1);
         }
         // @pacing kind=cooldown id=stoke value=10s phase=room_fire
-        setCooldown(s, "stoke", 10);
+        setCooldown(s, "stoke", 10, this.timeScale);
+        this.analytics.log(s, "cooldown_set", {
+          id: "stoke",
+          duration_sec: 10,
+          ends_at: s.cooldown_ends_at.stoke,
+          time_scale: this.timeScale
+        });
         // @pacing kind=interval id=fire_cool value=300s phase=room_fire
         s.flags.fire_cool_at = s.game_time_sec + 300;
         break;
@@ -1163,7 +1271,13 @@
         // @pacing kind=income id=gather_wood value=10/60s phase=forest
         addItem(s, "wood", s.buildings.cart > 0 ? 50 : 10);
         // @pacing kind=cooldown id=gather value=60s phase=forest
-        setCooldown(s, "gather", 60);
+        setCooldown(s, "gather", 60, this.timeScale);
+        this.analytics.log(s, "cooldown_set", {
+          id: "gather",
+          duration_sec: 60,
+          ends_at: s.cooldown_ends_at.gather,
+          time_scale: this.timeScale
+        });
         pushNote(s, t("dry brush and dead branches litter the forest floor"), "outside");
         break;
       case "check_traps":
@@ -1173,7 +1287,13 @@
         grant(s, tr.drops);
         if (tr.baitUsed) addItem(s, "bait", -tr.baitUsed);
         // @pacing kind=cooldown id=traps value=90s phase=forest
-        setCooldown(s, "traps", 90);
+        setCooldown(s, "traps", 90, this.timeScale);
+        this.analytics.log(s, "cooldown_set", {
+          id: "traps",
+          duration_sec: 90,
+          ends_at: s.cooldown_ends_at.traps,
+          time_scale: this.timeScale
+        });
         if (tr.msgs.length) {
           var line = t("the traps contain ");
           tr.msgs.forEach(function (m, i) {
@@ -1317,7 +1437,9 @@
         if (args.api_key != null) this.config.llm_api_key = args.api_key;
         break;
       case "set_timescale":
-        this.timeScale = Math.max(0.25, Math.min(20, args.scale || 1));
+        var nextScale = Math.max(0.25, Math.min(20, args.scale || 1));
+        rescaleCooldownEnds(s, this.timeScale, nextScale);
+        this.timeScale = nextScale;
         break;
       case "set_analytics":
         this.analytics.httpEndpoint = args.endpoint || "";
@@ -1467,9 +1589,7 @@
     var beforeSig = visualSig(s);
     var dt = dtReal * this.timeScale;
     s.game_time_sec += dt;
-    Object.keys(s.cooldowns).forEach(function (k) {
-      s.cooldowns[k] = Math.max(0, s.cooldowns[k] - dt);
-    });
+    syncCooldowns(s, this.timeScale);
 
     if (s.flags.fire_cool_at != null && s.game_time_sec >= s.flags.fire_cool_at && s.fire > 0) {
       if (s.builder_level > 3 && s.fire <= 2 && (s.stores.wood || 0) > 0) {
@@ -1609,6 +1729,11 @@
     hutTitle: hutTitle,
     roomTitle: roomTitle,
     visualSig: visualSig,
-    generateWorldSeed: generateWorldSeed
+    generateWorldSeed: generateWorldSeed,
+    cooldownLeft: cooldownLeft,
+    cooldownReady: cooldownReady,
+    setCooldown: setCooldown,
+    syncCooldowns: syncCooldowns,
+    adoptCooldowns: adoptCooldowns
   };
 });

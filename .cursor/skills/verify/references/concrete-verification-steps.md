@@ -142,6 +142,61 @@ await btn.screenshot({ path: 'artifacts/cooldown-bar.png' });
 
 **Failure handling.** **FAIL** on a 3px bar, a static width, opacity `< 1` on the button, or a missing number. Keep `t0`, `t1`, and the screenshot. Then run surface `verification-scope-mismatch`: enumerate every code path and confirm you measured the **live** one (`vercel.json` / build output / fetched asset), not a Godot scene script the deploy does not serve.
 
+### Cooldown visibility (tab hide / `visibilitychange`)
+
+**Trigger.** Same as step 3, plus any claim that a cooldown **restarts from the full duration** after switching tabs, hiding the page, or a `visibilitychange`.
+
+**How to execute.** Start a real stoke (`添柴` / `生火`) cooldown. Snapshot remaining. Simulate a background tab: open another page and `bring_to_front`, or pause `requestAnimationFrame` and wait **N** seconds (CDP `Page.setWebLifecycleState` `frozen` if the runtime accepts it). Return to the game page, fire `visibilitychange` if the document did not hide on its own, then read remaining again.
+
+```js
+const btn = page.locator('button.adr[data-key="fire"]');
+const box = await btn.boundingBox();
+await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+await page.waitForTimeout(300);
+
+const before = await page.evaluate(() => {
+  const g = window.__ADR_GAME;
+  const el = document.querySelector('button.adr[data-key="fire"]');
+  const left = g.cooldownLeft ? g.cooldownLeft('stoke') : (g.state.cooldowns.stoke || 0);
+  return {
+    remaining: left,
+    countdown: el.querySelector('.cd-sec')?.textContent || null,
+    ends_at: g.state.cooldown_ends_at && g.state.cooldown_ends_at.stoke,
+  };
+});
+
+const hideN = 4;
+await page.evaluate(() => {
+  window.__adrRAF = window.requestAnimationFrame;
+  window.requestAnimationFrame = function () { return 0; };
+});
+const other = await page.context().newPage();
+await other.goto('about:blank');
+await other.bringToFront();
+await page.waitForTimeout(hideN * 1000);
+await page.bringToFront();
+await page.evaluate(() => {
+  if (window.__adrRAF) window.requestAnimationFrame = window.__adrRAF;
+  document.dispatchEvent(new Event('visibilitychange'));
+});
+await page.waitForTimeout(250);
+
+const after = await page.evaluate(() => {
+  const g = window.__ADR_GAME;
+  const el = document.querySelector('button.adr[data-key="fire"]');
+  const left = g.cooldownLeft ? g.cooldownLeft('stoke') : (g.state.cooldowns.stoke || 0);
+  return {
+    remaining: left,
+    countdown: el.querySelector('.cd-sec')?.textContent || null,
+    ends_at: g.state.cooldown_ends_at && g.state.cooldown_ends_at.stoke,
+  };
+});
+```
+
+**Pass.** After N seconds away, remaining is **10 − N** (stoke), not reset to 10. Allow ±1.2s for click/setup slack. If **N ≥ 10**, the button is enabled again and the countdown is empty. `ends_at` is an absolute timestamp; `remaining` on `visibilitychange` / `cooldown_visibility` matches `ends_at − now`. Same rule for gather (60s) and traps (90s).
+
+**Failure handling.** **FAIL** if remaining jumps back to the full duration (stoke 10 / gather 60 / traps 90) after the hide. Keep `before`, `after`, `hideN`, and the screenshot. Root cause to check first: `ui.js` rAF `dt` clamped with `Math.min(0.25, …)` plus `engine.js` decrementing remaining by `dt` instead of `end − now`.
+
 ## Step 4 — Telemetry write
 
 **Trigger.** Diff or claim adds or changes `playtest_events`, a new `event_name`, payload fields, the flush path, or a bug-fix / data-question PR that must prove a row landed.
@@ -181,7 +236,7 @@ Select every matching row. A file can require more than one step and more than o
 | `*.ttf` `*.otf` `*.woff` `*.woff2` `*font*` `@font-face` `font-family` `font-weight` `typography` | **1** font check | `aesthetic-community-consensus` (opened community threads). Step 1 proves the face loaded; the surface judges whether the choice is justified. |
 | `*theme*` `*.css` `*.scss` UI color / palette (no font files) | **1** if type is involved; else none of 1–4 unless a visual claim names a face | `aesthetic-community-consensus` |
 | save / load / `localStorage` / persist / refresh / `save_write` | **2** save and refresh | `pr-telemetry-required` when the PR is a save bug-fix. Persistence claim also needs the reload read-back in SKILL.md. |
-| cooldown / `.cd` / `paintCooldowns` / disabled button / gather / stoke / traps UI | **3** cooldown bar | `verification-scope-mismatch`: measure the code that **actually runs live**, not a sibling Godot/web path. |
+| cooldown / `.cd` / `paintCooldowns` / disabled button / gather / stoke / traps UI | **3** cooldown bar **and** the tab-hide remaining check in the same step | `verification-scope-mismatch`: measure the code that **actually runs live**, not a sibling Godot/web path. |
 | `playtest_events` / `event_name` / telemetry / analytics sink / flush | **4** telemetry write | `pr-telemetry-required` (bug-fix or data-question PR) and `<sink>-telemetry` (row read-back). |
 | `tools/pacing_analyzer.py` / `@pacing` / early-phase timing | no checklist step — verify **auto-calls** the analyzer | `game-pacing-intent` **plus** `art-style-boredom-mitigation` (same `early_phase_slow` wait; style decides Rajan vs pixel mitigations) |
 | `?style=` / `assets/pixel/` / art-style boredom | no extra Playwright step | `art-style-boredom-mitigation`: text → PASS; pixel → **NEEDS ALTERNATIVE** |
