@@ -895,6 +895,9 @@
     this.lastProgress = { stores: 0, flags: 0, unlocks: 0, at: 0 };
     this.phaseEntered = 0;
     this.currentPhase = "room_dark";
+    this.stuckFired = false;
+    this.sessionStarted = {};
+    this._recentSigs = [];
     // @pacing kind=interval id=stuck value=3min
     this.stuckMinutes = opts.stuck_minutes || 3;
     // @pacing kind=interval id=resource_snapshot value=15s
@@ -929,7 +932,49 @@
     } catch (e) { /* ignore */ }
   };
 
+  function isAutomation() {
+    try {
+      if (typeof globalThis !== "undefined" && globalThis.ADR_AUTOMATION === true) return true;
+      if (typeof navigator === "undefined") return true;
+      if (navigator.webdriver) return true;
+      return /Headless|PhantomJS|Playwright|Puppeteer|Lighthouse/i.test(navigator.userAgent || "");
+    } catch (e) { return false; }
+  }
+
+  /* Re-anchor phase timing to the current state (after a save load, import or restart). */
+  Analytics.prototype.syncPhase = function (state) {
+    this.currentPhase = state.phase;
+    this.phaseEntered = state.game_time_sec || 0;
+    this.lastProgress = { stores: 0, flags: Object.keys(state.flags || {}).length, unlocks: 0, at: state.game_time_sec || 0 };
+    this.stuckFired = false;
+  };
+
+  /* Player-driven progress resets the stuck timer; passive income (carts, builder) does not. */
+  Analytics.prototype.noteProgress = function (state) {
+    this.lastProgress.at = state.game_time_sec;
+    this.stuckFired = false;
+  };
+
+  Analytics.prototype._isDuplicate = function (state, name, payload) {
+    var sig;
+    try { sig = state.session_id + "|" + name + "|" + Math.round(state.game_time_sec * 100) + "|" + JSON.stringify(payload || {}); } catch (e) { return false; }
+    var now = Date.now();
+    this._recentSigs = this._recentSigs.filter(function (r) { return now - r.at < 250; });
+    for (var i = 0; i < this._recentSigs.length; i++) if (this._recentSigs[i].sig === sig) return true;
+    this._recentSigs.push({ sig: sig, at: now });
+    return false;
+  };
+
   Analytics.prototype.log = function (state, name, payload) {
+    payload = payload ? Object.assign({}, payload) : {};
+    if (payload.is_automation == null) payload.is_automation = isAutomation();
+    if (name !== "director_think" && this._isDuplicate(state, name, payload)) return null;
+    if (name === "session_start") {
+      this.sessionStarted[state.session_id] = true;
+    } else if (!this.sessionStarted[state.session_id] && name !== "session_end") {
+      this.sessionStarted[state.session_id] = true;
+      this.log(state, "session_start", { synthetic: true, reason: "missing_session_start", first_event: name });
+    }
     if (name === "player_action") {
       this.recentActions.push({
         action: (payload || {}).action,
@@ -1039,12 +1084,15 @@
   };
 
   Analytics.prototype.markProgress = function (state) {
-    var storeSum = 0;
-    ITEMS.forEach(function (k) { storeSum += state.stores[k] || 0; });
+    /* Story progress only: new flags, unlocks or buildings. Passive store income (carts,
+     * builder, traps) used to count here, which kept the stuck timer from ever firing. */
+    var built = 0;
+    Object.keys(state.buildings || {}).forEach(function (k) { built += state.buildings[k] || 0; });
     var flags = Object.keys(state.flags).length;
     var unlocks = AREAS.filter(function (a) { return state.unlocked[a]; }).length;
-    if (storeSum > this.lastProgress.stores || flags > this.lastProgress.flags || unlocks > this.lastProgress.unlocks) {
-      this.lastProgress = { stores: storeSum, flags: flags, unlocks: unlocks, at: state.game_time_sec };
+    if (built > this.lastProgress.stores || flags > this.lastProgress.flags || unlocks > this.lastProgress.unlocks) {
+      this.lastProgress = { stores: built, flags: flags, unlocks: unlocks, at: state.game_time_sec };
+      this.stuckFired = false;
     }
   };
 
@@ -1058,8 +1106,9 @@
       this.phaseEntered = state.game_time_sec;
     }
     this.markProgress(state);
-    if (state.game_time_sec - this.lastProgress.at >= this.stuckMinutes * 60 && state.game_time_sec - this.lastProgress.at < this.stuckMinutes * 60 + 1.2) {
-      this.log(state, "stuck", { phase: state.phase, idle_sec: this.stuckMinutes * 60 });
+    if (!this.stuckFired && state.game_time_sec - this.lastProgress.at >= this.stuckMinutes * 60) {
+      this.stuckFired = true;
+      this.log(state, "stuck", { phase: state.phase, idle_sec: Math.round(state.game_time_sec - this.lastProgress.at) });
     }
     var sig = [
       JSON.stringify(state.stores), JSON.stringify(state.buildings),
@@ -1117,6 +1166,7 @@
     }
     if (typeof ADRTelemetry !== "undefined" && ADRTelemetry.bindGame) ADRTelemetry.bindGame(this);
     this.analytics.attachSupabase();
+    this.analytics.syncPhase(this.state);
     this.analytics.log(this.state, "session_start", {
       director: this.directorName,
       restored: restored,
@@ -1167,6 +1217,7 @@
     var doc = readSaveRaw();
     if (!doc) return false;
     this.state = hydrateState(doc.state);
+    this.analytics.syncPhase(this.state);
     return true;
   };
 
@@ -1174,6 +1225,7 @@
     var next = decodeImport(b64);
     if (!next) return false;
     this.state = next;
+    this.analytics.syncPhase(this.state);
     return true;
   };
 
@@ -1181,6 +1233,7 @@
     var next = rebuildFromTelemetry(sessionId);
     if (!next) return false;
     this.state = next;
+    this.analytics.syncPhase(this.state);
     return true;
   };
 
@@ -1282,7 +1335,18 @@
     if (calls && calls.length) this.applyCalls(calls, "rule");
   };
 
+  /* Every player action is reported: successes carry ok:true, failures ok:false + error
+   * (cooldown, cost, locked, event_open, ...), which were previously invisible. */
   Game.prototype.act = function (action, args) {
+    args = args || {};
+    var res = this._act(action, args);
+    if (res && res.ok === false) {
+      this.analytics.log(this.state, "player_action", { action: action, args: args, ok: false, error: res.error || "unknown" });
+    }
+    return res;
+  };
+
+  Game.prototype._act = function (action, args) {
     args = args || {};
     var s = this.state;
     var note = null;
@@ -1521,6 +1585,7 @@
         this.state = createState();
         this.rule = new RuleDirector();
         if (typeof ADRTelemetry !== "undefined" && ADRTelemetry.bindGame) ADRTelemetry.bindGame(this);
+        this.analytics.syncPhase(this.state);
         this.analytics.log(this.state, "session_start", { director: this.directorName, restart: true });
         this.analytics.log(this.state, "new_game_start", {
           overwritten: !!(prevCtx && prevCtx.save_id),
@@ -1542,7 +1607,8 @@
       default:
         return { ok: false, error: "unknown_action" };
     }
-    this.analytics.log(s, "player_action", { action: action, args: args, note: note });
+    if (action !== "travel") this.analytics.noteProgress(s);
+    this.analytics.log(s, "player_action", { action: action, args: args, note: note, ok: true });
     if (typeof ADRTelemetry !== "undefined" && ADRTelemetry.playTone) {
       var tones = { light_fire: 196, stoke_fire: 220, gather_wood: 165, build: 262, travel: 147, embark: 311 };
       if (tones[action]) ADRTelemetry.playTone(action, { freq: tones[action], sec: 0.06 });

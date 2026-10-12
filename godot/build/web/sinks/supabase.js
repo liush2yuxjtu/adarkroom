@@ -105,7 +105,8 @@
         return res;
       }).catch(function (err) {
         var aborted = isAbortError(err);
-        if (opts.onFail) opts.onFail(err, attempt, failStatus(err));
+        /* Try the beacon before reporting failure: reporting first re-queued rows that the
+         * beacon then also delivered, which produced duplicate rows ~0.1s apart. */
         if (aborted && opts.beacon) {
           var body = JSON.stringify(rows);
           if (tryBeacon(url, anonKey, body)) {
@@ -114,6 +115,7 @@
             return ok;
           }
         }
+        if (opts.onFail) opts.onFail(err, attempt, failStatus(err));
         if (attempt >= retries || (opts.beacon && aborted)) {
           return { ok: false, status: failStatus(err), attempt: attempt, error: err };
         }

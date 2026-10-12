@@ -65,6 +65,7 @@
   }
 
   var T = {
+    sentIds: {},
     sessionId: uuid(),
     buffer: [],
     queue: [],
@@ -201,6 +202,37 @@
     if (!T.inflight && !T._holdFlush && T.queue.length >= FLUSH_N) flush("count");
   }
 
+  /* Milestone events are never dropped by the per-session cap; only noisy UI events are. */
+  var CAP_EXEMPT = {
+    session_start: 1, session_end: 1, phase_time: 1, unlock: 1, build: 1, death: 1,
+    slice_complete: 1, stuck: 1, player_action: 1, dialogue_choice: 1, save_load: 1,
+    new_game_start: 1, page_unload: 1, page_reload: 1, js_error: 1
+  };
+
+  function isAutomation() {
+    try {
+      if (root.ADR_AUTOMATION === true) return true;
+      if (typeof navigator === "undefined") return true;
+      if (navigator.webdriver) return true;
+      return /Headless|PhantomJS|Playwright|Puppeteer|Lighthouse/i.test(navigator.userAgent || "");
+    } catch (e) { return false; }
+  }
+
+  var recentSigs = [];
+  function isDuplicate(ev) {
+    var sig;
+    try {
+      var p = Object.assign({}, ev.payload);
+      delete p.event_id;
+      sig = ev.session_id + "|" + ev.event_name + "|" + ev.game_time_sec + "|" + JSON.stringify(p);
+    } catch (e) { return false; }
+    var now = Date.now();
+    recentSigs = recentSigs.filter(function (r) { return now - r.at < 250; });
+    for (var i = 0; i < recentSigs.length; i++) if (recentSigs[i].sig === sig) return true;
+    recentSigs.push({ sig: sig, at: now });
+    return false;
+  }
+
   function log(name, payload, level) {
     level = levelOf(name, level);
     var debugOn = debugEnabled();
@@ -210,17 +242,18 @@
       }
       return null;
     }
-    if (T.capped && name !== "page_unload" && name !== "page_reload" && name !== "js_error" && name !== "session_end") {
+    if (T.capped && !CAP_EXEMPT[name]) {
       T.dropped += 1;
       return null;
     }
-    if (T.sent + T.queue.length + T.buffer.length >= SESSION_CAP && name !== "page_unload") {
+    if (T.sent + T.queue.length + T.buffer.length >= SESSION_CAP && !CAP_EXEMPT[name]) {
       T.capped = true;
-      if (name !== "session_end" && name !== "js_error" && name !== "page_reload") {
-        T.dropped += 1;
-        return null;
-      }
+      T.dropped += 1;
+      return null;
     }
+    payload = payload ? Object.assign({}, payload) : {};
+    if (payload.is_automation == null) payload.is_automation = isAutomation();
+    if (!payload.event_id) payload.event_id = uuid();
     var snap = gameSnap();
     var ev = {
       session_id: snap.session_id,
@@ -228,9 +261,13 @@
       occurred_at: nowIso(),
       game_time_sec: snap.game_time_sec,
       phase: snap.phase,
-      payload: payload || {},
+      payload: payload,
       user_agent: typeof navigator !== "undefined" ? navigator.userAgent : "godot"
     };
+    if (isDuplicate(ev)) {
+      T.deduped = (T.deduped || 0) + 1;
+      return null;
+    }
     enqueueRow(ev, { skipHttp: level === "debug" && !debugOn });
     return ev;
   }
@@ -290,7 +327,11 @@
     T.retryAttempt = attempt;
 
     function requeue() {
-      for (var i = events.length - 1; i >= 0; i--) T.queue.unshift(events[i]);
+      for (var i = events.length - 1; i >= 0; i--) {
+        var id = events[i] && events[i].payload && events[i].payload.event_id;
+        if (id && T.sentIds[id]) continue;
+        T.queue.unshift(events[i]);
+      }
     }
 
     function onFail(err, status) {
@@ -312,6 +353,14 @@
     }
 
     function onOk(res) {
+      if (res && res.ok === false) {
+        onFail(new Error(String(res.status || "send-failed")), res.status || "send-failed");
+        return;
+      }
+      events.forEach(function (e) {
+        var id = e && e.payload && e.payload.event_id;
+        if (id) T.sentIds[id] = 1;
+      });
       T.inflight = false;
       T.sent += rows.length;
       T._holdFlush = true;
