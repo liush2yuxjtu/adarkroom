@@ -141,13 +141,18 @@
     return n;
   }
 
+  function persistNow() {
+    if (persistTimer) {
+      clearTimeout(persistTimer);
+      persistTimer = 0;
+    }
+    if (typeof localStorage === "undefined") return;
+    try { localStorage.setItem(LS_KEY, JSON.stringify(T.buffer.slice(-800))); } catch (e) { /* ignore */ }
+  }
+
   function persistSoon() {
     if (persistTimer) return;
-    persistTimer = setTimeout(function () {
-      persistTimer = 0;
-      if (typeof localStorage === "undefined") return;
-      try { localStorage.setItem(LS_KEY, JSON.stringify(T.buffer.slice(-800))); } catch (e) { /* ignore */ }
-    }, 1500);
+    persistTimer = setTimeout(persistNow, 1500);
   }
 
   function debugEnabled() {
@@ -246,31 +251,33 @@
     T.sent += rows.length;
     var body = JSON.stringify(rows);
     var unloading = reason === "unload" || reason === "pagehide" || reason === "beforeunload";
-    if (unloading && typeof navigator !== "undefined" && navigator.sendBeacon) {
-      try {
-        var blob = new Blob([body], { type: "application/json" });
-        if (navigator.sendBeacon(beaconUrl(), blob)) return;
-      } catch (e) { /* fall through */ }
-    }
-    if (typeof fetch !== "function") {
-      for (var i = rows.length - 1; i >= 0; i--) T.queue.unshift(rows[i]);
-      T.sent -= rows.length;
-      return;
-    }
     var headers = sink && sink.headersFromAnonKey
       ? sink.headersFromAnonKey(T.anonKey)
       : { "Content-Type": "application/json", apikey: T.anonKey, Authorization: "Bearer " + T.anonKey, Prefer: "return=minimal" };
-    fetch(T.url, {
-      method: "POST",
-      keepalive: true,
-      headers: headers,
-      body: body
-    }).then(function (r) {
-      if (!r.ok) throw new Error(String(r.status));
-    }).catch(function () {
-      for (var j = rows.length - 1; j >= 0; j--) T.queue.unshift(rows[j]);
-      T.sent -= rows.length;
-    });
+    if (typeof fetch === "function") {
+      fetch(T.url, {
+        method: "POST",
+        keepalive: true,
+        headers: headers,
+        body: body
+      }).then(function (r) {
+        if (!r.ok) throw new Error(String(r.status));
+      }).catch(function () {
+        if (unloading && typeof navigator !== "undefined" && navigator.sendBeacon) {
+          try { navigator.sendBeacon(beaconUrl(), new Blob([body], { type: "application/json" })); } catch (e) { /* ignore */ }
+        }
+        for (var j = rows.length - 1; j >= 0; j--) T.queue.unshift(rows[j]);
+        T.sent -= rows.length;
+      });
+      return;
+    }
+    if (unloading && typeof navigator !== "undefined" && navigator.sendBeacon) {
+      try {
+        if (navigator.sendBeacon(beaconUrl(), new Blob([body], { type: "application/json" }))) return;
+      } catch (e2) { /* ignore */ }
+    }
+    for (var i = rows.length - 1; i >= 0; i--) T.queue.unshift(rows[i]);
+    T.sent -= rows.length;
   }
 
   function flushMouse(why) {
@@ -376,6 +383,7 @@
       last_action: T.lastAction
     };
     storageSet(UNLOAD_KEY, JSON.stringify(rec));
+    persistNow();
     log("page_unload", {
       reason: reason || "pagehide",
       phase: snap.phase,
@@ -387,6 +395,7 @@
       active_play_ms: T.activePlayMs,
       last_action: T.lastAction
     });
+    persistNow();
     flush("unload");
   }
 
