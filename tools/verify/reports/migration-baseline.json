@@ -1,14 +1,14 @@
 {
   "pass": false,
   "gate": {
-    "missing": 49,
+    "missing": 38,
     "no_producer": 4,
     "numeric_mismatch": 0,
     "allowlist": 0
   },
   "counts": {
-    "present": 246,
-    "missing": 49,
+    "present": 257,
+    "missing": 38,
     "no_producer": 4,
     "mismatch": 0,
     "no_zh": 0,
@@ -114,8 +114,8 @@
       "total": 5
     },
     "later phase": {
-      "present": 1,
-      "missing": 4,
+      "present": 3,
+      "missing": 2,
       "no_producer": 0,
       "mismatch": 0,
       "total": 5
@@ -149,15 +149,15 @@
       "total": 14
     },
     "ship": {
-      "present": 0,
-      "missing": 5,
+      "present": 5,
+      "missing": 0,
       "no_producer": 0,
       "mismatch": 0,
       "total": 5
     },
     "space": {
-      "present": 0,
-      "missing": 4,
+      "present": 4,
+      "missing": 0,
       "no_producer": 0,
       "mismatch": 0,
       "total": 4
@@ -228,8 +228,8 @@
       "total": 26
     },
     "7": {
-      "present": 0,
-      "missing": 11,
+      "present": 11,
+      "missing": 0,
       "no_producer": 0,
       "mismatch": 0,
       "total": 11
@@ -302,9 +302,9 @@
     {
       "batch": 7,
       "title": "Ship and space",
-      "pass": false,
+      "pass": true,
       "kind": "story",
-      "detail": "batch incomplete: 11 of 11 not present"
+      "detail": "ship unlock-on-return + hull/engine + lift-off warning + space crash/ascent + persist"
     },
     {
       "batch": 8,
@@ -484,20 +484,6 @@
       "note": "missing"
     },
     {
-      "id": "later phase:ship",
-      "status": "missing",
-      "batch": 7,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "later phase:space",
-      "status": "missing",
-      "batch": 7,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
       "id": "later phase:fabricator",
       "status": "missing",
       "batch": 8,
@@ -508,69 +494,6 @@
       "id": "later phase:ending/prestige/score",
       "status": "missing",
       "batch": 9,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "ship:LIFTOFF_COOLDOWN",
-      "status": "missing",
-      "batch": 7,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "ship:ALLOY_PER_HULL",
-      "status": "missing",
-      "batch": 7,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "ship:ALLOY_PER_THRUSTER",
-      "status": "missing",
-      "batch": 7,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "ship:BASE_HULL",
-      "status": "missing",
-      "batch": 7,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "ship:BASE_THRUSTERS",
-      "status": "missing",
-      "batch": 7,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "space:SHIP_SPEED",
-      "status": "missing",
-      "batch": 7,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "space:BASE_ASTEROID_DELAY",
-      "status": "missing",
-      "batch": 7,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "space:BASE_ASTEROID_SPEED",
-      "status": "missing",
-      "batch": 7,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "space:FTB_SPEED",
-      "status": "missing",
-      "batch": 7,
       "numeric": "skip",
       "note": "missing"
     },

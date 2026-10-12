@@ -176,6 +176,19 @@ h1.title {
 }
 .path-outfit-meta { margin: 8px 0; font-size: 14px; line-height: 1.5; }
 
+.space-field {
+  margin: 8px 0 12px;
+  padding: 8px;
+  border: 1px solid #111;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.15;
+  letter-spacing: 0.12em;
+  white-space: pre;
+  overflow: auto;
+  max-width: 100%;
+}
+
 button.adr {
   background: #fff;
   border: 1px solid #111;

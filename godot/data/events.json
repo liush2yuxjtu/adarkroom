@@ -4883,6 +4883,44 @@
       }
     }
   },
+  "liftoff_warning": {
+    "title": "准备好要离开了吗?",
+    "notification": "是时候离开这里了。不再回头",
+    "text": [
+      "是时候离开这里了。不再回头"
+    ],
+    "buttons": [
+      {
+        "id": "fly",
+        "text": "点火起飞",
+        "next": "end"
+      },
+      {
+        "id": "linger",
+        "text": "裹足徘徊",
+        "next": "end"
+      }
+    ],
+    "scenes": {
+      "start": {
+        "text": [
+          "是时候离开这里了。不再回头"
+        ],
+        "buttons": [
+          {
+            "id": "fly",
+            "text": "点火起飞",
+            "next": "end"
+          },
+          {
+            "id": "linger",
+            "text": "裹足徘徊",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
   "sulphurmine": {
     "title": "硫磺矿",
     "notification": "矿井周围设立了军事边界",
