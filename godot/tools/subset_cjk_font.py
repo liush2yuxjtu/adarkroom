@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Subset Noto Serif SC Medium to glyphs used by the remake (SIL OFL).
+"""Subset Noto Sans SC to glyphs used by the remake (SIL OFL).
 
-Reads copy from godot/data, scripts, and the committed HTML runtime,
+Reads Chinese copy from godot/data, scripts, and the committed HTML runtime,
 then writes a compact OTF (Godot FontFile) and WOFF2 (web @font-face).
 """
 from __future__ import annotations
@@ -14,12 +14,11 @@ ROOT = Path(__file__).resolve().parents[1]
 TOOLS = Path(__file__).resolve().parent
 GODOT_FONTS = ROOT / "fonts"
 WEB_FONTS = ROOT / "build" / "web" / "fonts"
-EXTRA = "…—–‘’“”·•※°—－～、。！？：；（）【】《》「」『』±×÷"
-ASCII = "".join(chr(i) for i in range(0x20, 0x7F))
+EXTRA = "…—–‘’“”·•※°—－～、。！？：；（）【】《》「」『』"
 
 
 def collect_glyphs() -> str:
-    blob: list[str] = [EXTRA, ASCII]
+    blob: list[str] = [EXTRA]
     roots = [ROOT / "data", ROOT / "scripts", ROOT / "build" / "web", ROOT / "scenes"]
     for base in roots:
         if not base.exists():
@@ -36,14 +35,11 @@ def collect_glyphs() -> str:
         for text in blob
         for ch in text
         if (
-            0x20 <= ord(ch) <= 0x7E
-            or 0xA0 <= ord(ch) <= 0x24F
-            or 0x2000 <= ord(ch) <= 0x206F
-            or 0x3000 <= ord(ch) <= 0x303F
-            or 0x3400 <= ord(ch) <= 0x4DBF
-            or 0x4E00 <= ord(ch) <= 0x9FFF
-            or 0xF900 <= ord(ch) <= 0xFAFF
-            or 0xFF00 <= ord(ch) <= 0xFFEF
+            "\u3000" <= ch <= "\u303f"
+            or "\u3400" <= ch <= "\u4dbf"
+            or "\u4e00" <= ch <= "\u9fff"
+            or "\uf900" <= ch <= "\ufaff"
+            or "\uff00" <= ch <= "\uffef"
             or ch in EXTRA
         )
     }
@@ -51,7 +47,7 @@ def collect_glyphs() -> str:
 
 
 def main() -> int:
-    src = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("/tmp/adr-fonts/src/NotoSerifSC-Medium.otf")
+    src = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("/tmp/adr-fonts/NotoSansSC-Regular.otf")
     if not src.is_file():
         print("missing source font:", src, file=sys.stderr)
         return 1
@@ -60,8 +56,8 @@ def main() -> int:
     WEB_FONTS.mkdir(parents=True, exist_ok=True)
     glyph_file = TOOLS / "cjk-glyphs.txt"
     glyph_file.write_text(glyphs, encoding="utf-8")
-    otf = GODOT_FONTS / "NotoSerifSC-Medium-subset.otf"
-    woff2 = WEB_FONTS / "NotoSerifSC-Medium-subset.woff2"
+    otf = GODOT_FONTS / "NotoSansSC-Regular-subset.otf"
+    woff2 = WEB_FONTS / "NotoSansSC-Regular-subset.woff2"
     common = [
         "pyftsubset",
         str(src),
