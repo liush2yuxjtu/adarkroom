@@ -12,6 +12,13 @@
   function $(id) { return document.getElementById(id); }
 
   function cdLeft(id) {
+    if (game && typeof game.cooldownLeft === "function") return game.cooldownLeft(id);
+    if (!game || !game.state) return 0;
+    var end = game.state.cooldown_ends_at && game.state.cooldown_ends_at[id];
+    if (end) {
+      var scale = game.timeScale > 0 ? game.timeScale : 1;
+      return Math.max(0, ((Number(end) - Date.now()) / 1000) * scale);
+    }
     return game.state.cooldowns[id] || 0;
   }
 
@@ -31,7 +38,12 @@
     var barEl = b.querySelector(".cd");
     var secEl = b.querySelector(".cd-sec");
     var left = cdId ? cdLeft(cdId) : 0;
-    if (barEl) barEl.style.width = cdId ? (cdRatio(cdId) * 100) + "%" : "0%";
+    var ratio = cdId ? cdRatio(cdId) : 0;
+    if (barEl) {
+      barEl.style.width = (ratio * 100) + "%";
+      var max = { stoke: 10, gather: 60, traps: 90 }[cdId] || 1;
+      barEl.style.animationDelay = left > 0 ? (-(max - left)) + "s" : "0s";
+    }
     if (secEl) secEl.textContent = left > 0 ? String(Math.ceil(left)) : "";
   }
 
@@ -573,7 +585,16 @@
     }
     window.addEventListener("pagehide", persistNow);
     document.addEventListener("visibilitychange", function () {
-      if (document.visibilityState === "hidden") persistNow();
+      if (document.visibilityState === "hidden") {
+        persistNow();
+        if (game && game.logCooldownVisibility) game.logCooldownVisibility("hidden");
+        return;
+      }
+      lastRender = 0;
+      if (game && game.syncCooldowns) game.syncCooldowns();
+      paintCooldowns();
+      if (game && game.emit) game.emit();
+      if (game && game.logCooldownVisibility) game.logCooldownVisibility("visible");
     });
     window.addEventListener("beforeunload", function () {
       persistNow();

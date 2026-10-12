@@ -39,6 +39,8 @@ Analytics 有事件等级：`info`（默认，始终上报）和 `debug`。`dire
 | `stuck` | N 分钟无进度 | `phase`, `idle_sec` | 阈值边沿一次 |
 | `death` / `quit` / `slice_complete` | 远征死 / 关页 / 切片完成 | 视事件 | 每次 |
 | `tab_hidden` / `tab_visible` | `visibilitychange`、`window` blur/focus、Godot focus | `source`, `active_play_ms`, `last_hidden_ms?` | 500ms 去重 |
+| `cooldown_set` | 生火/添柴/伐木/查陷阱进入冷却 | `id` (`stoke`/`gather`/`traps`), `duration_sec`, `ends_at`, `time_scale` | 每次设置 |
+| `cooldown_visibility` | 标签隐藏/回到前台时的冷却快照 | `visibility`, `remaining{stoke,gather,traps}`, `ends_at`, `wall_now`, `hidden_ms`, `source` | 每次显隐 |
 | `mouse_trajectory` | 鼠标移动 | `samples[{t,x,y,nx,ny}]`, `reason`, `n` | 300ms，仅移动 |
 | `button_hover_enter` / `button_hover_exit` | 按钮悬停 | `element_id`, `label`, `duration_ms?` | 进入/离开 |
 | `click_heat` | 点击 | `x`, `y`, `nx`, `ny`, `element_id`, `tag`, `label` | 每次点击 |
