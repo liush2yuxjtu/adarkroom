@@ -1,14 +1,14 @@
 {
   "pass": false,
   "gate": {
-    "missing": 220,
+    "missing": 174,
     "no_producer": 4,
     "numeric_mismatch": 1,
     "allowlist": 0
   },
   "counts": {
-    "present": 75,
-    "missing": 220,
+    "present": 121,
+    "missing": 174,
     "no_producer": 4,
     "mismatch": 1,
     "no_zh": 0,
@@ -23,8 +23,8 @@
       "total": 10
     },
     "tool/weapon/upgrade": {
-      "present": 0,
-      "missing": 15,
+      "present": 14,
+      "missing": 1,
       "no_producer": 0,
       "mismatch": 0,
       "total": 15
@@ -128,8 +128,8 @@
       "total": 11
     },
     "weapon": {
-      "present": 0,
-      "missing": 11,
+      "present": 4,
+      "missing": 7,
       "no_producer": 0,
       "mismatch": 0,
       "total": 11
@@ -177,8 +177,8 @@
       "total": 1
     },
     "notification": {
-      "present": 31,
-      "missing": 80,
+      "present": 59,
+      "missing": 52,
       "no_producer": 0,
       "mismatch": 0,
       "total": 111
@@ -193,8 +193,8 @@
       "total": 41
     },
     "2": {
-      "present": 0,
-      "missing": 42,
+      "present": 42,
+      "missing": 0,
       "no_producer": 0,
       "mismatch": 0,
       "total": 42
@@ -214,8 +214,8 @@
       "total": 12
     },
     "5": {
-      "present": 5,
-      "missing": 79,
+      "present": 9,
+      "missing": 75,
       "no_producer": 0,
       "mismatch": 1,
       "total": 84
@@ -267,9 +267,9 @@
     {
       "batch": 2,
       "title": "Workshop crafts, water, bags, armour, crafted weapons",
-      "pass": false,
+      "pass": true,
       "kind": "story",
-      "detail": "batch incomplete: 42 of 42 not present"
+      "detail": "workshop crafts + water/bag/armour + buildMsg"
     },
     {
       "batch": 3,
@@ -290,7 +290,7 @@
       "title": "World combat: encounters, weapons, perks, map rules",
       "pass": false,
       "kind": "story",
-      "detail": "batch incomplete: 79 of 84 not present"
+      "detail": "batch incomplete: 75 of 84 not present"
     },
     {
       "batch": 6,
@@ -329,104 +329,6 @@
     }
   ],
   "gaps": [
-    {
-      "id": "tool/weapon/upgrade:torch",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "not present"
-    },
-    {
-      "id": "tool/weapon/upgrade:waterskin",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "not present"
-    },
-    {
-      "id": "tool/weapon/upgrade:cask",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "not present"
-    },
-    {
-      "id": "tool/weapon/upgrade:water tank",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "not present"
-    },
-    {
-      "id": "tool/weapon/upgrade:bone spear",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "not present"
-    },
-    {
-      "id": "tool/weapon/upgrade:rucksack",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "not present"
-    },
-    {
-      "id": "tool/weapon/upgrade:wagon",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "not present"
-    },
-    {
-      "id": "tool/weapon/upgrade:convoy",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "not present"
-    },
-    {
-      "id": "tool/weapon/upgrade:l armour",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "not present"
-    },
-    {
-      "id": "tool/weapon/upgrade:i armour",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "not present"
-    },
-    {
-      "id": "tool/weapon/upgrade:s armour",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "not present"
-    },
-    {
-      "id": "tool/weapon/upgrade:iron sword",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "not present"
-    },
-    {
-      "id": "tool/weapon/upgrade:steel sword",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "not present"
-    },
-    {
-      "id": "tool/weapon/upgrade:rifle",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "not present"
-    },
     {
       "id": "tool/weapon/upgrade:laser rifle",
       "status": "missing",
@@ -1086,35 +988,7 @@
       "note": "missing"
     },
     {
-      "id": "weapon:bone spear",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "not present"
-    },
-    {
-      "id": "weapon:iron sword",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "not present"
-    },
-    {
-      "id": "weapon:steel sword",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "not present"
-    },
-    {
       "id": "weapon:bayonet",
-      "status": "missing",
-      "batch": 5,
-      "numeric": "skip",
-      "note": "not present"
-    },
-    {
-      "id": "weapon:rifle",
       "status": "missing",
       "batch": 5,
       "numeric": "skip",
@@ -1341,202 +1215,6 @@
       "id": "notification:craft:hut: no more room for huts.",
       "status": "missing",
       "batch": "core",
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:craft:torch: torch",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:craft:torch: a torch to keep the dark away",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:craft:waterskin: waterskin",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:craft:waterskin: this waterskin'll hold a bit of water, at least",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:craft:cask: cask",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:craft:cask: the cask holds enough water for longer expeditio",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:craft:water tank: water tank",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:craft:water tank: never go thirsty again",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:craft:bone spear: bone spear",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:craft:bone spear: this spear's not elegant, but it's pretty good a",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:craft:rucksack: rucksack",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:craft:rucksack: carrying more means longer expeditions to the wi",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:craft:wagon: wagon",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:craft:wagon: the wagon can carry a lot of supplies",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:craft:convoy: convoy",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:craft:convoy: the convoy can haul mostly everything",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:craft:l armour: l armour",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:craft:l armour: leather's not strong. better than rags, though.",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:craft:i armour: i armour",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:craft:i armour: iron's stronger than leather",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:craft:s armour: s armour",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:craft:s armour: steel's stronger than iron",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:craft:iron sword: iron sword",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:craft:iron sword: sword is sharp. good protection out in the wilds",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:craft:steel sword: steel sword",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:craft:steel sword: the steel is strong, and the blade true.",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:craft:rifle: rifle",
-      "status": "missing",
-      "batch": 2,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "notification:craft:rifle: black powder and bullets, like the old days.",
-      "status": "missing",
-      "batch": 2,
       "numeric": "skip",
       "note": "missing"
     },
