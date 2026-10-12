@@ -61,3 +61,12 @@ Analytics 有事件等级：`info`（默认，始终上报）和 `debug`。`dire
 存档埋点挂在现有存档模块上（`save-telemetry.js` 包装 `save`/`load`/`autosave` 以及约定的 storage key），**不另做一套存档**。损坏存档会备份到 `localStorage` 键 `adr.save.corrupt.<ts>`，不把整份档塞进 payload（RLS 限制 `pg_column_size(payload) < 16384`）。
 
 弃档长局（上一局 ≥30 分钟后 `new_game_start`）见视图 `abandoned_long_runs`（`supabase/migrations/002_abandoned_long_runs.sql`）。
+
+### 验证（预览 37c7c0b，`?fast=1`）
+
+| 开关 | session_id | `director_think` 行 | 总行 | 备注 |
+|---|---|---|---|---|
+| 默认（无 debug） | `cfbc47e3-1e84-433a-ad62-679768f97dcf` | **0** | 92 | 仍有 `player_action` / `director_tool` / `session_start` / `page_unload` / `page_reload` / `save_load` |
+| `?telemetry_debug=1` | `5768c975-e0a6-42d4-9b9e-a55f180f0f9e` | **55** | 99 | debug 级这才进 `playtest_events` |
+
+再确认：`af26834e-…` 默认 0 think；`c0bb741e-…` debug 54 think。anon RLS 仍只有 INSERT（`session_id` 1–128、`event_name` 1–64、`payload` < 16KB）。短局 `?fast=1` 墙钟约 6–7s，默认约 820 行/分、debug 约 990 行/分；其中 debug 增量几乎全是每秒一条的 `director_think`。正常 1× 时间、不开 debug 时不再有这 60 行/分。
