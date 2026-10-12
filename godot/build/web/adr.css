@@ -336,7 +336,7 @@ body.style-pixel #btn-style {
 
 .workers {
   margin-top: 16px;
-  max-width: 100%;
+  max-width: min(340px, calc(100% - 16px));
 }
 
 .worker-row {
