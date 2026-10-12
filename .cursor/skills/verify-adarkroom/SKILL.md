@@ -58,9 +58,27 @@ Run all four. Any FAIL is a FAIL.
    - Run `list_deployment_events` for the build log. Expect `Prepared /vercel/path0/dist` and `Build Completed`.
    - Run `list_deployment_files` and `get_runtime_logs`. These are a static deployment, so 404 / no logs is normal, and the MCP may not be authorized for the team.
    - Run `web_fetch_vercel_url` on `/ui.js`, `/engine.js` and `/data/config.json`, plus `scripts/doctor.sh` with `curl -w '%{content_type}'`. Every asset must be `200` with `application/javascript`, `text/css`, or `application/json`, and never `text/html` (a rewrite to index.html). COOP/COEP (`same-origin`/`require-corp`) is set in `vercel.json`. It does not block the same-origin scripts.
-2. **Telemetry DB.** The deployed `data/config.json` has `analytics_endpoint: ""` and `analytics_http_enabled: false`. Supabase `list_projects` has no adarkroom project. So there is **no backend telemetry DB**. `sinks/supabase.js` exists but is not wired in. Verify telemetry by reading `localStorage['adr.telemetry']` in the browser and require `player_action` after a click. Do not create a DB during verification.
+2. **Telemetry DB.** As of deployment `dpl_2nVj2PzELqQvVRrtsRpb3yYhfHXU` (commit `fbdc4e1`), the deployed `data/config.json` has `analytics_endpoint: ""` and `analytics_http_enabled: false`, and the build has no `telemetry-config.js`. So the live site sends nothing to a backend. Read `localStorage['adr.telemetry']` and require `player_action` after a click. Once the Supabase wiring is deployed, also run the Supabase check below. Never create a DB during verification.
 3. **Playwright (real mouse):** `scripts/verify_live.py` (see Drive). Also click the menu buttons `加速.` and `设置.` and check that something visible changes. `设置.` opens a modal in `#overlay`, which `renderEvent()` clears on the next frame if no event is active.
 4. **Chrome DevTools Protocol:** `scripts/cdp_inspect.sh <base_url>`. It launches Playwright's Chromium with `--remote-debugging-port=9333`, connects over CDP, and kills that Chromium on exit. It collects `Runtime.exceptionThrown`, `Network.loadingFailed`, 4xx/5xx `Network.responseReceived`, and `Log.entryAdded`. It runs `elementFromPoint` at each button centre (must be `self`, i.e. not covered by an overlay) and `DOMDebugger.getEventListeners` on `生火` (must include `click`). It also checks whether the button survives 2 animation frames and counts `#panel-room` mutations per second. PASS needs the button to survive and fewer than 5 mutations per second when idle. Output: `/workspace/adr-verify/cdp.json`.
+
+## Supabase telemetry end-to-end check
+
+Backend: Supabase project `adarkroom-telemetry` (ref `ywwguestvujaoimlqznq`), table `public.playtest_events` (`id, session_id, event_name, occurred_at, game_time_sec, phase, payload jsonb, user_agent, inserted_at`). RLS allows anon INSERT only. The Vercel env vars `SUPABASE_URL` and `SUPABASE_ANON_KEY` are injected at build time (static site, so a redeploy is needed to pick them up). Details: `/workspace/adr-telemetry/handoff.md`. Not yet runnable: as of 2026-10-12 the frontend wiring is not deployed.
+
+1. Open the LIVE URL in headless Playwright and record `session_id` from `JSON.parse(localStorage['adr.telemetry'])[0].session_id`. This is the unique marker for the run. Confirm the deployed build has a non-empty `self.ADR_TELEMETRY` (`telemetry-config.js`) and a `POST …/rest/v1/playtest_events` request answering `201`.
+2. Click `生火` with the real mouse, plus 2–3 other buttons (e.g. `添柴`, `加速.`, `设置.`).
+3. Wait about 15 s for the batch flush.
+4. Supabase MCP `execute_sql` (project `ywwguestvujaoimlqznq`):
+   ```sql
+   select event_name, count(*), min(occurred_at), max(occurred_at),
+          jsonb_agg(payload) filter (where event_name='player_action') as actions
+   from public.playtest_events where session_id = '<session_id>' group by 1;
+   ```
+   Assert rows for `session_start`, `player_action` and `director_tool`, a non-null `occurred_at`, and a `player_action` payload that names the clicked action (e.g. light fire / stoke).
+5. Confirm anon cannot read: `curl -s "$SUPABASE_URL/rest/v1/playtest_events?select=id&limit=1" -H "apikey: $ANON" -H "Authorization: Bearer $ANON"` must return an error / permission denied (or `[]`), never rows.
+6. Optional: open the Table Editor at https://supabase.com/dashboard/project/ywwguestvujaoimlqznq/editor and filter by the session_id for a screenshot.
+7. Lesson: events in localStorage alone do not prove the backend works. PASS needs rows in `playtest_events` for this run's session_id.
 
 ## Evidence
 
