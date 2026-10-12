@@ -508,7 +508,15 @@
     $("btn-classic").addEventListener("click", function () {
       window.location.href = "/classic/?lang=zh_cn";
     });
+    function persistNow() {
+      if (game && game.persistSave) game.persistSave();
+    }
+    window.addEventListener("pagehide", persistNow);
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState === "hidden") persistNow();
+    });
     window.addEventListener("beforeunload", function () {
+      persistNow();
       if (!game) return;
       game.analytics.log(game.state, "quit", {});
       game.analytics.log(game.state, "session_end", { reason: "quit" });
@@ -519,6 +527,22 @@
         game.analytics.flushHttp("unload");
       }
     });
+    window.ADRSave = {
+      key: ADR.SAVE_KEY,
+      export: function () { return ADR.readSaveRaw(); },
+      restore: function (sessionId) {
+        location.search = "restore=" + encodeURIComponent(sessionId);
+      },
+      importDoc: function (doc) {
+        if (!doc) return false;
+        var state = ADR.hydrateState(doc.state || doc);
+        if (!game) return false;
+        game.state = state;
+        game.persistSave();
+        game.emit();
+        return true;
+      }
+    };
     window.addEventListener("keydown", function (e) {
       if (!game.state.world.on_expedition) return;
       var map = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0], w: [0, -1], s: [0, 1], a: [-1, 0], d: [1, 0] };
@@ -547,6 +571,7 @@
       cfg.analytics_http_enabled = true;
     }
     if (q.get("fast") === "1" || q.get("fast") === "true") cfg.time_scale = 10;
+    if (q.get("telemetry_debug") === "1" || q.get("telemetry_debug") === "true") cfg.telemetry_debug = true;
     try {
       var saved = JSON.parse(localStorage.getItem("adr.config") || "null");
       if (saved && !q.get("director")) {

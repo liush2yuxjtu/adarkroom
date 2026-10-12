@@ -5,20 +5,32 @@ A Dark Room 早期循环的简体中文重制。原作 © Michael Townsend / dou
 - 打开 `project.godot`（Godot 4.4，Compatibility 渲染）。
 - 可玩的 HTML5 运行时在 `build/web/`（无线程，不强制依赖 SharedArrayBuffer）。
 - 字体：JetBrains Mono + Noto Sans SC（SIL OFL 1.1），见 `fonts/README.md`。
+- 进度存档：`localStorage['adr.save.v1']`（Godot 同时写 `user://adr-save-v1.json`）。刷新会读档；`?fresh=1` 开新档；`?restore=<session_id>` 从本机 `adr.telemetry` 重建；`?import=<base64>` 导入快照。重开会清档。
 - 有官方导出模板时：`./export.sh`。
 - 叙事工具协议：`docs/TOOLS.md`。
 - 无头规则导演试玩：`node tools/simulate.mjs`。
 
 ## 遥测事件目录
 
-可玩站点是 `build/web/`（不是 WASM）。事件写入 `playtest_events.event_name`，细节在 `payload` jsonb。浏览器队列每 **3 秒或 15 条** flush；`pagehide`/`beforeunload` 走 `sendBeacon` 或 `fetch keepalive`。单会话封顶 **2500** 条。`director_think` 只在导演真正产出工具调用时记录（不再每秒一条）。`resource_snapshot` 默认 **15s**，资源变化时额外打点（最短间隔 2s）。鼠标轨迹仅在移动时每 **300ms** 采样，满 6 点或停住再发一条。滚动 400ms、可见性 500ms 去重。
+可玩站点是 `build/web/`（不是 WASM）。事件写入 `playtest_events.event_name`，细节在 `payload` jsonb。浏览器队列每 **3 秒或 15 条** flush；`pagehide`/`beforeunload` 走 `sendBeacon` 或 `fetch keepalive`。单会话封顶 **2500** 条。
+
+Analytics 有事件等级：`info`（默认，始终上报）和 `debug`。`director_think` 是 **debug**：默认 **不会** 写入 Supabase `playtest_events`，只在控制台 `console.debug`。打开调试后才上报。其它事件（`player_action`、`resource_snapshot`、`phase_time`、`session_start`、`director_tool` 以及下表新事件）都是 `info`，始终发送。
+
+打开 debug 的方式（任一即可）：
+
+- URL：`/?telemetry_debug=1`
+- `localStorage.setItem('adr.telemetry_debug', '1')`（`0` 可关）
+- `data/config.json` 的 `telemetry_debug: true`
+- 构建环境变量 `TELEMETRY_DEBUG=1`（写入 `telemetry-config.js` 的 `ADR_TELEMETRY.debug`）
+
+`resource_snapshot` 默认 **15s**，资源变化时额外打点（最短间隔 2s）。鼠标轨迹仅在移动时每 **300ms** 采样，满 6 点或停住再发一条。滚动 400ms、可见性 500ms 去重。
 
 | event_name | 触发 | payload 字段 | 采样 |
 |---|---|---|---|
 | `session_start` | 启动 / 重开 | `director`, `restart?` | 每次 |
 | `session_end` | 重开或关闭页 | `reason` | 每次 |
 | `player_action` | `Game.act` 成功 | `action`, `args`, `note` | 每次 |
-| `director_think` | 导演产出了 calls | `director`, `call_count`, `tools` | 仅有动作时 |
+| `director_think` | 导演每秒思考（debug） | `director`, `call_count`, `tools` | 默认不上报；`?telemetry_debug=1` 时每秒 |
 | `director_tool` | 单条工具执行 | `tool`, `args`, `result`, `error`, `origin` | 每次 |
 | `resource_snapshot` | 定时或库存变化 | `stores`, `buildings`, `fire`, `population`, `temperature`, `reason` | 15s 或变化≥2s |
 | `phase_time` | 离开阶段 | `phase`, `seconds` | 每次切换 |

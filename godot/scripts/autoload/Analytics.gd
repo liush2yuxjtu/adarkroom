@@ -57,7 +57,22 @@ func configure(cfg: Dictionary) -> void:
 	snapshot_every = float(cfg.get("snapshot_interval_sec", 15))
 	extra_headers = cfg.get("analytics_headers", {})
 
-func log_event(name: String, payload: Dictionary = {}) -> void:
+func debug_enabled() -> bool:
+	if bool(GameState.config.get("telemetry_debug", false)):
+		return true
+	if OS.has_feature("web"):
+		var flag: Variant = null
+		if Engine.has_singleton("JavaScriptBridge"):
+			var js := Engine.get_singleton("JavaScriptBridge")
+			flag = js.eval("!!(window.ADRTelemetry&&ADRTelemetry.debugEnabled&&ADRTelemetry.debugEnabled())")
+		return bool(flag)
+	return false
+
+func log_event(name: String, payload: Dictionary = {}, level: String = "") -> void:
+	if level == "":
+		level = "debug" if name == "director_think" else "info"
+	if level == "debug" and not debug_enabled():
+		return
 	if buffer.size() + pending_http.size() >= session_cap and name not in ["page_unload", "page_reload", "js_error", "session_end", "save_corrupt"]:
 		dropped += 1
 		return

@@ -110,10 +110,15 @@
       }
     }
     if (obj.checksum && text) {
-      var body = text.replace(/,"checksum":"[^"]+"/, "").replace(/"checksum":"[^"]+",?/, "");
-      var expect = obj.checksum;
-      var got = checksum(body);
-      if (expect && got !== expect) return { ok: false, reason: "checksum", expected: expect, got: got };
+      var copy;
+      try { copy = JSON.parse(text); } catch (e2) { copy = null; }
+      if (copy) {
+        delete copy.checksum;
+        var got = checksum(JSON.stringify(copy));
+        if (obj.checksum && got !== obj.checksum) {
+          return { ok: false, reason: "checksum", expected: obj.checksum, got: got };
+        }
+      }
     }
     return { ok: true, value: obj, size: byteSize(text || JSON.stringify(obj)), checksum: checksum(text || JSON.stringify(obj)) };
   }
@@ -320,7 +325,7 @@
   function hookGame(g) {
     if (!g) return false;
     var n = 0;
-    ["save", "persist", "writeSave", "autosave"].forEach(function (name) {
+    ["save", "autosave"].forEach(function (name) {
       if (wrapFn(g, name, "write")) n += 1;
     });
     ["load", "restore", "readSave", "loadSave"].forEach(function (name) {

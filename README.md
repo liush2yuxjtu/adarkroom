@@ -84,6 +84,6 @@ or play the latest on [GitHub](http://doublespeakgames.github.io/adarkroom)
 https://<project>.supabase.co/rest/v1/playtest_events
 ```
 
-并把 anon key 填进「遥测 apikey」。适配器见 `godot/build/web/sinks/supabase.js` 与 `godot/scripts/sinks/SupabaseSink.gd`。Vercel 预览/生产构建会把 `SUPABASE_URL` / `SUPABASE_ANON_KEY` 写入 `telemetry-config.js`。浏览器把事件放进队列，每 3 秒或满 15 条 flush；`pagehide` / `beforeunload` 用 `sendBeacon`（`apikey` 查询参数）或 `fetch keepalive`。单会话上限 2500 条。新增埋点：`this.analytics.log(this.state, "事件名", { 任意字段 })`。完整事件目录、采样率与弃档 SQL 见 [`godot/README.md`](godot/README.md#遥测事件目录) 与 [`analysis/README.md`](analysis/README.md)。
+并把 anon key 填进「遥测 apikey」。适配器见 `godot/build/web/sinks/supabase.js` 与 `godot/scripts/sinks/SupabaseSink.gd`。Vercel 预览/生产构建会把 `SUPABASE_URL` / `SUPABASE_ANON_KEY` 写入 `telemetry-config.js`。浏览器把事件放进队列，每 3 秒或满 15 条 flush；`pagehide` / `beforeunload` 用 `sendBeacon`（`apikey` 查询参数）或 `fetch keepalive`。单会话上限 2500 条。`director_think` 是 debug 级，默认不进 Supabase；用 `/?telemetry_debug=1`、`localStorage.adr.telemetry_debug=1` 或构建变量 `TELEMETRY_DEBUG=1` 打开。新增埋点：`this.analytics.log(this.state, "事件名", { 任意字段 })`。完整事件目录、采样率与弃档 SQL 见 [`godot/README.md`](godot/README.md#遥测事件目录) 与 [`analysis/README.md`](analysis/README.md)。
 
 本地预览：`bash scripts/prepare-vercel.sh && npx --yes serve dist`。Godot 编辑器打开 `godot/project.godot`；有导出模板时跑 `godot/export.sh`。

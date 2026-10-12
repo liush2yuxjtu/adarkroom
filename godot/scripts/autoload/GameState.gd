@@ -35,9 +35,22 @@ var config: Dictionary = {}
 
 signal changed
 
+const SAVE_PATH := "user://adr-save-v1.json"
+const SAVE_LS_KEY := "adr.save.v1"
+const SAVE_VERSION := 1
+
 func _ready() -> void:
 	reset()
 	_load_jsons()
+	if not _boot_fresh():
+		try_load()
+
+func _boot_fresh() -> bool:
+	if not OS.has_feature("web") or not Engine.has_singleton("JavaScriptBridge"):
+		return false
+	var js := Engine.get_singleton("JavaScriptBridge")
+	var flag: Variant = js.eval("(()=>{try{var q=new URLSearchParams(location.search);return q.get('fresh')==='1'}catch(e){return false}})()")
+	return bool(flag)
 
 func _load_jsons() -> void:
 	if FileAccess.file_exists("res://data/events.json"):
@@ -139,6 +152,118 @@ func director_payload() -> Dictionary:
 func notify_changed() -> void:
 	phase = derive_phase()
 	changed.emit()
+
+func serialize() -> Dictionary:
+	return {
+		"session_id": session_id,
+		"game_time_sec": game_time_sec,
+		"fire": fire,
+		"temperature": temperature,
+		"builder_level": builder_level,
+		"npc_moods": npc_moods.duplicate(),
+		"stores": stores.duplicate(),
+		"wood_initialized": wood_initialized,
+		"buildings": buildings.duplicate(),
+		"population": population,
+		"workers": workers.duplicate(),
+		"unlocked": unlocked.duplicate(),
+		"location": location,
+		"phase": phase,
+		"flags": flags.duplicate(),
+		"notifications": notifications.duplicate(true),
+		"cooldowns": cooldowns.duplicate(),
+		"scheduled": scheduled.duplicate(true),
+		"active_event": active_event,
+		"combat": combat,
+		"outfit": outfit.duplicate(),
+		"world": world.duplicate(true),
+		"slice_complete": slice_complete,
+		"income_acc": income_acc.duplicate(),
+		"pop_timer": pop_timer
+	}
+
+func apply_save(saved: Dictionary) -> void:
+	if saved.is_empty():
+		return
+	session_id = str(saved.get("session_id", session_id))
+	game_time_sec = float(saved.get("game_time_sec", game_time_sec))
+	fire = int(saved.get("fire", fire))
+	temperature = int(saved.get("temperature", temperature))
+	builder_level = int(saved.get("builder_level", builder_level))
+	if typeof(saved.get("npc_moods")) == TYPE_DICTIONARY:
+		npc_moods.merge(saved.npc_moods, true)
+	if typeof(saved.get("stores")) == TYPE_DICTIONARY:
+		stores.merge(saved.stores, true)
+	wood_initialized = bool(saved.get("wood_initialized", wood_initialized))
+	if typeof(saved.get("buildings")) == TYPE_DICTIONARY:
+		buildings.merge(saved.buildings, true)
+	population = int(saved.get("population", population))
+	if typeof(saved.get("workers")) == TYPE_DICTIONARY:
+		workers.merge(saved.workers, true)
+	if typeof(saved.get("unlocked")) == TYPE_DICTIONARY:
+		unlocked.merge(saved.unlocked, true)
+	location = str(saved.get("location", location))
+	if typeof(saved.get("flags")) == TYPE_DICTIONARY:
+		flags = saved.flags.duplicate()
+	if typeof(saved.get("notifications")) == TYPE_ARRAY:
+		notifications = saved.notifications.duplicate()
+	if typeof(saved.get("cooldowns")) == TYPE_DICTIONARY:
+		cooldowns = saved.cooldowns.duplicate()
+	if typeof(saved.get("scheduled")) == TYPE_ARRAY:
+		scheduled = saved.scheduled.duplicate()
+	active_event = saved.get("active_event", active_event)
+	combat = saved.get("combat", combat)
+	if typeof(saved.get("outfit")) == TYPE_DICTIONARY:
+		outfit.merge(saved.outfit, true)
+	if typeof(saved.get("world")) == TYPE_DICTIONARY:
+		world.merge(saved.world, true)
+	slice_complete = bool(saved.get("slice_complete", slice_complete))
+	if typeof(saved.get("income_acc")) == TYPE_DICTIONARY:
+		income_acc.merge(saved.income_acc, true)
+	pop_timer = saved.get("pop_timer", pop_timer)
+	phase = derive_phase()
+
+func save_game() -> void:
+	var doc := {
+		"v": SAVE_VERSION,
+		"saved_at": Time.get_datetime_string_from_system(true),
+		"state": serialize()
+	}
+	var text := JSON.stringify(doc)
+	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	if f:
+		f.store_string(text)
+	if OS.has_feature("web") and Engine.has_singleton("JavaScriptBridge"):
+		var js := Engine.get_singleton("JavaScriptBridge")
+		js.eval("try{localStorage.setItem('%s', %s)}catch(e){}" % [SAVE_LS_KEY, JSON.stringify(text)])
+
+func try_load() -> bool:
+	var parsed: Variant = null
+	if FileAccess.file_exists(SAVE_PATH):
+		var f := FileAccess.open(SAVE_PATH, FileAccess.READ)
+		if f:
+			parsed = JSON.parse_string(f.get_as_text())
+	if parsed == null and OS.has_feature("web") and Engine.has_singleton("JavaScriptBridge"):
+		var js := Engine.get_singleton("JavaScriptBridge")
+		var raw: Variant = js.eval("try{localStorage.getItem('%s')}catch(e){null}" % SAVE_LS_KEY)
+		if typeof(raw) == TYPE_STRING and str(raw) != "":
+			parsed = JSON.parse_string(str(raw))
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return false
+	if int(parsed.get("v", 0)) != SAVE_VERSION:
+		return false
+	var st: Variant = parsed.get("state", {})
+	if typeof(st) != TYPE_DICTIONARY:
+		return false
+	apply_save(st)
+	return true
+
+func clear_save() -> void:
+	if FileAccess.file_exists(SAVE_PATH):
+		DirAccess.remove_absolute(SAVE_PATH)
+	if OS.has_feature("web") and Engine.has_singleton("JavaScriptBridge"):
+		var js := Engine.get_singleton("JavaScriptBridge")
+		js.eval("try{localStorage.removeItem('%s')}catch(e){}" % SAVE_LS_KEY)
 
 func _uuid() -> String:
 	return "%02x%02x%02x%02x-%02x%02x-4%03x-a%03x-%02x%02x%02x%02x%02x%02x" % [

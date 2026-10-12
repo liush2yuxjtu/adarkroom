@@ -13,6 +13,8 @@
   var VIS_DEDUP_MS = 500;
   var LS_KEY = "adr.telemetry";
   var UNLOAD_KEY = "adr.last_unload";
+  var DEBUG_LS = "adr.telemetry_debug";
+  var EVENT_LEVEL = { director_think: "debug" };
   var persistTimer = 0;
   var flushTimer = 0;
   var startedAt = Date.now();
@@ -148,16 +150,54 @@
     }, 1500);
   }
 
-  function enqueueRow(row) {
+  function debugEnabled() {
+    try {
+      if (typeof location !== "undefined" && location.search) {
+        var q = new URLSearchParams(location.search);
+        var v = q.get("telemetry_debug");
+        if (v === "1" || v === "true") return true;
+        if (v === "0" || v === "false") return false;
+      }
+    } catch (e) { /* ignore */ }
+    try {
+      if (typeof localStorage !== "undefined") {
+        var ls = localStorage.getItem(DEBUG_LS);
+        if (ls === "1" || ls === "true") return true;
+        if (ls === "0" || ls === "false") return false;
+      }
+    } catch (e2) { /* ignore */ }
+    var boot = cfg();
+    if (boot.debug === true || boot.debug === 1 || boot.debug === "1") return true;
+    var g = T.game;
+    if (g && g.config && (g.config.telemetry_debug === true || g.config.telemetry_debug === 1)) return true;
+    return false;
+  }
+
+  function levelOf(name, explicit) {
+    if (explicit) return explicit;
+    return EVENT_LEVEL[name] || "info";
+  }
+
+  function enqueueRow(row, opts) {
+    opts = opts || {};
     T.buffer.push(row);
     if (T.buffer.length > 800) T.buffer = T.buffer.slice(-800);
     persistSoon();
+    if (opts.skipHttp) return;
     if (!T.url || !T.anonKey) return;
     T.queue.push(row);
     if (T.queue.length >= FLUSH_N) flush("count");
   }
 
-  function log(name, payload) {
+  function log(name, payload, level) {
+    level = levelOf(name, level);
+    var debugOn = debugEnabled();
+    if (level === "debug" && !debugOn) {
+      if (typeof console !== "undefined" && console.debug) {
+        console.debug("[adr:debug]", name, payload || {});
+      }
+      return null;
+    }
     if (T.capped && name !== "page_unload" && name !== "page_reload" && name !== "js_error" && name !== "session_end") {
       T.dropped += 1;
       return null;
@@ -179,7 +219,7 @@
       payload: payload || {},
       user_agent: typeof navigator !== "undefined" ? navigator.userAgent : "godot"
     };
-    enqueueRow(ev);
+    enqueueRow(ev, { skipHttp: level === "debug" && !debugOn });
     return ev;
   }
 
@@ -595,6 +635,8 @@
     noteLastAction: noteLastAction,
     pageUnload: pageUnload,
     logFromGodot: logFromGodot,
+    debugEnabled: debugEnabled,
+    EVENT_LEVEL: EVENT_LEVEL,
     activePlayMs: activePlayMs,
     exportJson: function () { return JSON.stringify(T.buffer, null, 2); },
     buffer: T.buffer,

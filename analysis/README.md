@@ -10,7 +10,7 @@
 |------------|------|
 | `session_start` / `session_end` | 会话起止 |
 | `player_action` | 每次玩家操作（生火、伐木、建造、移动…） |
-| `director_think` | 导演真正产出工具调用时（不再每秒一条） |
+| `director_think` | **debug** 级：默认不进 Supabase；`?telemetry_debug=1` / `localStorage.adr.telemetry_debug` / `TELEMETRY_DEBUG=1` 才上报 |
 | `director_tool` | 单条工具调用及 `ok` / `rejected` / `error` |
 | `resource_snapshot` | 15s 或库存变化 |
 | `phase_time` | 离开某阶段时的停留秒数 |
