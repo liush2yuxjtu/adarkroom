@@ -65,6 +65,7 @@ func _build() -> void:
 	menu.offset_top = -36
 	menu.offset_bottom = -8
 	add_child(menu)
+	# @pacing kind=interval id=fast_timescale value=2 phase=room_dark note=menu 加速. toggle
 	menu.add_child(_link("加速.", func(): GameState.time_scale = 2.0 if GameState.time_scale < 2.0 else 1.0))
 	menu.add_child(_link("导出遥测.", _export))
 	menu.add_child(_link("重开.", func(): loop.act("restart")))

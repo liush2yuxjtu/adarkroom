@@ -7,6 +7,7 @@ var busy: bool = false
 
 func setup(host: Node) -> void:
 	_http = HTTPRequest.new()
+	# @pacing kind=interval id=llm_timeout value=8s
 	_http.timeout = 8.0
 	host.add_child(_http)
 	_http.request_completed.connect(_on_done)

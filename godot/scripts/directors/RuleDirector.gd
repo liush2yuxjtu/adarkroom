@@ -9,10 +9,12 @@ func think() -> Array:
 	var s := GameState
 	var f := s.flags
 
+	# @pacing kind=threshold id=light_spill_fire value=1 phase=room_fire note=fire must exceed this
 	if s.fire > 1 and s.builder_level < 0 and not f.get("builder_light_spilled", false):
 		_once(calls, "builder_light_spilled", [
 			{ "tool": "set_flag", "args": { "key": "builder_level", "value": 0 } },
 			{ "tool": "narrate", "args": { "text": Loc.t("the light from the fire spills from the windows, out into the dark"), "source": "room" } },
+			# @pacing kind=trigger id=builder_arrives value=30s phase=room_fire min=28s max=35s
 			{ "tool": "set_flag", "args": { "key": "builder_arrives_at", "value": s.game_time_sec + 30 } },
 		])
 
@@ -21,18 +23,22 @@ func think() -> Array:
 			{ "tool": "set_flag", "args": { "key": "builder_level", "value": 1 } },
 			{ "tool": "change_npc_mood", "args": { "npc": "builder", "mood": "collapsed" } },
 			{ "tool": "narrate", "args": { "text": Loc.t("a ragged stranger stumbles through the door and collapses in the corner"), "source": "room" } },
+			# @pacing kind=trigger id=need_wood value=15s phase=stranger min=14s max=20s
 			{ "tool": "set_flag", "args": { "key": "need_wood_at", "value": s.game_time_sec + 15 } },
 		])
 
 	if s.builder_level >= 1 and f.get("need_wood_at") != null and s.game_time_sec >= float(f.need_wood_at) and not f.get("outside_unlocked", false):
 		_once(calls, "outside_unlocked", [
 			{ "tool": "unlock_area", "args": { "area": "outside" } },
+			# @pacing kind=income id=outside_starter_wood value=4 phase=forest
 			{ "tool": "give_item", "args": { "item": "wood", "amount": 4 } },
 			{ "tool": "narrate", "args": { "text": Loc.t("the wind howls outside"), "source": "room" } },
 			{ "tool": "narrate", "args": { "text": Loc.t("the wood is running out"), "source": "room" } },
+			# @pacing kind=trigger id=builder_tick value=30s phase=stranger
 			{ "tool": "set_flag", "args": { "key": "next_builder_tick", "value": s.game_time_sec + 30 } },
 		])
 
+	# @pacing kind=threshold id=builder_warm value=3 phase=stranger note=temperature needed for builder ticks
 	if s.builder_level >= 1 and s.builder_level < 3 and s.temperature >= 3:
 		var nxt = f.get("next_builder_tick")
 		var key := "builder_tick_%d" % (s.builder_level + 1)
@@ -44,6 +50,7 @@ func think() -> Array:
 				{ "tool": "set_flag", "args": { "key": "builder_level", "value": next_lv } },
 				{ "tool": "change_npc_mood", "args": { "npc": "builder", "mood": mood } },
 				{ "tool": "narrate", "args": { "text": line, "source": "room" } },
+				# @pacing kind=trigger id=builder_tick value=30s phase=stranger
 				{ "tool": "set_flag", "args": { "key": "next_builder_tick", "value": s.game_time_sec + 30 } },
 			])
 
@@ -54,6 +61,8 @@ func think() -> Array:
 			{ "tool": "narrate", "args": { "text": Loc.t("the stranger is standing by the fire. she says she can help. says she builds things."), "source": "room" } },
 		])
 
+	# @pacing kind=threshold id=compass_hut value=1 phase=village
+	# @pacing kind=threshold id=compass_fur value=1 phase=village
 	if int(s.buildings.hut) >= 1 and int(s.stores.fur) >= 1 and int(s.stores.compass) < 1 and not f.get("compass_offered", false):
 		_once(calls, "compass_offered", [
 			{ "tool": "spawn_event", "args": { "event_id": "builder_finds_compass" } },

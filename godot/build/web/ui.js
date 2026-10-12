@@ -17,7 +17,13 @@
 
   function cdRatio(id) {
     var left = cdLeft(id);
-    var max = { stoke: 10, gather: 60, traps: 90 }[id] || 1;
+    // @pacing kind=cooldown id=stoke value=10s phase=room_fire
+    var STOKE_CD = 10;
+    // @pacing kind=cooldown id=gather value=60s phase=forest
+    var GATHER_CD = 60;
+    // @pacing kind=cooldown id=traps value=90s phase=forest
+    var TRAPS_CD = 90;
+    var max = { stoke: STOKE_CD, gather: GATHER_CD, traps: TRAPS_CD }[id] || 1;
     return left > 0 ? left / max : 0;
   }
 
@@ -444,6 +450,7 @@
     var el = $("toast");
     el.textContent = msg;
     el.className = "show";
+    // @pacing-ignore note=toast animation, not game pacing
     setTimeout(function () { el.className = ""; }, 1600);
   }
 
@@ -622,6 +629,7 @@
       cfg.analytics_endpoint = q.get("analytics");
       cfg.analytics_http_enabled = true;
     }
+    // @pacing kind=interval id=fast_timescale value=10 phase=room_dark note=debug URL multiplier
     if (q.get("fast") === "1" || q.get("fast") === "true") cfg.time_scale = 10;
     if (q.get("telemetry_debug") === "1" || q.get("telemetry_debug") === "true") cfg.telemetry_debug = true;
     try {

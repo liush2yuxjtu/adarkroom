@@ -1,5 +1,7 @@
 # 试玩分析
 
+节奏曲线对比（设计 vs `playtest_events`）见仓库根 README「节奏分析器」和 `from tools.pacing_analyzer import analyze`。每次 verify 的 `pacing-intent-check` 表面按需调用，没有 cron。
+
 遥测默认写在浏览器 `localStorage`（键 `adr.telemetry`），也可在游戏里点「导出遥测」下载 JSON。可选 HTTP POST 到任意端点；若指向 Supabase REST，使用本目录上一级的 `supabase/migrations/001_playtest_events.sql`。
 
 游戏**构建不需要** Supabase 密钥。只有在设置里填写了 `analytics_endpoint` 才会外发。
