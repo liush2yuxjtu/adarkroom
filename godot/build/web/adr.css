@@ -1,10 +1,18 @@
 /* A Dark Room remake — visual language borrowed from the original (Times / sparse / black on white). */
+@font-face {
+  font-family: "ADR SC";
+  src: url("fonts/wqy-microhei.ttc");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 html, body {
   height: 100%;
   margin: 0;
   background: #f3f1ea;
   color: #111;
-  font-family: "Times New Roman", "Songti SC", "STSong", "SimSun", "Noto Serif SC", serif;
+  font-family: "ADR SC", "WenQuanYi Micro Hei", "文泉驿微米黑", "Droid Sans Fallback", "Songti SC", "SimSun", sans-serif;
   font-size: 16px;
 }
 
@@ -131,6 +139,7 @@ button.adr .cd {
   display: flex;
   gap: 12px;
   font-size: 14px;
+  z-index: 40;
 }
 
 #menu button {

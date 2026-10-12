@@ -608,6 +608,7 @@
     this.listeners = [];
     this._llmBusy = false;
     this.analytics.log(this.state, "session_start", { director: this.directorName });
+    this.directorTick();
   }
 
   Game.prototype.on = function (fn) {
