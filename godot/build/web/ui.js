@@ -109,6 +109,7 @@
     var dir = $("director-label");
     if (dir && game) {
       dir.textContent = game.directorName === "llm" ? "导演：语言模型" : "导演：规则";
+      dir.setAttribute("role", "status");
       dir.removeAttribute("aria-label");
     }
   }
@@ -209,9 +210,13 @@
 
   function stackCount(n) {
     if (n <= 0) return 0;
-    if (n <= 4) return n;
-    if (n <= 12) return 4;
-    return 5;
+    return 1;
+  }
+
+  function formatStoreN(n) {
+    var x = Number(n) || 0;
+    if (x >= 1e6) return x.toExponential(0).replace("+", "");
+    return String(Math.round(x));
   }
 
   function woodpileFrame(n) {
@@ -303,35 +308,52 @@
     return sc;
   }
 
+  function fitChrome() {
+    var menu = $("menu");
+    var menuH = 72;
+    if (menu) {
+      var r = menu.getBoundingClientRect();
+      menuH = Math.ceil(r.height) + 16;
+    }
+    document.documentElement.style.setProperty("--adr-menu-h", menuH + "px");
+    return menuH;
+  }
+
   function fitPixelScene() {
+    var menuH = fitChrome();
     if (!isPixel()) {
       document.body.classList.remove("px-wide");
-      return;
+      document.body.classList.remove("px-has-stores");
+      return 1;
     }
     var vw = window.innerWidth || 0;
+    var vh = window.innerHeight || 0;
     var wide = vw >= 1024;
     document.body.classList.toggle("px-wide", wide);
     var storesBox = $("stores");
     var hasStores = !!(storesBox && storesBox.style.display !== "none");
     document.body.classList.toggle("px-has-stores", hasStores);
-    var availParent = $("wrapper") || document.body;
+    var notesCol = wide ? 196 : 0;
+    var side = wide && hasStores ? 168 : 0;
+    var gaps = wide ? (hasStores ? 32 : 16) : 0;
     var pad = 32;
-    var side = wide && hasStores ? 300 : 0;
-    var gap = wide && hasStores ? 24 : 0;
-    var avail = Math.max(160, (availParent.clientWidth || vw) - pad - side - gap);
-    var native = 640;
-    var scale = Math.floor((avail / native) * 4) / 4;
-    if (scale < 0.5) {
-      scale = avail >= 320 ? 0.5 : Math.max(0.25, scale);
-    }
-    if (scale > 2) scale = 2;
-    if (scale < 0.25) scale = 0.25;
+    var availW = Math.max(160, vw - pad - notesCol - side - gaps);
+    var headerEl = $("header");
+    var headerH = headerEl ? headerEl.getBoundingClientRect().height : 64;
+    var availH = Math.max(160, vh - menuH - headerH - 16);
+    var nativeW = 640;
+    var nativeH = 384;
+    var scale = Math.min(Math.floor(availW / nativeW) || 0, Math.floor(availH / nativeH) || 0);
+    if (scale < 1) scale = 0.5;
+    if (scale > 3) scale = 3;
+    var uiScale = scale >= 2 ? scale : 1;
+    document.documentElement.style.setProperty("--px-ui-scale", String(uiScale));
     document.querySelectorAll(".px-scene").forEach(function (sc) {
       var host = sc.parentElement;
       sc.style.setProperty("--px-scale", String(scale));
       if (host && host.classList.contains("px-scene-host")) {
-        host.style.width = Math.round(native * scale) + "px";
-        host.style.height = Math.round(384 * scale) + "px";
+        host.style.width = Math.round(nativeW * scale) + "px";
+        host.style.height = Math.round(nativeH * scale) + "px";
       }
     });
     return scale;
@@ -622,9 +644,13 @@
         d.setAttribute("role", "img");
         d.appendChild(pxIconEl(cue));
         var cap = document.createElement("span");
-        cap.className = "px-caption";
+        cap.className = "px-caption px-note-cat";
         cap.textContent = CUE_CN[cue] || "讯";
         d.appendChild(cap);
+        var body = document.createElement("span");
+        body.className = "px-note-text";
+        body.textContent = noteLabel(n);
+        d.appendChild(body);
       } else {
         var label = document.createElement("span");
         label.className = "note-text";
@@ -659,17 +685,14 @@
         if (n <= 0 && k !== "wood") return;
         if (k === "wood" && !game.state.wood_initialized) return;
         var icon = k === "cured_meat" ? "cured_meat" : k;
-        html += '<div class="store-row" aria-label="' + (ADR.ITEM_CN[k] || k) + '"><div class="px-stack">';
-        var count = stackCount(n);
-        var i;
-        for (i = 0; i < count; i++) html += '<span class="px-icon px-' + icon + '"></span>';
-        html += "</div></div>";
+        html += '<div class="store-row" aria-label="' + (ADR.ITEM_CN[k] || k) + " " + n + '">';
+        html += '<span class="px-icon px-' + icon + '" aria-hidden="true"></span>';
+        html += '<span class="px-caption px-store-n">' + formatStoreN(n) + "</span></div>";
       });
       if (game.state.buildings.hut > 0 || game.state.population > 0) {
-        html += '<div class="store-row" aria-label="pop"><div class="px-stack">';
-        var p;
-        for (p = 0; p < stackCount(game.state.population); p++) html += '<span class="px-icon px-pop"></span>';
-        html += "</div></div>";
+        html += '<div class="store-row" aria-label="pop ' + game.state.population + '">';
+        html += '<span class="px-icon px-pop" aria-hidden="true"></span>';
+        html += '<span class="px-caption px-store-n">' + formatStoreN(game.state.population) + "</span></div>";
       }
     } else {
       html = '<div class="legend">' + ADR.t("stores") + "</div>";
@@ -686,6 +709,13 @@
     if (box.dataset.html !== html) {
       box.innerHTML = html;
       box.dataset.html = html;
+      if (isPixel() && window.ADRTelemetry && ADRTelemetry.log) {
+        ADRTelemetry.log("store_count", {
+          wood: game.state.stores.wood || 0,
+          shown: true,
+          icon_cap: 1
+        });
+      }
     }
   }
 
@@ -1037,6 +1067,7 @@
   }
 
   function renderAll() {
+    fitChrome();
     var loc = game.state.location;
     $("panel-room").className = "panel" + (loc === "room" ? " active" : "");
     $("panel-outside").className = "panel" + (loc === "outside" ? " active" : "");
@@ -1051,15 +1082,19 @@
     playPhaseWipe(loc);
     if (isPixel()) {
       var dirText = game.directorName === "llm" ? "模型" : "规则";
-      $("director-label").textContent = "";
-      $("director-label").setAttribute("aria-label", "导演：" + dirText);
-      $("director-label").setAttribute("title", "导演：" + dirText);
-      if (!$("director-label").querySelector(".px-icon")) {
-        $("director-label").appendChild(pxIconEl("director"));
+      var dir = $("director-label");
+      dir.setAttribute("role", "status");
+      dir.removeAttribute("aria-label");
+      dir.setAttribute("title", "导演：" + dirText);
+      if (!dir.querySelector(".px-icon")) {
+        dir.textContent = "";
+        dir.appendChild(pxIconEl("director"));
       }
-      ensureCaption($("director-label"), dirText);
+      ensureCaption(dir, dirText);
     } else {
       $("director-label").textContent = game.directorName === "llm" ? "导演：语言模型" : "导演：规则";
+      $("director-label").setAttribute("role", "status");
+      $("director-label").removeAttribute("aria-label");
     }
     paintAmbient();
     lastViewSig = ADR.visualSig(game.state);
@@ -1252,7 +1287,32 @@
       has_legend: !!(noteLegend && noteLegend.textContent),
       note_count: notes.length,
       titled: notes.filter(function (n) { return !!n.getAttribute("title"); }).length,
-      captioned: notes.filter(function (n) { return !!(n.querySelector(".px-caption") || {}).textContent; }).length
+      captioned: notes.filter(function (n) { return !!(n.querySelector(".px-caption") || {}).textContent; }).length,
+      has_body_text: notes.filter(function (n) {
+        var t = n.querySelector(".px-note-text");
+        return !!(t && t.textContent && t.textContent.length > 1);
+      }).length
+    });
+    ADRTelemetry.log("note_full_text", {
+      count: notes.length,
+      with_body: notes.filter(function (n) { return !!(n.querySelector(".px-note-text") || {}).textContent; }).length
+    });
+    var menu = document.getElementById("menu");
+    var menuR = menu ? menu.getBoundingClientRect() : null;
+    var styleBtn = document.getElementById("btn-style");
+    var styleR = styleBtn ? styleBtn.getBoundingClientRect() : null;
+    var noteR = document.getElementById("notifications");
+    var nR = noteR ? noteR.getBoundingClientRect() : null;
+    var menuNotes = !!(menuR && nR && menuR.width > 0 && nR.width > 0 &&
+      !(menuR.right <= nR.left || menuR.left >= nR.right || menuR.bottom <= nR.top || menuR.top >= nR.bottom));
+    ADRTelemetry.log("toolbar_layout", {
+      width: w,
+      height: h,
+      menu_h: menuR ? Math.round(menuR.height) : null,
+      btn_style_w: styleR ? Math.round(styleR.width) : null,
+      btn_style_h: styleR ? Math.round(styleR.height) : null,
+      notes_y: nR ? Math.round(nR.y) : null,
+      overlap_notes: menuNotes
     });
     var unusedRight = hostR ? Math.max(0, w - hostR.right) : 0;
     ADRTelemetry.log("pixel_wide_layout", {
