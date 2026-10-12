@@ -5,7 +5,9 @@ var buffer: Array = []
 var http_endpoint: String = ""
 var http_enabled: bool = false
 var extra_headers: Dictionary = {}
+# @pacing kind=interval id=stuck value=3min
 var stuck_minutes: float = 3.0
+# @pacing kind=interval id=resource_snapshot value=15s
 var snapshot_every: float = 15.0
 var last_progress: Dictionary = { "stores": 0, "flags": 0, "unlocks": 0, "at": 0.0 }
 var phase_entered: float = 0.0
@@ -28,6 +30,7 @@ var _persist_dirty: bool = false
 
 func _ready() -> void:
 	_http = HTTPRequest.new()
+	# @pacing-ignore note=telemetry HTTP timeout
 	_http.timeout = 8.0
 	add_child(_http)
 	_load()
@@ -38,6 +41,7 @@ func _process(delta: float) -> void:
 	if focused:
 		active_play_sec += delta
 	_flush_acc += delta
+	# @pacing-ignore note=telemetry batch flush
 	if _flush_acc >= 3.0:
 		_flush_acc = 0.0
 		_flush_http()
@@ -53,7 +57,9 @@ func _notification(what: int) -> void:
 func configure(cfg: Dictionary) -> void:
 	http_endpoint = str(cfg.get("analytics_endpoint", ""))
 	http_enabled = bool(cfg.get("analytics_http_enabled", false))
+	# @pacing kind=interval id=stuck value=3min
 	stuck_minutes = float(cfg.get("stuck_minutes", 3))
+	# @pacing kind=interval id=resource_snapshot value=15s
 	snapshot_every = float(cfg.get("snapshot_interval_sec", 15))
 	extra_headers = cfg.get("analytics_headers", {})
 

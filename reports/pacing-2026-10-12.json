@@ -1,0 +1,80 @@
+{
+  "phases": [
+    {
+      "phase": "room_dark",
+      "expected_min": 0.0,
+      "expected_max": 30.0,
+      "actual_median": 2.2,
+      "ratio": 0.0733,
+      "sample_count": 17
+    },
+    {
+      "phase": "room_fire",
+      "expected_min": 28.0,
+      "expected_max": 35.0,
+      "actual_median": 30.55,
+      "ratio": 0.8729,
+      "sample_count": 10
+    },
+    {
+      "phase": "stranger",
+      "expected_min": 14.0,
+      "expected_max": 20.0,
+      "actual_median": 15.0,
+      "ratio": 0.75,
+      "sample_count": 5
+    },
+    {
+      "phase": "forest",
+      "expected_min": 240.0,
+      "expected_max": 900.0,
+      "actual_median": null,
+      "ratio": null,
+      "sample_count": 0
+    },
+    {
+      "phase": "village",
+      "expected_min": 90.0,
+      "expected_max": 360.0,
+      "actual_median": null,
+      "ratio": null,
+      "sample_count": 0
+    },
+    {
+      "phase": "path",
+      "expected_min": 0.0,
+      "expected_max": 60.0,
+      "actual_median": null,
+      "ratio": null,
+      "sample_count": 0
+    },
+    {
+      "phase": "world",
+      "expected_min": 0.0,
+      "expected_max": 120.0,
+      "actual_median": null,
+      "ratio": null,
+      "sample_count": 0
+    },
+    {
+      "phase": "slice_complete",
+      "expected_min": 0.0,
+      "expected_max": 0.0,
+      "actual_median": null,
+      "ratio": null,
+      "sample_count": 0
+    }
+  ],
+  "cooldown_utilization": {
+    "gather": 95.7,
+    "stoke": 88.4,
+    "traps": null
+  },
+  "resource_balance": {
+    "wood_in": 60.0,
+    "wood_out": 21.0,
+    "net": 39.0
+  },
+  "early_phase_slow": false,
+  "early_phase_slow_threshold": 1.5
+}

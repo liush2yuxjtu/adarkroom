@@ -99,3 +99,60 @@ npx vercel deploy --scope nyn5255-8475s-projects
 ```
 
 或调用 Vercel Deploy API。规则写在 `vercel.json` 的 `git.deploymentEnabled` 与 `scripts/vercel-ignore.sh`。仅改文档/工具的提交也会跳过：`*.md`、`reports/`、`tools/`、`agent/skills/`、`.github/`。浅克隆缺少 `HEAD^` 时脚本会选择构建，以免漏发。
+
+### 节奏分析器（由 verify 按需调用，无 cron）
+
+`tools.pacing_analyzer` 只读 `@pacing` 标签和 `playtest_events`，对比设计曲线与试玩停留。每次 dot-pi verify 跑 **`pacing-intent-check`** 表面时按需调用，没有 GitHub Action、没有 cron、也没有 webhook。游戏逻辑里只加注释，不改节奏数值。
+
+稳定 API：
+
+```python
+from tools.pacing_analyzer import analyze
+result = analyze(repo_root, input_path=None, supabase_url=None, key=None, slow_ratio=1.5)
+```
+
+verify 用的命令接口（只此一种）：
+
+```
+python -m tools.pacing_analyzer --json
+python -m tools.pacing_analyzer --json --input tools/testdata/playtest_events_sample.json
+```
+
+停留一律用 `game_time_sec`，不用墙钟。`--input` 供测试/离线；不传则读 Supabase。
+
+#### 标签语法
+
+放在常量**上一行**，JS 用 `//`，GDScript 用 `#`。`kind` / `id` / `value` 必填；`phase` / `min` / `max` / `note` 可选。`note` 写在最后，可含空格。
+
+```
+// @pacing kind=cooldown id=gather value=60s phase=forest
+# @pacing kind=trigger id=builder_arrives value=30s phase=room_fire min=28s max=35s
+```
+
+| 字段 | 含义 |
+| --- | --- |
+| `kind` | `cooldown` 冷却 · `trigger` 阶段触发 · `interval` 周期 · `income` 收入 · `consume` 消耗 · `cost` 花费 · `threshold` 门槛 |
+| `id` | 稳定名字，如 `gather`、`stoke`、`hut_base` |
+| `value` | 带单位：`60s` / `300ms` / `3min`；速率 `0.2/s` 或 `2/10s`；无量纲数量 `10` |
+| `phase` | `room_dark` → `room_fire` → `stranger` → `forest` → `village` → `path` → `world` → `slice_complete` |
+| 忽略 | `// @pacing-ignore note=autosave`（存档/遥测冲刷等非节奏字面量） |
+
+分析器会：1) 标出靠近 `cooldown` / `timeout` / `*_at` 等关键词、却没有标签的数字；2) 核对标签的 `value` 是否出现在下一行字面量里。
+
+#### 环境变量（拉线上事件时）
+
+| 变量 | 用途 |
+| --- | --- |
+| `SUPABASE_URL` | `https://<ref>.supabase.co`（或已带 `/rest/v1/playtest_events` 的完整 URL） |
+| `SUPABASE_SERVICE_ROLE_KEY` 或 `SUPABASE_READ_KEY` | 能 `SELECT` 的密钥。**anon RLS 只允许 INSERT，anon key 读不到行** |
+
+不要把密钥写进仓库。
+
+#### 返回 JSON（`--json` / `analyze()`）
+
+- `phases[]`：`phase`、`expected_min`、`expected_max`、`actual_median`、`ratio`（实际中位 / 预期 max）、`sample_count`
+- `cooldown_utilization`：`gather` / `stoke` / `traps` 的利用率（冷却 / 间隔中位，%）
+- `resource_balance`：`wood_in`、`wood_out`、`net`
+- `early_phase_slow`：前期（`room_dark` / `room_fire` / `stranger`）任一 `ratio >= slow_ratio` 则为 true；`slow_ratio` 默认 **1.5**
+
+样例报告：[`reports/pacing-2026-10-12.json`](reports/pacing-2026-10-12.json)。`ratio > 1` 表示慢于设计上界（可能盯着按钮）；`ratio < expected_min/expected_max` 且实际短于下界，可能跳过内容。

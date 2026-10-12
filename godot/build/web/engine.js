@@ -554,8 +554,13 @@
   }
 
   function buildingCost(kind, count) {
+    // @pacing kind=cost id=trap_base value=10 phase=forest
+    // @pacing kind=cost id=trap_step value=10 phase=forest
     if (kind === "trap") return { wood: 10 + count * 10 };
+    // @pacing kind=cost id=cart value=30 phase=forest
     if (kind === "cart") return { wood: 30 };
+    // @pacing kind=cost id=hut_base value=100 phase=forest min=240s max=900s note=first hut vs gather+builder income
+    // @pacing kind=cost id=hut_step value=50 phase=forest
     if (kind === "hut") return { wood: 100 + count * 50 };
     return null;
   }
@@ -620,10 +625,12 @@
       list.forEach(function (c) { calls.push(c); });
     }.bind(this);
 
+    // @pacing kind=threshold id=light_spill_fire value=1 phase=room_fire note=fire must exceed this
     if (state.fire > 1 && state.builder_level < 0 && !f.builder_light_spilled) {
       once("builder_light_spilled", [
         { tool: "set_flag", args: { key: "builder_level", value: 0 } },
         { tool: "narrate", args: { text: t("the light from the fire spills from the windows, out into the dark"), source: "room" } },
+        // @pacing kind=trigger id=builder_arrives value=30s phase=room_fire min=28s max=35s
         { tool: "set_flag", args: { key: "builder_arrives_at", value: state.game_time_sec + 30 } }
       ]);
     }
@@ -633,6 +640,7 @@
         { tool: "set_flag", args: { key: "builder_level", value: 1 } },
         { tool: "change_npc_mood", args: { npc: "builder", mood: "collapsed" } },
         { tool: "narrate", args: { text: t("a ragged stranger stumbles through the door and collapses in the corner"), source: "room" } },
+        // @pacing kind=trigger id=need_wood value=15s phase=stranger min=14s max=20s
         { tool: "set_flag", args: { key: "need_wood_at", value: state.game_time_sec + 15 } }
       ]);
     }
@@ -640,13 +648,16 @@
     if (state.builder_level >= 1 && f.need_wood_at != null && state.game_time_sec >= f.need_wood_at && !f.outside_unlocked) {
       once("outside_unlocked", [
         { tool: "unlock_area", args: { area: "outside" } },
+        // @pacing kind=income id=outside_starter_wood value=4 phase=forest
         { tool: "give_item", args: { item: "wood", amount: 4 } },
         { tool: "narrate", args: { text: t("the wind howls outside"), source: "room" } },
         { tool: "narrate", args: { text: t("the wood is running out"), source: "room" } },
+        // @pacing kind=trigger id=builder_tick value=30s phase=stranger
         { tool: "set_flag", args: { key: "next_builder_tick", value: state.game_time_sec + 30 } }
       ]);
     }
 
+    // @pacing kind=threshold id=builder_warm value=3 phase=stranger note=temperature needed for builder ticks
     if (state.builder_level >= 1 && state.builder_level < 3 && state.temperature >= 3) {
       var nxt = f.next_builder_tick;
       if (nxt != null && state.game_time_sec >= nxt && !f["builder_tick_" + (state.builder_level + 1)]) {
@@ -659,6 +670,7 @@
           { tool: "set_flag", args: { key: "builder_level", value: nextLv } },
           { tool: "change_npc_mood", args: { npc: "builder", mood: mood } },
           { tool: "narrate", args: { text: line, source: "room" } },
+          // @pacing kind=trigger id=builder_tick value=30s phase=stranger
           { tool: "set_flag", args: { key: "next_builder_tick", value: state.game_time_sec + 30 } }
         ]);
       }
@@ -672,24 +684,29 @@
       ]);
     }
 
+    // @pacing kind=threshold id=craft_hint_trap value=5 phase=forest
     if (state.builder_level >= 4 && !f.craft_hint_trap && (state.stores.wood || 0) >= 5) {
       once("craft_hint_trap", [
         { tool: "narrate", args: { text: t("builder says she can make traps to catch any creatures might still be alive out there"), source: "room" } }
       ]);
     }
 
+    // @pacing kind=threshold id=craft_hint_cart value=15 phase=forest
     if (state.builder_level >= 4 && !f.craft_hint_cart && (state.stores.wood || 0) >= 15) {
       once("craft_hint_cart", [
         { tool: "narrate", args: { text: t("builder says she can make a cart for carrying wood"), source: "room" } }
       ]);
     }
 
+    // @pacing kind=threshold id=craft_hint_hut value=50 phase=forest
     if (state.builder_level >= 4 && !f.craft_hint_hut && (state.stores.wood || 0) >= 50) {
       once("craft_hint_hut", [
         { tool: "narrate", args: { text: t("builder says there are more wanderers. says they'll work, too."), source: "room" } }
       ]);
     }
 
+    // @pacing kind=threshold id=compass_hut value=1 phase=village
+    // @pacing kind=threshold id=compass_fur value=1 phase=village
     if (state.buildings.hut >= 1 && (state.stores.fur || 0) >= 1 && (state.stores.compass || 0) < 1 && !f.compass_offered) {
       once("compass_offered", [
         { tool: "spawn_event", args: { event_id: "builder_finds_compass" } }
@@ -712,6 +729,8 @@
 
     var evDue = f.next_world_event_at;
     if (evDue == null && state.unlocked.outside) {
+      // @pacing kind=interval id=world_event_min value=180s phase=forest
+      // @pacing kind=interval id=world_event_span value=180s phase=forest
       calls.push({ tool: "set_flag", args: { key: "next_world_event_at", value: state.game_time_sec + 180 + Math.random() * 180 } });
     } else if (evDue != null && state.game_time_sec >= evDue && !state.active_event && !state.world.on_expedition) {
       var pool = [];
@@ -723,6 +742,8 @@
         var pick = pool[Math.floor(Math.random() * pool.length)];
         calls.push({ tool: "spawn_event", args: { event_id: pick } });
       }
+      // @pacing kind=interval id=world_event_min value=180s phase=forest
+      // @pacing kind=interval id=world_event_span value=180s phase=forest
       calls.push({ tool: "set_flag", args: { key: "next_world_event_at", value: state.game_time_sec + 180 + Math.random() * 180 } });
     }
 
@@ -736,7 +757,9 @@
     this.lastProgress = { stores: 0, flags: 0, unlocks: 0, at: 0 };
     this.phaseEntered = 0;
     this.currentPhase = "room_dark";
+    // @pacing kind=interval id=stuck value=3min
     this.stuckMinutes = opts.stuck_minutes || 3;
+    // @pacing kind=interval id=resource_snapshot value=15s
     this.snapshotEvery = opts.snapshot_interval_sec || 15;
     this.lastSnapshot = 0;
     this.lastStoreSig = "";
@@ -850,6 +873,7 @@
     this.flushHttp = flush;
     this.httpEndpoint = cfg.url;
     this.httpEnabled = true;
+    // @pacing-ignore note=telemetry batch flush, not game pacing
     if (typeof setInterval === "function") setInterval(flush, 3000);
     if (typeof addEventListener === "function") {
       addEventListener("pagehide", function () { flush("unload"); });
@@ -932,6 +956,7 @@
   function Game(config, events) {
     this.config = config || {};
     this.events = events || {};
+    // @pacing kind=interval id=time_scale value=1 phase=room_dark note=default 1x
     this.timeScale = this.config.time_scale || 1;
     this.directorName = this.config.director || "rule";
     this.rule = new RuleDirector();
@@ -1069,6 +1094,7 @@
       var headers = { "Content-Type": "application/json" };
       if (this.config.llm_api_key) headers.Authorization = "Bearer " + this.config.llm_api_key;
       var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+      // @pacing kind=interval id=llm_timeout value=8000ms
       var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 8000);
       fetch(this.config.llm_endpoint, {
         method: "POST",
@@ -1106,11 +1132,13 @@
       case "stoke_fire":
         if (!cooldownReady(s, "stoke")) return { ok: false, error: "cooldown" };
         if (s.fire <= 0) {
+          // @pacing kind=cost id=light_fire_wood value=5 phase=room_dark
           if (s.wood_initialized && s.stores.wood < 5) {
             pushNote(s, t("not enough wood to get the fire going"), "room");
             note = "no_wood";
             break;
           }
+          // @pacing kind=consume id=light_fire_wood value=5 phase=room_dark
           if (s.wood_initialized) addItem(s, "wood", -5);
           s.fire = 3;
         } else {
@@ -1119,16 +1147,22 @@
             note = "no_wood";
             break;
           }
+          // @pacing kind=consume id=stoke_wood value=1 phase=room_fire
           if (s.wood_initialized) addItem(s, "wood", -1);
           s.fire = Math.min(4, s.fire + 1);
         }
+        // @pacing kind=cooldown id=stoke value=10s phase=room_fire
         setCooldown(s, "stoke", 10);
+        // @pacing kind=interval id=fire_cool value=300s phase=room_fire
         s.flags.fire_cool_at = s.game_time_sec + 300;
         break;
       case "gather_wood":
         if (!s.unlocked.outside) return { ok: false, error: "locked" };
         if (!cooldownReady(s, "gather")) return { ok: false, error: "cooldown" };
+        // @pacing kind=income id=gather_cart value=50 phase=forest note=per gather with cart
+        // @pacing kind=income id=gather_wood value=10/60s phase=forest
         addItem(s, "wood", s.buildings.cart > 0 ? 50 : 10);
+        // @pacing kind=cooldown id=gather value=60s phase=forest
         setCooldown(s, "gather", 60);
         pushNote(s, t("dry brush and dead branches litter the forest floor"), "outside");
         break;
@@ -1138,6 +1172,7 @@
         var tr = trapDrops(s.buildings.trap, s.stores.bait || 0);
         grant(s, tr.drops);
         if (tr.baitUsed) addItem(s, "bait", -tr.baitUsed);
+        // @pacing kind=cooldown id=traps value=90s phase=forest
         setCooldown(s, "traps", 90);
         if (tr.msgs.length) {
           var line = t("the traps contain ");
@@ -1168,6 +1203,8 @@
         if (kind === "cart") pushNote(s, t("the rickety cart will carry more wood from the forest"), "room");
         if (kind === "hut") {
           pushNote(s, t("builder puts up a hut, out in the forest. says word will get around."), "room");
+          // @pacing kind=interval id=pop_timer_min value=30s phase=village
+          // @pacing kind=interval id=pop_timer_span value=150s phase=village
           if (s.pop_timer == null) s.pop_timer = s.game_time_sec + 30 + Math.random() * 150;
         }
         this.analytics.log(s, "build", {
@@ -1221,6 +1258,7 @@
         s.world.visited[nx + "," + ny] = true;
         s.world.water -= 1;
         s.world.food_moves += 1;
+        // @pacing kind=consume id=world_food_moves value=2 phase=world
         if (s.world.food_moves >= 2) {
           s.world.food_moves = 0;
           if ((s.outfit.cured_meat || 0) > 0) s.outfit.cured_meat -= 1;
@@ -1435,24 +1473,29 @@
 
     if (s.flags.fire_cool_at != null && s.game_time_sec >= s.flags.fire_cool_at && s.fire > 0) {
       if (s.builder_level > 3 && s.fire <= 2 && (s.stores.wood || 0) > 0) {
+        // @pacing kind=consume id=builder_stoke_wood value=1 phase=forest
         addItem(s, "wood", -1);
         s.fire = Math.min(4, s.fire + 1);
         pushNote(s, t("builder stokes the fire"), "room");
       } else {
         s.fire = Math.max(0, s.fire - 1);
       }
+      // @pacing kind=interval id=fire_cool value=300s phase=room_fire
       s.flags.fire_cool_at = s.fire > 0 ? s.game_time_sec + 300 : null;
     }
 
+    // @pacing kind=interval id=temp_tick value=30s phase=room_fire
     if (!s.flags.next_temp_at) s.flags.next_temp_at = s.game_time_sec + 30;
     if (s.game_time_sec >= s.flags.next_temp_at) {
       if (s.temperature > s.fire) s.temperature -= 1;
       else if (s.temperature < s.fire) s.temperature += 1;
+      // @pacing kind=interval id=temp_tick value=30s phase=room_fire
       s.flags.next_temp_at = s.game_time_sec + 30;
     }
 
     if (s.builder_level >= 4) {
       s.income_acc.builder += dt;
+      // @pacing kind=income id=builder_wood value=2/10s phase=forest
       if (s.income_acc.builder >= 10) {
         var n = Math.floor(s.income_acc.builder / 10);
         s.income_acc.builder -= n * 10;
@@ -1462,6 +1505,7 @@
     var g = s.workers.gatherer || (s.population > 0 ? s.population : 0);
     if (g > 0) {
       s.income_acc.gatherer += dt;
+      // @pacing kind=income id=gatherer_wood value=1/10s phase=village note=per worker
       if (s.income_acc.gatherer >= 10) {
         var gn = Math.floor(s.income_acc.gatherer / 10);
         s.income_acc.gatherer -= gn * 10;
@@ -1481,6 +1525,8 @@
         else if (add <= 3) pushNote(s, "一户饱经风雨的人家住进一栋小屋。", "outside");
         else pushNote(s, "一群瘦骨嶙峋，风尘仆仆的人抵达了。", "outside");
       }
+      // @pacing kind=interval id=pop_timer_min value=30s phase=village
+      // @pacing kind=interval id=pop_timer_span value=150s phase=village
       s.pop_timer = cap > s.population ? s.game_time_sec + 30 + Math.random() * 150 : null;
     }
 
@@ -1505,6 +1551,7 @@
 
     if (!s.flags._dir_acc) s.flags._dir_acc = 0;
     s.flags._dir_acc += dt;
+    // @pacing kind=interval id=director_think value=1s
     if (s.flags._dir_acc >= 1) {
       s.flags._dir_acc = 0;
       this.directorTick();
@@ -1514,6 +1561,7 @@
     this.analytics.tickChecks(s);
     if (visualSig(s) !== beforeSig) this.emit();
     this._saveDirty = true;
+    // @pacing-ignore note=autosave wall-clock, not game pacing
     if (Date.now() - this._lastSaveAt >= 3000) this.persistSave();
     if (this.hud) this.hud();
   };
@@ -1527,6 +1575,7 @@
       var max = kind === "trap" ? 10 : kind === "hut" ? 20 : 1;
       var cost = buildingCost(kind, n);
       var woodNeed = cost.wood || 0;
+      // @pacing kind=threshold id=craft_visible_ratio value=0.5 phase=forest
       var show = (s.stores.wood || 0) >= woodNeed * 0.5;
       if (show) out.push({ kind: kind, cost: cost, have: n, max: max, can: canAfford(s, cost) && n < max && s.temperature > 1 });
     });
