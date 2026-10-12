@@ -1,6 +1,6 @@
 ---
 name: verify
-description: "Verify a change at the real caller surface. Judgment surfaces (aesthetic consensus, PR telemetry, timeline vs mechanics, scope mismatch, pacing intent, wrong-repo PR, original intent) plus an on-demand execution checklist. Use on every PR merge or task completion in this adarkroom remake."
+description: "Verify a change at the real caller surface. Judgment surfaces (aesthetic consensus, PR telemetry, timeline vs mechanics, scope mismatch, pacing intent, art-style boredom mitigation, wrong-repo PR, original intent) plus an on-demand execution checklist. Use on every PR merge or task completion in this adarkroom remake."
 ---
 
 # Verify by runtime observation
@@ -35,7 +35,7 @@ Follow changed code outward to the actual boundary:
 | Bug-fix or data-question PR | `pr-telemetry-required`: new `playtest_events` types + verification query |
 | Unusual player-behavior frequency | `behavior-timeline-vs-mechanics`: session timeline vs code mechanic values |
 | UI / render / interaction diagnosis | `verification-scope-mismatch`: every code path, render layer, and deploy target before a verdict |
-| This repo when `tools/pacing_analyzer.py` exists | `game-pacing-intent`: verify itself must call the analyzer; intent question, never a bug |
+| This repo when `tools/pacing_analyzer.py` exists | `game-pacing-intent`: verify itself must call the analyzer; intent question, never a bug. Then run `art-style-boredom-mitigation` on the same early-wait. |
 | Game-code or game-verification PR | `wrong-repo-pr`: target repo must be `liush2yuxjtu/adarkroom`, not the dot-pi agent framework |
 | UI / art / interaction proposal (remake or original exists) | `original-intent-check`: read the original implementation and design intent before proposing; conflicts are art-direction choices, not fixes |
 
@@ -52,6 +52,7 @@ Named surfaces live in [`references/verification-surfaces.md`](references/verifi
 | Unusual action frequency is a bug | `behavior-timeline-vs-mechanics` | timeline, mechanic `file:line`, comparison, bug yes/no |
 | A UI/render/interaction conclusion is valid | `verification-scope-mismatch` | every path enumerated, live target with evidence, per-path findings |
 | An early-game phase is slower than the `@pacing` curve | `game-pacing-intent` | analyzer JSON (`early_phase_slow` / `ratio`) + Chinese intent question; not a bug |
+| Early waiting + an art style can fill the wait | `art-style-boredom-mitigation` | run with the analyzer; `?style=text` → Rajan PASS; `?style=pixel` → `NEEDS ALTERNATIVE` + pixel mitigations |
 | Game work landed in the right GitHub repo | `wrong-repo-pr` | target repo + description + file paths match adarkroom ownership |
 | A UI/art/interaction proposal is a fix, not a new direction | `original-intent-check` | original `file:line` + intent sources; conflict flagged to the user as art direction, not a fix |
 
@@ -61,10 +62,10 @@ Keep these layers separate. Do not merge a step into a surface or a surface into
 
 | Layer | What it is | Where |
 |---|---|---|
-| **Judgment** | Named **surfaces**. Each decides what evidence means (community consensus, merge telemetry, bug yes/no, live path, pacing intent, repo ownership, original intent). | [`references/verification-surfaces.md`](references/verification-surfaces.md) and each recipe |
+| **Judgment** | Named **surfaces**. Each decides what evidence means (community consensus, merge telemetry, bug yes/no, live path, pacing intent, art-style boredom mitigation, repo ownership, original intent). | [`references/verification-surfaces.md`](references/verification-surfaces.md) and each recipe |
 | **Execution** | Concrete **steps**. A standard checklist run **on demand before each PR merge**, selected by the diff. Playwright / SQL, pass criteria, failure handling. | [`references/concrete-verification-steps.md`](references/concrete-verification-steps.md) |
 
-The seven judgment-layer surfaces are `aesthetic-community-consensus`, `pr-telemetry-required`, `behavior-timeline-vs-mechanics`, `verification-scope-mismatch`, `game-pacing-intent`, `wrong-repo-pr`, and `original-intent-check`.
+The eight judgment-layer surfaces are `aesthetic-community-consensus`, `pr-telemetry-required`, `behavior-timeline-vs-mechanics`, `verification-scope-mismatch`, `game-pacing-intent`, `art-style-boredom-mitigation`, `wrong-repo-pr`, and `original-intent-check`.
 
 Before merge, map changed file types to steps, run those steps, then feed the artifacts into the matching surfaces. Examples: a font change runs step 1 (computed family/weight, `document.fonts`, tofu, screenshot) **plus** `aesthetic-community-consensus`. A telemetry change runs step 4 (unique session + service/read-key SELECT) **plus** `pr-telemetry-required`. A UI layout change runs step 6 (Playwright multi-viewport audit) **plus** `verification-scope-mismatch`. A UI/art/interaction **proposal** runs `original-intent-check` first. For `verification-scope-mismatch`, run the step on the code that **actually runs live**.
 
@@ -74,7 +75,7 @@ Prefer the project verifier `.cursor/skills/verify-adarkroom/`. Use its Doctor/D
 
 ## Vercel deployment playability check (web games / web apps)
 
-In a project verifier, give each boundary its own surface entry (e.g. `vercel-live-deploy`, `browser-<app>`, `<sink>-telemetry`, `aesthetic-community-consensus`, `pr-telemetry-required`, `behavior-timeline-vs-mechanics`, `verification-scope-mismatch`, `game-pacing-intent`, `wrong-repo-pr`, `original-intent-check`, one per sub-path app) in a `references/verification-surfaces.md` index (`| Surface | Public caller boundary | Operational recipe |`) with one recipe file per surface, and a `| Claim | Real surface | Required evidence |` table in SKILL.md. Keep the execution checklist in `references/concrete-verification-steps.md`; do not list steps as surfaces.
+In a project verifier, give each boundary its own surface entry (e.g. `vercel-live-deploy`, `browser-<app>`, `<sink>-telemetry`, `aesthetic-community-consensus`, `pr-telemetry-required`, `behavior-timeline-vs-mechanics`, `verification-scope-mismatch`, `game-pacing-intent`, `art-style-boredom-mitigation`, `wrong-repo-pr`, `original-intent-check`, one per sub-path app) in a `references/verification-surfaces.md` index (`| Surface | Public caller boundary | Operational recipe |`) with one recipe file per surface, and a `| Claim | Real surface | Required evidence |` table in SKILL.md. Keep the execution checklist in `references/concrete-verification-steps.md`; do not list steps as surfaces.
 
 For a Vercel-hosted web game or web app, "it works" means the LIVE deployment is playable. Run every step against the deployed URL:
 
@@ -207,7 +208,18 @@ or in-process: `from tools.pacing_analyzer import analyze`. Live data needs `SUP
 - Intentional → do not retune constants. Suggest filling the wait: Rajan's approach (text / narrative beats at curve-derived timing points), visible cooldown countdowns, ambient events, and small flavor messages.
 - Unintentional → propose tuning the cooldown / yield / phase-exit constants, or the `@pacing` expected-max tag if the tag is wrong. Cite `file:line`.
 
-Worked example: A Dark Room gather cooldown 60s. One session ran 525s wall clock and 232s game time, with gathers at 64.8s / 130.2s / 190.2s — at the cap, so this is not a bug but a slow early stage. Analyzer JSON: `early_phase_slow` for `forest`, `ratio` `1.55`. See `references/pacing-intent-check.md`.
+Worked example: A Dark Room gather cooldown 60s. One session ran 525s wall clock and 232s game time, with gathers at 64.8s / 130.2s / 190.2s — at the cap, so this is not a bug but a slow early stage. Analyzer JSON: `early_phase_slow` for `forest`, `ratio` `1.55`. See `references/pacing-intent-check.md`. Then run `art-style-boredom-mitigation` on the same wait.
+
+## Surface `art-style-boredom-mitigation`
+
+Run **together with** `game-pacing-intent` whenever the game has early-waiting design (cooldowns, resource-accumulation phases) or `early_phase_slow` is set. Check whether the **active art style** can carry Rajan-style timed text inserts. This is not a bug and does not retune constants.
+
+1. Read `early_phase_slow` / `ratio` from the same analyzer JSON.
+2. Identify the style: `?style=text` (fonts + narrative log) vs `?style=pixel` (pure visual assets, no fonts, `assets/pixel/`).
+3. **`?style=text`** → Rajan method available → **PASS**. Keep timed text at curve-derived points.
+4. **`?style=pixel`** → Rajan unavailable → **NEEDS ALTERNATIVE**. List pixel-suitable mitigations: ambient animation (flame flicker, passing animals, sky changing over time), visual storytelling, sound effects, visual progress cues. Do not overlay fonts on the pixel style.
+
+Worked example (this remake): text version uses Rajan timed text (**PASS**). Pixel version has no text channel, so uses flame flicker, sky change, and the other pixel mitigations (**NEEDS ALTERNATIVE**). Pixel assets in `assets/pixel/`; style-tweak PR in progress. See `references/art-style-boredom-mitigation.md`.
 
 ## Surface `wrong-repo-pr`
 
@@ -251,7 +263,7 @@ Run only the steps the mapping table selects for the diff. Each step has a trigg
 2. **Save and refresh** — click to save, read the `localStorage` key, reload, diff phase / resources / NPC JSON.
 3. **Cooldown bar** — full button-height overlay, width shrinking, button opacity 1, countdown number, screenshot.
 4. **Telemetry write** — unique session, then SELECT `playtest_events` with the service/read key (anon is insert-only).
-5. **Mapping** — file types → steps → surfaces. Font → step 1 + `aesthetic-community-consensus`. Telemetry → step 4 + `pr-telemetry-required`. `verification-scope-mismatch` → measure the live path. Game docs/skills in the wrong GitHub repo → `wrong-repo-pr`. UI/art/interaction proposal → `original-intent-check` **before** proposing the change.
+5. **Mapping** — file types → steps → surfaces. Font → step 1 + `aesthetic-community-consensus`. Telemetry → step 4 + `pr-telemetry-required`. `verification-scope-mismatch` → measure the live path. Game docs/skills in the wrong GitHub repo → `wrong-repo-pr`. UI/art/interaction proposal → `original-intent-check` **before** proposing the change. Pacing analyzer / `early_phase_slow` → `game-pacing-intent` **plus** `art-style-boredom-mitigation`.
 6. **Playwright multi-viewport UI audit** — 1280×800, 390×844, 1920×1080; layout, spacing, contrast (WCAG 4.5:1), tap targets ≥44px, alignment, overlap/clipping (`x<0`), horizontal scroll, console/`requestfailed`; numbered issues + screenshots, then P0–P5 triage.
 
 Worked example (this repo, commit `5e3b891`, live export `godot/build/web`): font 500 loaded; overlay 39px tall at about 93% width; opacity 1; save restored after reload.
@@ -265,6 +277,7 @@ Preserve raw evidence before interpreting it. Use one verdict per surface:
 - **BLOCKED** — runtime surface could not be reached because launch/environment failed.
 - **SKIP** — no runtime behavior exists to observe, or the surface's trigger did not match.
 - **INCONCLUSIVE** — required evidence could not be gathered (too few community sources, no session rows). Not a **PASS**.
+- **NEEDS ALTERNATIVE** — the requested method (e.g. Rajan timed text) is unavailable in the active art style; list style-suitable mitigations. Not a **PASS** and not a bug.
 
 No partial pass. A docs-only change has runtime verdict **SKIP**.
 

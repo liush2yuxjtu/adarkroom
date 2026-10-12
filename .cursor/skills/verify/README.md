@@ -8,7 +8,7 @@ Verification has **two layers**. Surfaces **judge**. Concrete steps **execute**.
 
 | Layer | Role | Index |
 |---|---|---|
-| Judgment | Seven surfaces decide what evidence means | [`references/verification-surfaces.md`](references/verification-surfaces.md) |
+| Judgment | Eight surfaces decide what evidence means | [`references/verification-surfaces.md`](references/verification-surfaces.md) |
 | Execution | Pre-merge checklist, selected by the diff | [`references/concrete-verification-steps.md`](references/concrete-verification-steps.md) |
 
 ## Surfaces
@@ -24,6 +24,7 @@ Index: [`references/verification-surfaces.md`](references/verification-surfaces.
 | `behavior-timeline-vs-mechanics` | Question about unusual player-behavior frequency (low clicks, odd intervals) | FAIL if timeline, mechanic `file:line`, or comparison is missing. Intervals that match the cooldown are **not a bug**. |
 | `verification-scope-mismatch` | Verifying any UI, rendering, or interaction issue | Enumerate every code path, render layer, and export/deploy target; identify which one is live. A conclusion from a single path when several exist **fails**. |
 | `game-pacing-intent` | Every `/verify` in this repo when `tools/pacing_analyzer.py` exists — verify itself must call it (no GitHub Action, cron, or manual run) | Read `early_phase_slow` / `ratio` from the analyzer JSON. Intent question, never a bug. Tool or data absent → **skip with a note**. |
+| `art-style-boredom-mitigation` | Together with the pacing analyzer whenever the game has early-waiting design (`early_phase_slow`, cooldowns, resource accumulation) | `?style=text` → Rajan timed text available, **PASS**. `?style=pixel` (no fonts) → Rajan unavailable, **NEEDS ALTERNATIVE** + pixel mitigations. |
 | `wrong-repo-pr` | Game-code / game-verification work (or a PR whose paths and examples are about this remake) | Target repo, description, and file paths must match content ownership. Game work belongs in `liush2yuxjtu/adarkroom`, not `dot-pi`. If wrong: migrate, comment, close. |
 | `original-intent-check` | Before proposing any UI / art / interaction change, when an original exists | Read the original implementation (`file:line`) and design intent. A conflict is a deliberate art-direction choice, not a fix. |
 
@@ -87,6 +88,17 @@ On **every** `/verify` in this repo, if `tools/pacing_analyzer.py` is present at
 
 Recipe: [`references/pacing-intent-check.md`](references/pacing-intent-check.md).
 
+### `art-style-boredom-mitigation`
+
+Run **together with** `game-pacing-intent` / `early_phase_slow`. If the game has early-waiting design, check whether the active art style can carry Rajan-style timed text inserts.
+
+- `?style=text` → fonts + narrative channel → Rajan available → **PASS**.
+- `?style=pixel` → pure visual assets, no fonts (`assets/pixel/`) → Rajan unavailable → **NEEDS ALTERNATIVE**. List: ambient animation (flame flicker, passing animals, sky changing over time), visual storytelling, sound effects, visual progress cues.
+
+**Worked example (this remake).** Text version uses Rajan timed text. Pixel version has no text channel, so it uses flame flicker, sky change, and the other pixel mitigations. Style-tweak PR in progress.
+
+Recipe: [`references/art-style-boredom-mitigation.md`](references/art-style-boredom-mitigation.md).
+
 ### `wrong-repo-pr`
 
 Game-code and game-verification changes belong in `liush2yuxjtu/adarkroom`, not the `dot-pi` agent-framework repo. Check that the PR's target repo matches content ownership, and that the description and file paths match that repo's structure. If wrong: migrate to the right repo and comment on the original PR.
@@ -116,7 +128,7 @@ Standard checklist, run **on demand before each PR merge**. Not a surface. Pick 
 | 5 Mapping | every pre-merge diff | File types → steps → surfaces (below) |
 | 6 Playwright multi-viewport UI audit | UI / layout / CSS / responsive / visual-style diff | 1280×800, 390×844, 1920×1080: layout, spacing, WCAG 4.5:1 contrast, tap targets ≥44px, alignment, no `x<0` clip, no horizontal scroll, no console/`requestfailed`; numbered issues + screenshots, then P0–P5 |
 
-**Mapping (how steps feed surfaces).** A font change → step 1 **plus** `aesthetic-community-consensus`. A telemetry change → step 4 **plus** `pr-telemetry-required`. A UI/layout change → step 6 **plus** `verification-scope-mismatch`. For `verification-scope-mismatch`, run the matching step on the code that **actually runs live**. Pacing analyzer files have no checklist step; `game-pacing-intent` auto-calls the tool. Game work opened against `dot-pi` → `wrong-repo-pr`. Any UI/art/interaction proposal → `original-intent-check` first.
+**Mapping (how steps feed surfaces).** A font change → step 1 **plus** `aesthetic-community-consensus`. A telemetry change → step 4 **plus** `pr-telemetry-required`. A UI/layout change → step 6 **plus** `verification-scope-mismatch`. For `verification-scope-mismatch`, run the matching step on the code that **actually runs live**. Pacing analyzer files have no checklist step; `game-pacing-intent` auto-calls the tool and then `art-style-boredom-mitigation`. Game work opened against `dot-pi` → `wrong-repo-pr`. Any UI/art/interaction proposal → `original-intent-check` first.
 
 **Worked example (commit `5e3b891`).** Live export `godot/build/web`: font weight 500 loaded; cooldown overlay 39px tall at about 93% width; button opacity 1; save restored after reload.
 
@@ -128,3 +140,4 @@ Recipe: [`references/concrete-verification-steps.md`](references/concrete-verifi
 - [`.cursor/skills/verify-adarkroom/`](../verify-adarkroom/SKILL.md) — operational live Vercel / Playwright / CDP / classic recipes
 - [`references/wrong-repo-pr.md`](references/wrong-repo-pr.md) — game work must land in this repo
 - [`references/original-intent-check.md`](references/original-intent-check.md) — remake UI/art/interaction vs the original's direction
+- [`references/art-style-boredom-mitigation.md`](references/art-style-boredom-mitigation.md) — Rajan vs pixel mitigations on early waits
