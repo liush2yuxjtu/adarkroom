@@ -69,6 +69,8 @@ function accessibleName(node, attrs) {
   if (aria.trim()) return aria.trim();
   if ((a.title || node.title || "").trim()) return (a.title || node.title).trim();
   if ((a.alt || "").trim()) return a.alt.trim();
+  const text = (node && node.text) || "";
+  if (text.trim()) return text.trim();
   return "";
 }
 

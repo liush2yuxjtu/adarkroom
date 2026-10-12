@@ -209,6 +209,12 @@ export async function queryBox(client, selector, rootId) {
   }
 }
 
+function collectNodeText(node) {
+  if (!node) return "";
+  if (node.nodeName === "#text") return node.nodeValue || "";
+  return (node.children || []).map(collectNodeText).join("").replace(/\s+/g, " ").trim();
+}
+
 export async function queryAllBoxes(client, selector) {
   await getDocumentRoot(client);
   const { searchId, resultCount } = await client.send("DOM.performSearch", {
@@ -228,7 +234,7 @@ export async function queryAllBoxes(client, selector) {
   for (const nodeId of nodeIds) {
     try {
       const { model } = await client.send("DOM.getBoxModel", { nodeId });
-      const desc = await client.send("DOM.describeNode", { nodeId }).catch(() => null);
+      const desc = await client.send("DOM.describeNode", { nodeId, depth: 4, pierce: true }).catch(() => null);
       const node = desc && desc.node;
       const attrs = {};
       if (node && node.attributes) {
@@ -242,7 +248,8 @@ export async function queryAllBoxes(client, selector) {
         box: rectFromBoxModel(model),
         model,
         nodeName: node && node.nodeName,
-        attrs
+        attrs,
+        text: collectNodeText(node)
       });
     } catch (e) {
       boxes.push({ selector, nodeId, box: null, error: String(e.message || e) });

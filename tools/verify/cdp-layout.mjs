@@ -235,6 +235,18 @@ export async function runCdpLayout({ browser, url, styles, widths, outDir }) {
               width: w
             });
           }
+          const firstVisibleNote = noteCards.find((c) => visible(c.box));
+          if (style === "pixel" && visible(notesBox) && firstVisibleNote && firstVisibleNote.box.y > notesBox.y + notesBox.h + 4) {
+            fail(suite, {
+              id: `${prefix}:notes-scrolled-out`,
+              kind: "clip",
+              detail: `first note card y=${Math.round(firstVisibleNote.box.y)} is below #notifications box (y=${Math.round(notesBox.y)} h=${Math.round(notesBox.h)})`,
+              card: roundRect(firstVisibleNote.box),
+              host: roundRect(notesBox),
+              style,
+              width: w
+            });
+          }
 
           const toolbarBtns = ["#btn-style", "#btn-hyper", "#btn-settings", "#btn-export", "#btn-restart", "#btn-classic"]
             .map((sel) => ({ sel, box: toolbar[sel] && toolbar[sel].box }))
