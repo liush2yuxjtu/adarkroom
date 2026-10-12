@@ -196,7 +196,11 @@ report.sessionId = dedup.sessionId;
 
 await page.waitForTimeout(4000);
 report.supabase = { requestfailed: failed, posts };
-report.failCount = await page.evaluate(() => window.ADRTelemetry ? ADRTelemetry.failCount() : null);
+report.failCount = await page.evaluate(() => {
+    if (!window.ADRTelemetry) return null;
+    if (typeof ADRTelemetry.failCount === "function") return ADRTelemetry.failCount();
+    return (ADRTelemetry._state && ADRTelemetry._state.failCount) || 0;
+  });
 
 await browser.close();
 const out = path.join(outDir, `report_${label}.json`);
