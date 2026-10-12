@@ -123,9 +123,15 @@
     el.setAttribute("aria-pressed", uiStyle === "pixel" ? "true" : "false");
     if (isPixel()) {
       if (!el.querySelector(".px-icon")) {
-        el.textContent = "";
-        el.appendChild(pxIconEl(el.getAttribute("data-icon") || "spark"));
+        var icon = pxIconEl(el.getAttribute("data-icon") || "spark");
+        var cap = el.querySelector(":scope > .px-caption");
+        if (cap) el.insertBefore(icon, cap);
+        else {
+          while (el.firstChild) el.removeChild(el.firstChild);
+          el.appendChild(icon);
+        }
       }
+      ensureCaption(el, name);
     } else {
       el.textContent = label;
     }
@@ -1163,7 +1169,9 @@
       var el = $(id);
       if (!el) return;
       var icon = el.getAttribute("data-icon") || "spark";
-      var raw = MENU_CN[id] || compactCn(el.textContent || el.getAttribute("aria-label") || icon);
+      var raw = id === "btn-style"
+        ? compactCn(styleActionLabel(uiStyle))
+        : (MENU_CN[id] || compactCn(el.textContent || el.getAttribute("aria-label") || icon));
       el.setAttribute("aria-label", raw);
       el.setAttribute("title", raw);
       if (!el.querySelector(".px-icon")) {
