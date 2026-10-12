@@ -1094,6 +1094,7 @@ body.style-pixel .px-animal {
     order: 1;
   }
 
+  /* Compact chip bar + row-shaped notes so the scene and 添柴 stay above the fixed menu. */
   body.style-pixel #stores {
     order: 2;
     display: flex;
