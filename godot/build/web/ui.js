@@ -17,6 +17,11 @@
     "build-lodge": "hut", "build-trading_post": "trade", "build-tannery": "fur",
     "build-smokehouse": "cured_meat", "build-workshop": "settings",
     "build-steelworks": "spark", "build-armoury": "spark",
+    "build-torch": "light", "build-waterskin": "stores", "build-cask": "stores",
+    "build-water_tank": "stores", "build-bone_spear": "punch", "build-rucksack": "fur",
+    "build-wagon": "cart", "build-convoy": "cart", "build-l_armour": "fur",
+    "build-i_armour": "spark", "build-s_armour": "spark", "build-iron_sword": "punch",
+    "build-steel_sword": "punch", "build-rifle": "spark",
     north: "north", west: "west", east: "east", south: "south",
     embark: "embark", punch: "punch", flee: "flee"
   };
@@ -761,6 +766,22 @@
     col.className = "btn-col";
     col.id = btnsId;
     p.appendChild(col);
+    if (panelId === "panel-room") {
+      var craftWrap = document.createElement("div");
+      craftWrap.id = "room-craft-wrap";
+      craftWrap.className = "craft-wrap";
+      craftWrap.hidden = true;
+      var legend = document.createElement("div");
+      legend.className = "btn-legend";
+      legend.id = "room-craft-legend";
+      legend.textContent = ADR.t("craft:");
+      var craftCol = document.createElement("div");
+      craftCol.className = "btn-col";
+      craftCol.id = "room-craft-btns";
+      craftWrap.appendChild(legend);
+      craftWrap.appendChild(craftCol);
+      p.appendChild(craftWrap);
+    }
     if (hintId) {
       var hint = document.createElement("div");
       hint.className = "hint";
@@ -787,6 +808,7 @@
       $("room-status").innerHTML = "房间" + ADR.TEMP[game.state.temperature] + "<br>火堆" + ADR.FIRE[game.state.fire];
     }
     var keys = ["fire"];
+    var craftKeys = [];
     upsertButton($("room-btns"), "fire", {
       label: game.state.fire <= 0 ? ADR.t("light fire") : ADR.t("stoke fire"),
       icon: game.state.fire <= 0 ? "light" : "stoke",
@@ -795,20 +817,36 @@
         game.act(game.state.fire <= 0 ? "light_fire" : "stoke_fire");
       }
     });
+    var craftHost = $("room-craft-btns");
+    var craftWrap = $("room-craft-wrap");
     ADR.Game.prototype.visibleCrafts.call(game).forEach(function (c) {
-      var name = (ADR.BUILDING_CN && ADR.BUILDING_CN[c.kind]) || { trap: "陷阱", cart: "货车", hut: "小屋" }[c.kind] || c.kind;
+      var name = (c.section === "craft"
+        ? (ADR.ITEM_CN && ADR.ITEM_CN[c.kind])
+        : (ADR.BUILDING_CN && ADR.BUILDING_CN[c.kind])) || { trap: "陷阱", cart: "货车", hut: "小屋" }[c.kind] || c.kind;
       var cost = Object.keys(c.cost).map(function (k) {
         return (ADR.ITEM_CN[k] || k) + c.cost[k];
       }).join(" ");
-      keys.push("build-" + c.kind);
-      upsertButton($("room-btns"), "build-" + c.kind, {
+      var btnKey = "build-" + c.kind;
+      var host = c.section === "craft" && craftHost ? craftHost : $("room-btns");
+      if (c.section === "craft") craftKeys.push(btnKey);
+      else keys.push(btnKey);
+      upsertButton(host, btnKey, {
         label: name + " (" + cost + ")",
-        icon: c.kind,
+        icon: PX_ICON[btnKey] || c.kind,
         disabled: !c.can,
         onClick: function () { game.act("build", { kind: c.kind }); }
       });
     });
     keepButtons($("room-btns"), keys);
+    if (craftHost) keepButtons(craftHost, craftKeys);
+    if (craftWrap) {
+      var showCraft = craftKeys.length > 0;
+      craftWrap.hidden = !showCraft;
+      if (isPixel()) {
+        var lg = $("room-craft-legend");
+        if (lg) lg.textContent = showCraft ? ADR.t("craft:") : "";
+      }
+    }
     var hint = $("room-hint");
     if (game.state.builder_level >= 1 && game.state.builder_level < 4) {
       hint.textContent = isPixel() ? "" : "角落里有人。把屋子烧暖些。";
@@ -1080,15 +1118,33 @@
       }
       extraBox.appendChild(ban);
     }
+    var armourName = ADR.t("none");
+    if ((game.state.stores.s_armour || 0) > 0) armourName = ADR.t("steel");
+    else if ((game.state.stores.i_armour || 0) > 0) armourName = ADR.t("iron");
+    else if ((game.state.stores.l_armour || 0) > 0) armourName = ADR.t("leather");
+    var info = document.createElement("div");
+    info.className = "path-outfit-meta";
+    var waterMax = ADR.getMaxWater ? ADR.getMaxWater(game.state) : 10;
+    var cap = ADR.bagCapacity ? ADR.bagCapacity(game.state) : 10;
+    var used = ADR.bagUsed ? ADR.bagUsed(game.state) : 0;
+    var freeTxt = ADR.t("free {0}/{1}").replace("{0}", String(Math.floor(cap - used))).replace("{1}", String(cap));
+    if (isPixel()) {
+      info.setAttribute("aria-label", ADR.t("armour") + " " + armourName + " " + ADR.t("water") + " " + waterMax);
+    } else {
+      info.innerHTML = "<div>" + ADR.t("armour") + " " + armourName + "</div><div>" + ADR.t("water") + " " + waterMax + "</div><div>" + freeTxt + "</div>";
+    }
+    extraBox.appendChild(info);
     var supplies = document.createElement("div");
     if (isPixel()) supplies.appendChild(pxIconEl("stores"));
     else supplies.textContent = ADR.t("supplies:");
     extraBox.appendChild(supplies);
-    ["meat", "cured_meat", "fur"].forEach(function (item) {
-      var row = document.createElement("div");
-      row.className = "pack-row";
+    var packItems = ["meat", "cured_meat", "fur", "torch", "bone_spear", "iron_sword", "steel_sword", "rifle", "bullets"];
+    packItems.forEach(function (item) {
       var have = game.state.stores[item] || 0;
       var packed = game.state.outfit[item] || 0;
+      if (["torch", "bone_spear", "iron_sword", "steel_sword", "rifle", "bullets"].indexOf(item) >= 0 && have <= 0 && packed <= 0) return;
+      var row = document.createElement("div");
+      row.className = "pack-row";
       if (isPixel()) {
         var stack = document.createElement("div");
         stack.className = "px-stack";
