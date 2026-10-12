@@ -7,20 +7,19 @@ var header: HBoxContainer
 var body: VBoxContainer
 var stores: VBoxContainer
 var font: FontFile
-var cjk_font: FontFile
 
 func _ready() -> void:
 	font = FontFile.new()
-	if font.load_dynamic_font("res://fonts/JetBrainsMono-Regular.ttf") != OK:
-		push_warning("JetBrains Mono missing")
-	cjk_font = FontFile.new()
-	if cjk_font.load_dynamic_font("res://fonts/NotoSansSC-Regular-subset.otf") != OK:
-		push_warning("Noto Sans SC subset missing")
+	if font.load_dynamic_font("res://fonts/fusion-pixel-12px-proportional-zh_hans-subset.otf") != OK:
+		push_warning("Fusion Pixel subset missing")
 	else:
-		font.fallbacks = [cjk_font]
+		font.antialiasing = TextServer.FONT_ANTIALIASING_NONE
+		font.hinting = TextServer.HINTING_NONE
+		font.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_DISABLED
+		font.oversampling = 1.0
 	theme = Theme.new()
 	theme.default_font = font
-	theme.default_font_size = 16
+	theme.default_font_size = 12
 	_build()
 	loop = GameLoop.new()
 	add_child(loop)
@@ -84,7 +83,7 @@ func _btn(text: String, cb: Callable, disabled: bool = false) -> Button:
 	b.pressed.connect(cb)
 	return b
 
-func _label(text: String, size: int = 16) -> Label:
+func _label(text: String, size: int = 12) -> Label:
 	var l := Label.new()
 	l.text = text
 	l.add_theme_font_size_override("font_size", size)
@@ -97,14 +96,14 @@ func _render() -> void:
 	_clear(body)
 	_clear(stores)
 	for n in GameState.notifications.slice(0, 14):
-		var l := _label(str(n.text), 14)
+		var l := _label(str(n.text), 12)
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		notes.add_child(l)
 	header.add_child(_btn(_room_title(), func(): loop.act("travel", { "area": "room" }), false))
 	header.add_child(_btn(_out_title(), func(): loop.act("travel", { "area": "outside" }), not GameState.unlocked.outside))
 	header.add_child(_btn(Loc.t("A Dusty Path"), func(): loop.act("travel", { "area": "path" }), not GameState.unlocked.path))
 	if GameState.location == "room":
-		body.add_child(_label(_room_title(), 22))
+		body.add_child(_label(_room_title(), 24))
 		body.add_child(_label("房间" + ["寒冷刺骨", "很冷", "很宜人", "暖和", "很热"][GameState.temperature]))
 		body.add_child(_label("火堆" + ["熄灭了", "开始冒烟", "冒出火苗", "燃烧着", "熊熊燃烧"][GameState.fire]))
 		var fire_lbl := "生火" if GameState.fire <= 0 else "添柴"
@@ -114,12 +113,12 @@ func _render() -> void:
 			body.add_child(_btn("货车", func(): loop.act("build", { "kind": "cart" })))
 			body.add_child(_btn("小屋", func(): loop.act("build", { "kind": "hut" })))
 	elif GameState.location == "outside":
-		body.add_child(_label(_out_title(), 22))
+		body.add_child(_label(_out_title(), 24))
 		body.add_child(_btn("伐木", func(): loop.act("gather_wood"), GameState.cooldowns.get("gather", 0.0) > 0.0))
 		if int(GameState.buildings.trap) > 0:
 			body.add_child(_btn("查看陷阱", func(): loop.act("check_traps"), GameState.cooldowns.get("traps", 0.0) > 0.0))
 	else:
-		body.add_child(_label(Loc.t("A Dusty Path"), 22))
+		body.add_child(_label(Loc.t("A Dusty Path"), 24))
 		body.add_child(_label(Loc.t("the compass points east")))
 		body.add_child(_btn("出发", func(): loop.act("embark"), int(GameState.outfit.get("meat", 0)) + int(GameState.stores.meat) <= 0))
 		if GameState.world.get("on_expedition", false):
@@ -136,7 +135,7 @@ func _render() -> void:
 			stores.add_child(_label("%s  %d" % [k, int(GameState.stores[k])]))
 	if GameState.active_event != null:
 		var spec: Dictionary = GameState.active_event.spec
-		body.add_child(_label(str(spec.get("title", "消息")), 18))
+		body.add_child(_label(str(spec.get("title", "消息")), 24))
 		body.add_child(_btn("继续", func(): loop.act("event_choice", { "button": "ok" })))
 
 func _room_title() -> String:

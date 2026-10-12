@@ -1,16 +1,10 @@
 # Fonts
 
-Playable text uses **JetBrains Mono** for Latin, digits and punctuation, with **Noto Sans SC** (Source Han Sans SC) for CJK.
+Playable text uses **Fusion Pixel** 12px proportional Simplified Chinese (https://github.com/takwolf/fusion-pixel-font, SIL OFL 1.1).
 
 | File | Role |
 | --- | --- |
-| `JetBrainsMono-Regular.ttf` | Godot theme default `FontFile` |
-| `NotoSansSC-Regular-subset.otf` | Godot `FontFile` fallback (glyphs used by the remake) |
-| `../build/web/fonts/jetbrains-mono-latin-*.woff2` | HTML local fallback (jsDelivr `@fontsource` is primary) |
-| `../build/web/fonts/NotoSansSC-Regular-subset.woff2` | HTML CJK `@font-face` |
+| `fusion-pixel-12px-proportional-zh_hans-subset.otf` | Godot theme default `FontFile` (no antialias, no hinting, no subpixel) |
+| `../build/web/fonts/fusion-pixel-12px-proportional-zh_hans-subset.woff2` | HTML `@font-face` |
 
-Both families are SIL Open Font License 1.1 (`OFL-JetBrainsMono.txt`, `OFL-NotoSansSC.txt`). Rebuild the CJK subset with:
-
-```bash
-python3 tools/subset_cjk_font.py /path/to/NotoSansSC-Regular.otf
-```
+Sizes are 12px or an integer multiple. Glyphs subset to the remake’s copy.
