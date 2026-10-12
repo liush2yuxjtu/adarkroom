@@ -277,6 +277,7 @@
     if (!T.queue.length || !T.url || !T.anonKey) return;
     if (T.inflight && reason !== "unload" && reason !== "pagehide" && reason !== "beforeunload") return;
     var unloading = reason === "unload" || reason === "pagehide" || reason === "beforeunload";
+    var hidden = typeof document !== "undefined" && document.visibilityState === "hidden";
     if (unloading && T.unloadFlushStarted && reason === "beforeunload") return;
     if (unloading) T.unloadFlushStarted = true;
     var sink = sinkApi();
@@ -284,7 +285,7 @@
     var events = batch.events;
     var rows = batch.rows;
     if (!rows.length) return;
-    T.inflight = !unloading;
+    T.inflight = !(unloading || hidden);
     var attempt = (T.retryAttempt || 0) + 1;
     T.retryAttempt = attempt;
 
@@ -324,8 +325,8 @@
 
     if (sink && sink.postRows) {
       sink.postRows(T.url, T.anonKey, rows, {
-        beacon: unloading,
-        retries: unloading ? 1 : 1,
+        beacon: unloading || hidden,
+        retries: 1,
         returnPromise: true,
         onOk: onOk,
         onFail: function (err, att, status) { onFail(err, status || (sink.failStatus && sink.failStatus(err)) || "network"); }
@@ -355,7 +356,7 @@
       headers: headers,
       body: body
     };
-    if (unloading && body.length <= MAX_BODY) fetchOpts.keepalive = true;
+    /* no keepalive: Chromium reports keepalive POSTs as requestfailed/ERR_ABORTED */
     fetch(T.url, fetchOpts).then(function (r) {
       if (!r.ok) {
         var err = new Error(String(r.status));

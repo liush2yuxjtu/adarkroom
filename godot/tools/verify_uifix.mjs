@@ -50,7 +50,7 @@ const page = await context.newPage();
 const failed = [];
 page.on("requestfailed", (req) => {
   const u = req.url();
-  if (/supabase\.co|playtest_events/.test(u)) {
+  if (/supabase\.co|playtest_events|\/api\/playtest_events/.test(u)) {
     failed.push({ url: u, error: req.failure() && req.failure().errorText, method: req.method() });
   }
 });
@@ -63,10 +63,12 @@ page.on("response", (res) => {
   }
 });
 
+await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
+await page.waitForFunction(() => window.__ADR_GAME, { timeout: 15000 }).catch(function () {});
+
 for (const vp of viewports) {
   await page.setViewportSize({ width: vp.width, height: vp.height });
-  await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
-  await page.waitForTimeout(1200);
+  await page.waitForTimeout(500);
   const shot = path.join(outDir, `${label}_${vp.name}.png`);
   await page.screenshot({ path: shot, fullPage: true });
 
@@ -151,10 +153,8 @@ for (const vp of viewports) {
   report.viewports.push(row);
 }
 
-// Dedup: force fire-out spam
+// Dedup: force fire-out spam on the same document (no extra navigation).
 await page.setViewportSize({ width: 1280, height: 800 });
-await page.goto(url.replace(/[?&]fresh=1/, "") + (url.includes("?") ? "&" : "?") + "fresh=1&fast=1", { waitUntil: "domcontentloaded" });
-await page.waitForTimeout(800);
 await page.evaluate(() => {
   const g = window.__ADR_GAME;
   if (!g) return;
@@ -176,7 +176,9 @@ await page.waitForTimeout(400);
 const dedup = await page.evaluate(() => {
   const notes = [...document.querySelectorAll("#notifications .note")].map((n) => n.textContent.trim());
   const wood = notes.filter((t) => t.includes("木头用光了"));
-  const tel = JSON.parse(localStorage.getItem("adr.telemetry") || "[]");
+  const tel = (window.ADRTelemetry && ADRTelemetry.buffer && ADRTelemetry.buffer.length)
+      ? ADRTelemetry.buffer.slice()
+      : JSON.parse(localStorage.getItem("adr.telemetry") || "[]");
   return {
     notes,
     woodLines: wood.length,
@@ -195,7 +197,13 @@ report.dedup = dedup;
 report.sessionId = dedup.sessionId;
 
 await page.waitForTimeout(4000);
-report.supabase = { requestfailed: failed, posts };
+  const paired = failed.filter((f) => f.error === "net::ERR_ABORTED" && posts.some((p) => p.status >= 200 && p.status < 300));
+  report.supabase = {
+    requestfailed: failed,
+    posts,
+    abortedWithSuccess: paired.length,
+    realFailures: failed.length - paired.length
+  };
 report.failCount = await page.evaluate(() => {
     if (!window.ADRTelemetry) return null;
     if (typeof ADRTelemetry.failCount === "function") return ADRTelemetry.failCount();

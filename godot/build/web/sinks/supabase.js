@@ -65,7 +65,7 @@
       headers: headers,
       body: body
     };
-    if (unloading && body.length <= MAX_KEEPALIVE) fetchOpts.keepalive = true;
+    /* keepalive:true is recorded as net::ERR_ABORTED in Chromium/Playwright even when the POST returns 201. */
     return fetch(url, fetchOpts).then(function (r) {
       if (!r.ok) {
         var err = new Error(String(r.status));
@@ -81,8 +81,11 @@
       return Promise.resolve({ ok: false, status: "empty" });
     }
     var body = JSON.stringify(rows);
-    if (opts.beacon && tryBeacon(url, anonKey, body)) {
-      return Promise.resolve({ ok: true, status: 0, via: "beacon" });
+    if (opts.beacon) {
+      if (tryBeacon(url, anonKey, body)) {
+        return Promise.resolve({ ok: true, status: 0, via: "beacon" });
+      }
+      return Promise.resolve({ ok: false, status: "beacon-failed" });
     }
     if (typeof fetch !== "function") {
       return Promise.resolve({ ok: false, status: "no-fetch" });

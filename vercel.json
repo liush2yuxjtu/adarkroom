@@ -10,31 +10,20 @@
     }
   },
   "ignoreCommand": "bash scripts/vercel-ignore.sh",
+  "rewrites": [
+    {
+      "source": "/api/playtest_events",
+      "destination": "https://ywwguestvujaoimlqznq.supabase.co/rest/v1/playtest_events"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        {
-          "key": "Cross-Origin-Opener-Policy",
-          "value": "same-origin"
-        },
-        {
-          "key": "Cross-Origin-Embedder-Policy",
-          "value": "credentialless"
-        },
-        {
-          "key": "Cross-Origin-Resource-Policy",
-          "value": "cross-origin"
-        }
+        { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" },
+        { "key": "Cross-Origin-Embedder-Policy", "value": "credentialless" },
+        { "key": "Cross-Origin-Resource-Policy", "value": "cross-origin" }
       ]
     }
-  ],
-  "git": {
-    "deploymentEnabled": {
-      "*": false,
-      "main": true,
-      "cursor/godot-chinese-remake-5c3a": true
-    }
-  },
-  "ignoreCommand": "bash scripts/vercel-ignore.sh"
+  ]
 }
