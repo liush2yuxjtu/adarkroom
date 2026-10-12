@@ -87,3 +87,15 @@ https://<project>.supabase.co/rest/v1/playtest_events
 并把 anon key 填进「遥测 apikey」。适配器见 `godot/build/web/sinks/supabase.js` 与 `godot/scripts/sinks/SupabaseSink.gd`。Vercel 预览/生产构建会把 `SUPABASE_URL` / `SUPABASE_ANON_KEY` 写入 `telemetry-config.js`。浏览器把事件放进队列，每 3 秒或满 15 条 flush；`pagehide` / `beforeunload` 用 `sendBeacon`（`apikey` 查询参数）或 `fetch keepalive`。单会话上限 2500 条。`director_think` 是 debug 级，默认不进 Supabase（只 `console.debug`）；用 `/?telemetry_debug=1`、`localStorage.adr.telemetry_debug=1`、`data/config.json` 的 `telemetry_debug` 或构建变量 `TELEMETRY_DEBUG=1` 打开。已在预览验证：默认局 `cfbc47e3-…` 的 `playtest_events` 里 **0** 条 `director_think`，`?telemetry_debug=1` 局 `5768c975-…` 有 **55** 条。新增埋点：`this.analytics.log(this.state, "事件名", { 任意字段 })`。完整事件目录、采样率与弃档 SQL 见 [`godot/README.md`](godot/README.md#遥测事件目录) 与 [`analysis/README.md`](analysis/README.md)。
 
 本地预览：`bash scripts/prepare-vercel.sh && npx --yes serve dist`。Godot 编辑器打开 `godot/project.godot`；有导出模板时跑 `godot/export.sh`。
+
+### Vercel 自动部署（adarkroom-zh）
+
+只有 **`main`** 和试玩分支 **`cursor/godot-chinese-remake-5c3a`** 会自动构建。其它分支（`cursor/*`、`font-preview/*`、agent 工作分支）默认不部署。
+
+需要预览时在该分支手动部署一次：
+
+```
+npx vercel deploy --scope nyn5255-8475s-projects
+```
+
+或调用 Vercel Deploy API。规则写在 `vercel.json` 的 `git.deploymentEnabled` 与 `scripts/vercel-ignore.sh`。仅改文档/工具的提交也会跳过：`*.md`、`reports/`、`tools/`、`agent/skills/`、`.github/`。

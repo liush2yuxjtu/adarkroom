@@ -2,6 +2,14 @@
   "buildCommand": "bash scripts/prepare-vercel.sh",
   "outputDirectory": "dist",
   "cleanUrls": false,
+  "git": {
+    "deploymentEnabled": {
+      "*": false,
+      "main": true,
+      "cursor/godot-chinese-remake-5c3a": true
+    }
+  },
+  "ignoreCommand": "bash scripts/vercel-ignore.sh",
   "headers": [
     {
       "source": "/(.*)",
