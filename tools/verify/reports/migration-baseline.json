@@ -1,14 +1,14 @@
 {
   "pass": false,
   "gate": {
-    "missing": 9,
+    "missing": 1,
     "no_producer": 0,
     "numeric_mismatch": 0,
     "allowlist": 0
   },
   "counts": {
-    "present": 290,
-    "missing": 9,
+    "present": 298,
+    "missing": 1,
     "no_producer": 0,
     "mismatch": 0,
     "no_zh": 0,
@@ -107,15 +107,15 @@
       "total": 9
     },
     "executioner": {
-      "present": 0,
-      "missing": 5,
+      "present": 5,
+      "missing": 0,
       "no_producer": 0,
       "mismatch": 0,
       "total": 5
     },
     "later phase": {
-      "present": 4,
-      "missing": 1,
+      "present": 5,
+      "missing": 0,
       "no_producer": 0,
       "mismatch": 0,
       "total": 5
@@ -163,15 +163,15 @@
       "total": 4
     },
     "prestige": {
-      "present": 0,
-      "missing": 1,
+      "present": 1,
+      "missing": 0,
       "no_producer": 0,
       "mismatch": 0,
       "total": 1
     },
     "score": {
-      "present": 0,
-      "missing": 1,
+      "present": 1,
+      "missing": 0,
       "no_producer": 0,
       "mismatch": 0,
       "total": 1
@@ -242,8 +242,8 @@
       "total": 36
     },
     "9": {
-      "present": 0,
-      "missing": 8,
+      "present": 8,
+      "missing": 0,
       "no_producer": 0,
       "mismatch": 0,
       "total": 8
@@ -316,9 +316,9 @@
     {
       "batch": 9,
       "title": "Executioner, ending, prestige, score",
-      "pass": false,
+      "pass": true,
       "kind": "story",
-      "detail": "batch incomplete: 8 of 8 not present"
+      "detail": "executioner wings + ending score + prestige save/collect + persist"
     },
     {
       "batch": "core",
@@ -329,62 +329,6 @@
     }
   ],
   "gaps": [
-    {
-      "id": "executioner:A Ravaged Battleship",
-      "status": "missing",
-      "batch": 9,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "executioner:Engineering Wing",
-      "status": "missing",
-      "batch": 9,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "executioner:Martial Wing",
-      "status": "missing",
-      "batch": 9,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "executioner:Medical Wing",
-      "status": "missing",
-      "batch": 9,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "executioner:Command Deck",
-      "status": "missing",
-      "batch": 9,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "later phase:ending/prestige/score",
-      "status": "missing",
-      "batch": 9,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "prestige:storesMap + previous.stores",
-      "status": "missing",
-      "batch": 9,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "score:calculateScore + factors",
-      "status": "missing",
-      "batch": 9,
-      "numeric": "skip",
-      "note": "missing"
-    },
     {
       "id": "notification:craft:hut: no more room for huts.",
       "status": "missing",

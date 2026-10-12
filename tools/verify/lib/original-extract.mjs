@@ -349,7 +349,12 @@ export const EVENT_ALIASES = {
   "The Sulphur Mine": "sulphurmine",
   "The Coal Mine": "coalmine",
   "The Iron Mine": "ironmine",
-  "A Destroyed Village": "cache"
+  "A Destroyed Village": "cache",
+  "A Ravaged Battleship": "executioner",
+  "Engineering Wing": "engineering_wing",
+  "Martial Wing": "martial_wing",
+  "Medical Wing": "medical_wing",
+  "Command Deck": "command_deck"
 };
 export const LANDMARK_IDS = {
   HOUSE: "old_house", CAVE: "cave", TOWN: "town", CITY: "city", OUTPOST: "outpost", SHIP: "ship",

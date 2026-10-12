@@ -200,7 +200,10 @@ export function runParity() {
     add("setpiece event", t, r.events[id] ? "present" : "missing", r.events[id] ? lineOf(EVENTS, `"${id}": {`) : null);
   }
   for (const k of o.fab) { const [s, w, n] = itemStatus(k); add("fabricator", k, s, w, n); }
-  for (const t of o.executioner) add("executioner", t, "missing", null);
+  for (const t of o.executioner) {
+    const id = EVENT_ALIASES[t] || snake(t.replace(/^(the|an?) /i, ""));
+    add("executioner", t, r.events[id] ? "present" : "missing", r.events[id] ? lineOf(EVENTS, `"${id}": {`) : null);
+  }
   const phaseChecks = {
     "path (embark/outfit)": r.areas.includes("path"),
     ship: r.areas.includes("ship"),

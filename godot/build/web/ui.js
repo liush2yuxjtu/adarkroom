@@ -90,7 +90,7 @@
     document.querySelectorAll(".px-scene-host").forEach(function (el) {
       if (el.parentNode) el.parentNode.removeChild(el);
     });
-    ["panel-room", "panel-outside", "panel-path", "panel-ship", "panel-space", "panel-fabricator"].forEach(function (id) {
+    ["panel-room", "panel-outside", "panel-path", "panel-ship", "panel-space", "panel-fabricator", "panel-ending"].forEach(function (id) {
       var p = $(id);
       if (!p) return;
       delete p.dataset.ready;
@@ -381,6 +381,7 @@
       : loc === "ship" ? $("panel-ship")
       : loc === "space" ? $("panel-space")
       : loc === "fabricator" ? $("panel-fabricator")
+      : loc === "ending" ? $("panel-ending")
       : $("panel-room");
     if (!panel) return;
     var sc = panel.querySelector(".px-scene");
@@ -1373,6 +1374,25 @@
     $("fab-hint").textContent = isPixel() ? "" : "用外星合金制造流浪者装置。有的图纸要先带回家。";
   }
 
+  function renderEnding() {
+    ensureScaffold("panel-ending", "end-title", "end-status", "end-btns", "end-hint");
+    var s = game.state;
+    var run = ADR.calculateScore ? ADR.calculateScore(s) : 0;
+    var total = ADR.totalScore ? ADR.totalScore(s) : run;
+    $("end-title").textContent = isPixel() ? "" : ADR.t("ending");
+    $("end-status").textContent = isPixel() ? "" : (
+      ADR.t("score for this game: {0}").replace("{0}", String(run)) + "\n" +
+      ADR.t("total score: {0}").replace("{0}", String(s.previous && s.previous.score || total))
+    );
+    keepButtons($("end-btns"), ["end-restart"]);
+    upsertButton($("end-btns"), "end-restart", {
+      label: ADR.t("restart."),
+      icon: "restart",
+      onClick: function () { game.act("restart"); }
+    });
+    $("end-hint").textContent = isPixel() ? "" : ADR.t("expanded story. alternate ending. behind the scenes commentary. get the app.");
+  }
+
   function renderEvent() {
     var ov = $("overlay");
     var ev = game.state.active_event;
@@ -1492,6 +1512,7 @@
     if ($("panel-ship")) $("panel-ship").className = "panel" + (loc === "ship" ? " active" : "");
     if ($("panel-space")) $("panel-space").className = "panel" + (loc === "space" ? " active" : "");
     if ($("panel-fabricator")) $("panel-fabricator").className = "panel" + (loc === "fabricator" ? " active" : "");
+    if ($("panel-ending")) $("panel-ending").className = "panel" + (loc === "ending" ? " active" : "");
     renderHeader();
     renderNotes();
     renderStores();
@@ -1501,6 +1522,7 @@
     if (loc === "ship") renderShip();
     if (loc === "space") renderSpace();
     if (loc === "fabricator") renderFabricator();
+    if (loc === "ending") renderEnding();
     renderEvent();
     playPhaseWipe(loc);
     if (isPixel()) {

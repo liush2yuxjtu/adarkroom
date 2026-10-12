@@ -773,6 +773,155 @@ export function fabricatorPlaythrough() {
   };
 }
 
+/** Headless batch-9 executioner wings, ending score, prestige. */
+export function endingPlaythrough() {
+  const sb = makeSandbox({ seed: 9 });
+  const events = loadEvents();
+  const g = new sb.ADR.Game({ director: "rule", time_scale: 1, stuck_minutes: 99 }, events);
+  const s = g.state;
+  const A = (n, a = {}) => g.act(n, a);
+  const ids = ["executioner", "engineering_wing", "martial_wing", "medical_wing", "command_deck"];
+  const allEvents = ids.every((id) => !!(events[id] && events[id].scenes && events[id].scenes.start));
+  s.unlocked.path = true;
+  s.unlocked.world = true;
+  Object.assign(s.stores, { cured_meat: 20, torch: 4, bone_spear: 1 });
+  A("pack", { item: "cured_meat", amount: 10 });
+  A("pack", { item: "torch", amount: 2 });
+  A("pack", { item: "bone_spear", amount: 1 });
+  A("embark");
+  const spawn = (id) => {
+    s.active_event = null;
+    s.combat = null;
+    g.applyCalls([{ tool: "spawn_event", args: { event_id: id } }], "test");
+    return !!(s.active_event && s.active_event.id === id);
+  };
+  const fight = () => {
+    let n = 0;
+    while (s.combat && n++ < 200) {
+      if (s.world.hp <= (s.combat.dmg || 1) + 2 && ((s.outfit.cured_meat || 0) + (s.outfit.meat || 0)) > 0) {
+        A("combat", { move: "eat" });
+      } else {
+        A("combat", { move: (s.outfit.bone_spear || 0) > 0 ? "bone_spear" : "punch" });
+      }
+    }
+  };
+  spawn("executioner");
+  A("event_choice", { button: "enter" });
+  const introEnter = !!(s.active_event && s.active_event.scene === "hull");
+  A("event_choice", { button: "continue" });
+  const deviceOpen = !!s.flags.executioner_open && !!(s.active_event && s.active_event.scene === "device");
+  A("event_choice", { button: "take_device" });
+  spawn("executioner");
+  const antechamber = !!(s.active_event && s.active_event.scene === "antechamber");
+  const cmdHidden = !((s.active_event.spec.scenes.antechamber.buttons || []).some((b) => b.id === "command") && sb.ADR.buttonAvailable(s, (s.active_event.spec.scenes.antechamber.buttons || []).find((b) => b.id === "command")));
+  A("event_choice", { button: "leave" });
+
+  const beef = () => { s.world.hp = 200; s.world.max_hp = 200; s.outfit.cured_meat = (s.outfit.cured_meat || 0) + 12; };
+  spawn("engineering_wing");
+  beef();
+  A("event_choice", { button: "continue" });
+  if (s.combat) fight();
+  A("event_choice", { button: "continue" });
+  if (s.combat) fight();
+  A("event_choice", { button: "continue" });
+  if (s.active_event) A("event_choice", { button: "leave" });
+  const engFlag = !!s.flags.wing_engineering;
+
+  spawn("martial_wing");
+  beef();
+  A("event_choice", { button: "continue" });
+  if (s.combat) fight();
+  A("event_choice", { button: "continue" });
+  if (s.combat) fight();
+  A("event_choice", { button: "continue" });
+  if (s.active_event) A("event_choice", { button: "leave" });
+  const martialFlag = !!s.flags.wing_martial;
+
+  spawn("medical_wing");
+  beef();
+  A("event_choice", { button: "continue" });
+  if (s.combat) fight();
+  A("event_choice", { button: "continue" });
+  if (s.combat) fight();
+  A("event_choice", { button: "continue" });
+  if (s.active_event) A("event_choice", { button: "leave" });
+  const medFlag = !!s.flags.wing_medical;
+
+  spawn("executioner");
+  const cmdBtn = (s.active_event.spec.scenes.antechamber.buttons || []).find((b) => b.id === "command");
+  const commandOpen = sb.ADR.buttonAvailable(s, cmdBtn);
+  A("event_choice", { button: "leave" });
+
+  spawn("command_deck");
+  beef();
+  A("event_choice", { button: "continue" });
+  A("event_choice", { button: "approach" });
+  A("event_choice", { button: "observe" });
+  if (s.combat) fight();
+  if (s.combat) {
+    sb.ADR.applySceneEffects(s, events.command_deck.scenes.immortal);
+    s.combat = null;
+  }
+  if (s.active_event) A("event_choice", { button: "continue" });
+  if (s.active_event) A("event_choice", { button: "leave" });
+  const beacon = (s.outfit.fleet_beacon || 0) + (s.stores.fleet_beacon || 0) > 0;
+
+  const factors = sb.ADR.SCORE_FACTORS;
+  const orig = [1, 1.5, 1, 2, 2, 3, 3, 2, 2, 2, 2, 1.5, 1, 1, 10, 30, 50, 100, 150, 150, 3, 3, 5, 4];
+  const factorsOk = factors && factors.length === orig.length && factors.every((n, i) => n === orig[i]);
+  s.world.on_expedition = false;
+  Object.keys(s.stores).forEach((k) => { s.stores[k] = 0; });
+  s.stores.wood = 10;
+  const base = sb.ADR.calculateScore(s);
+  s.stores.alien_alloy = 2;
+  const scoreAlloy = sb.ADR.calculateScore(s) === base + 20;
+  s.stores.fleet_beacon = 1;
+  const scoreBeacon = sb.ADR.calculateScore(s) === base + 20 + 500;
+  ensureShip(s, sb);
+  s.spaceShip.hull = 3;
+  const scoreHull = sb.ADR.calculateScore(s) === base + 20 + 500 + 150;
+
+  s.unlocked.ship = true;
+  s.unlocked.space = true;
+  s.location = "space";
+  s.space = { active: true, done: false, altitude: 61, asteroids: [], hull: 3, shipX: 20, shipY: 20, startedAt: s.game_time_sec - 61, altAcc: 0, spawnAcc: 0 };
+  tickGame(sb, g, 1, 0.25);
+  const endingOnEscape = !!s.ending && s.location === "ending" && !!s.flags.ending;
+  const prestigeSaved = !!(s.previous && typeof s.previous.score === "number" && s.previous.score > 0);
+  const woodBefore = s.stores.wood;
+  const prevCopy = JSON.parse(JSON.stringify(s.previous));
+  const fresh = sb.ADR.migrateState(sb.ADR.createState());
+  sb.ADR.prestigeSet(fresh, prevCopy);
+  sb.ADR.prestigeCollect(fresh);
+  const prestigeCollect = (fresh.stores.wood || 0) > 0 || (prevCopy.stores && prevCopy.stores.every((n) => !n));
+  const hydrated = sb.ADR.hydrateState(JSON.parse(JSON.stringify(s)));
+  return {
+    allEvents,
+    introEnter,
+    deviceOpen,
+    antechamber,
+    commandGated: cmdHidden,
+    engFlag,
+    martialFlag,
+    medFlag,
+    commandOpen,
+    beacon,
+    factorsOk,
+    scoreAlloy,
+    scoreBeacon,
+    scoreHull,
+    endingOnEscape,
+    prestigeSaved,
+    prestigeCollect,
+    persistPrevious: !!(hydrated.previous && hydrated.previous.score === s.previous.score),
+    woodBefore
+  };
+}
+
+function ensureShip(s, sb) {
+  if (!s.spaceShip) s.spaceShip = { hull: sb.ADR.BASE_HULL, thrusters: sb.ADR.BASE_THRUSTERS, seenShip: true, seenWarning: true };
+}
+
 /** Headless batch-3 trading post: costs, seen-unlock, compass max 1. */
 export function tradingPlaythrough() {
   const sb = makeSandbox({ seed: 3 });
