@@ -152,6 +152,28 @@
   var SAVE_VERSION = 1;
   var OBJECT_KEYS = ["stores", "buildings", "unlocked", "npc_moods", "workers", "outfit", "income_acc", "world", "flags", "cooldowns", "cooldown_ends_at"];
   var ARRAY_KEYS = ["notifications", "scheduled"];
+  var NUMBER_KEYS = ["fire", "temperature", "game_time_sec", "builder_level", "population"];
+
+  function isPlainObject(v) {
+    return !!v && typeof v === "object" && !Array.isArray(v);
+  }
+
+  function validateStateShape(saved) {
+    var issues = [];
+    if (!saved || typeof saved !== "object" || Array.isArray(saved)) {
+      return { ok: false, issues: ["state"] };
+    }
+    OBJECT_KEYS.forEach(function (k) {
+      if (saved[k] !== undefined && !isPlainObject(saved[k])) issues.push(k);
+    });
+    ARRAY_KEYS.forEach(function (k) {
+      if (saved[k] !== undefined && !Array.isArray(saved[k])) issues.push(k);
+    });
+    NUMBER_KEYS.forEach(function (k) {
+      if (saved[k] !== undefined && typeof saved[k] !== "number") issues.push(k);
+    });
+    return { ok: issues.length === 0, issues: issues };
+  }
 
   function readSaveRaw(opts) {
     opts = opts || {};
@@ -177,7 +199,7 @@
     if (!check) {
       try { doc = JSON.parse(raw); } catch (e) { doc = null; }
     }
-    if ((check && !check.ok) || !doc || doc.v !== SAVE_VERSION || !doc.state || typeof doc.state !== "object") {
+    if ((check && !check.ok) || !doc || doc.v !== SAVE_VERSION || !doc.state || typeof doc.state !== "object" || Array.isArray(doc.state)) {
       var reason = (check && check.reason) || (!doc ? "json" : "schema");
       if (tel) {
         tel.onSaveCorrupt({
@@ -185,11 +207,25 @@
           raw: raw,
           backend: "localStorage",
           error: check && check.error,
-          save_id: doc && (doc.save_id || (doc.state && doc.state.session_id))
+          save_id: doc && (doc.save_id || (doc.state && doc.state.session_id)),
+          fallback: "new_game"
         });
         tel.onSaveLoad({ ok: false, backend: "localStorage", error: reason, size: raw.length });
       }
       return null;
+    }
+    var shape = validateStateShape(doc.state);
+    if (!shape.ok) {
+      if (tel) {
+        tel.onSaveCorrupt({
+          reason: "wrong_types",
+          raw: raw,
+          backend: "localStorage",
+          error: shape.issues.join(","),
+          save_id: doc.save_id || (doc.state && doc.state.session_id),
+          fallback: "sanitize"
+        });
+      }
     }
     if (tel) {
       var loadedId = doc.save_id || (doc.state && doc.state.session_id) || null;
@@ -249,10 +285,19 @@
 
   function hydrateState(saved) {
     var base = createState();
-    if (!saved || typeof saved !== "object") return base;
+    if (!saved || typeof saved !== "object" || Array.isArray(saved)) return base;
+    var shape = validateStateShape(saved);
+    if (!shape.ok && typeof ADRTelemetry !== "undefined" && ADRTelemetry.log) {
+      ADRTelemetry.log("save_recover", {
+        reason: "wrong_types",
+        fields: shape.issues,
+        fallback: "sanitize"
+      });
+    }
     Object.keys(base).forEach(function (k) {
       if (saved[k] === undefined) return;
       if (OBJECT_KEYS.indexOf(k) >= 0) {
+        if (!isPlainObject(saved[k])) return;
         base[k] = Object.assign({}, base[k], saved[k]);
         if (k === "world") {
           base.world.visited = (saved.world && saved.world.visited) || {};
@@ -260,6 +305,11 @@
         }
       } else if (ARRAY_KEYS.indexOf(k) >= 0) {
         base[k] = Array.isArray(saved[k]) ? saved[k] : base[k];
+      } else if (NUMBER_KEYS.indexOf(k) >= 0) {
+        var n = Number(saved[k]);
+        if (Number.isFinite(n)) base[k] = n;
+      } else if (typeof base[k] === "boolean") {
+        if (typeof saved[k] === "boolean") base[k] = saved[k];
       } else {
         base[k] = saved[k];
       }

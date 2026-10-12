@@ -189,6 +189,13 @@
       backup_key: backupKey,
       save_id: info.save_id || null
     });
+    log("save_recover", {
+      reason: info.reason || "unknown",
+      recovered: true,
+      fallback: info.fallback || "new_game",
+      error: info.error || null,
+      save_id: info.save_id || null
+    });
     return backupKey;
   }
 
