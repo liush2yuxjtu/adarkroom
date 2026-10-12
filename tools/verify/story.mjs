@@ -34,10 +34,25 @@ export function playthrough({ maxGameSec = 9000, seed = 1 } = {}) {
     return r;
   };
   const afford = (c) => !c || Object.entries(c).every(([k, v]) => (S().stores[k] || 0) >= v);
+  function drainEvents(max = 16) {
+    let n = 0;
+    while ((S().active_event || S().combat) && n++ < max) resolve();
+  }
   function resolve() {
     const e = S().active_event;
+    if (S().combat) {
+      const food = (S().outfit.cured_meat || 0) + (S().outfit.meat || 0);
+      if (S().world.hp <= 6 && food > 0) {
+        A("combat", { move: "eat" });
+        return;
+      }
+      const armed = ["bayonet", "steel_sword", "iron_sword", "bone_spear"].find(
+        (w) => (S().outfit[w] || 0) + (S().stores[w] || 0) > 0
+      );
+      A("combat", { move: armed || "punch" });
+      return;
+    }
     if (!e) return;
-    if (S().combat) { A("combat", { move: "punch" }); return; }
     const sp = events[e.id];
     const sc = e.scene && sp.scenes && sp.scenes[e.scene] ? sp.scenes[e.scene] : sp;
     const okb = (sc.buttons || []).filter((x) => afford(x.cost)).map((x) => x.id);
@@ -48,7 +63,7 @@ export function playthrough({ maxGameSec = 9000, seed = 1 } = {}) {
     for (let i = 0; i < Math.ceil(sec / 0.25); i++) {
       sb.advance(250);
       g.tick(0.25);
-      if (S().active_event && !S().world.on_expedition) resolve();
+      if ((S().active_event || S().combat) && !S().world.on_expedition) resolve();
       rec("tick");
     }
   }
@@ -58,6 +73,7 @@ export function playthrough({ maxGameSec = 9000, seed = 1 } = {}) {
   tick(50);
   const village = { lodge: false, smokehouse: false, charcutier: false, cured_meat: 0, packed: 0 };
   function villageActs() {
+    drainEvents();
     warm();
     if (S().unlocked.outside) { A("travel", { area: "outside" }); A("gather_wood"); }
     if (S().buildings.trap > 0) A("check_traps");
@@ -99,17 +115,32 @@ export function playthrough({ maxGameSec = 9000, seed = 1 } = {}) {
     villageActs();
     tick(2);
   }
-  A("travel", { area: "path" });
-  if ((S().stores.cured_meat || 0) > 0) {
-    A("pack", { item: "cured_meat", amount: S().stores.cured_meat || 0 });
+  function packAndEmbark() {
+    drainEvents();
+    A("travel", { area: "path" });
+    if ((S().stores.cured_meat || 0) > 0) A("pack", { item: "cured_meat", amount: S().stores.cured_meat || 0 });
+    if ((S().stores.meat || 0) > 0) A("pack", { item: "meat", amount: S().stores.meat || 0 });
+    village.packed = Math.max(village.packed, S().outfit.cured_meat || 0);
+    const until = S().flags.world_death_until;
+    if (until != null && S().game_time_sec < until) tick(until - S().game_time_sec + 1);
+    drainEvents();
+    A("embark");
   }
-  if ((S().stores.meat || 0) > 0) A("pack", { item: "meat", amount: S().stores.meat || 0 });
-  village.packed = S().outfit.cured_meat || 0;
-  A("embark");
-  const mv = (dx, dy) => { A("world_move", { dx, dy }); let k = 0; while (S().active_event && k++ < 40) resolve(); };
-  for (const [dx, dy] of [[1, 0], [1, 0], [1, 0], [0, -1], [0, -1], [0, 1], [0, 1], [-1, 0], [-1, 0], [-1, 0]]) {
-    if (!S().world.on_expedition) break;
-    mv(dx, dy);
+  const PATH = [[1, 0], [1, 0], [1, 0], [0, -1], [0, -1], [0, 1], [0, 1], [-1, 0], [-1, 0], [-1, 0]];
+  function walkPath() {
+    for (const [dx, dy] of PATH) {
+      if (!S().world.on_expedition) break;
+      A("world_move", { dx, dy });
+      drainEvents(80);
+    }
+  }
+  packAndEmbark();
+  walkPath();
+  for (let retry = 0; !S().slice_complete && retry < 5 && S().game_time_sec < maxGameSec; retry++) {
+    villageActs();
+    tick(8);
+    packAndEmbark();
+    walkPath();
   }
   tick(2);
   return {
@@ -304,6 +335,79 @@ export function villageEventsPlaythrough() {
   };
 }
 
+/** Headless batch-5 world map, weapons, perks, encounters. */
+export function worldCombatPlaythrough() {
+  const sb = makeSandbox({ seed: 5 });
+  const events = loadEvents();
+  const g = new sb.ADR.Game({ director: "rule", time_scale: 1, stuck_minutes: 99 }, events);
+  const s = g.state;
+  const size = s.world.size;
+  const radiusOk = size === 61 || size === 30;
+  s.unlocked.path = true;
+  s.unlocked.world = true;
+  s.stores.cured_meat = 20;
+  s.stores.bone_spear = 1;
+  s.stores.iron_sword = 1;
+  s.stores.laser_rifle = 1;
+  s.stores.plasma_rifle = 1;
+  s.stores.energy_blade = 1;
+  s.stores.disruptor = 1;
+  g.act("pack", { item: "cured_meat", amount: 8 });
+  g.act("embark");
+  const atVillage = s.world.x === 30 && s.world.y === 30 && s.world.on_expedition;
+  const weapons = sb.ADR.WEAPONS;
+  const weaponOk = !!(weapons && weapons.laser_rifle && weapons.laser_rifle.damage === 8 && weapons.bolas.damage === "stun" && weapons.bone_spear.cooldown === 2);
+  const spawned = {};
+  ["gaunt_man", "strange_bird", "two_headed_creature", "shivering_man", "man_eater", "scavenger", "huge_lizard", "feral_terror", "soldier", "sniper", "snarling_beast"].forEach((id) => {
+    s.combat = null;
+    s.active_event = null;
+    g.applyCalls([{ tool: "spawn_event", args: { event_id: id } }], "test");
+    spawned[id] = !!(s.combat && s.active_event && s.active_event.id === id);
+    g.act("combat", { move: "flee" });
+  });
+  sb.ADR.addPerk(s, "boxer");
+  sb.ADR.addPerk(s, "martial_artist");
+  sb.ADR.addPerk(s, "unarmed_master");
+  sb.ADR.addPerk(s, "barbarian");
+  sb.ADR.addPerk(s, "slow_metabolism");
+  sb.ADR.addPerk(s, "desert_rat");
+  sb.ADR.addPerk(s, "evasive");
+  sb.ADR.addPerk(s, "precise");
+  sb.ADR.addPerk(s, "scout");
+  sb.ADR.addPerk(s, "stealthy");
+  sb.ADR.addPerk(s, "gastronome");
+  const allPerks = ["boxer", "martial_artist", "unarmed_master", "barbarian", "slow_metabolism", "desert_rat", "evasive", "precise", "scout", "stealthy", "gastronome"].every((k) => s.perks[k]);
+  s.combat = { hp: 100, dmg: 0, hit: 0, name: "t", death: "x" };
+  s.world.max_hp = 45;
+  s.world.hp = 20;
+  const enemyHp = s.combat.hp;
+  for (let i = 0; i < 8; i++) g.act("combat", { move: "punch" });
+  const perkDmg = enemyHp - (s.combat ? s.combat.hp : 0);
+  s.combat = { hp: 4, dmg: 1, name: "t", death: "x" };
+  s.world.hp = 10;
+  g.act("combat", { move: "eat" });
+  const ate = s.world.hp > 10;
+  const villageNoFight = !sb.ADR.eventAvailable(s, events.snarling_beast);
+  const hydrated = sb.ADR.hydrateState(JSON.parse(JSON.stringify(s)));
+  return {
+    radiusOk,
+    size,
+    atVillage,
+    weaponOk,
+    allEncounters: Object.keys(spawned).every((k) => spawned[k]),
+    spawned,
+    allPerks,
+    perkDmg,
+    perkPunch: perkDmg >= 24,
+    persistBoxer: !!hydrated.perks.boxer,
+    persistSize: hydrated.world.size === size,
+    fightChance: sb.ADR.FIGHT_CHANCE === 0.2,
+    meatHeal: sb.ADR.MEAT_HEAL === 8,
+    ate,
+    villageNoFight
+  };
+}
+
 /** Headless batch-3 trading post: costs, seen-unlock, compass max 1. */
 export function tradingPlaythrough() {
   const sb = makeSandbox({ seed: 3 });
@@ -377,7 +481,7 @@ export function runStory({ runs = 5 } = {}) {
       const check = { id: c.id, trigger: c.trigger, expected: c.expected, actual: c.ok ? "reached" : JSON.stringify(v) };
       if (c.ok) ok(suite, check); else fail(suite, { ...check, detail: JSON.stringify(res) });
     }
-    const bad = Object.keys(res.unexpected_errors).filter((k) => !/^(build:cost|embark:no_food|combat:|world_move:event_open|pack:|assign_worker:)/.test(k));
+    const bad = Object.keys(res.unexpected_errors).filter((k) => !/^(build:cost|embark:no_food|embark:death_cooldown|combat:|world_move:event_open|pack:|assign_worker:|gather_wood:event_open|check_traps:event_open)/.test(k));
     if (bad.length) suite.warnings.push({ id: `run${r}:errors`, detail: res.unexpected_errors });
   }
   return suite;

@@ -13,7 +13,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { emptySuite, ok, fail, summarize, writeJson } from "./lib/report.mjs";
 import { makeSandbox } from "./lib/engine-sandbox.mjs";
-import { playthrough, workshopPlaythrough, tradingPlaythrough, villageEventsPlaythrough } from "./story.mjs";
+import { playthrough, workshopPlaythrough, tradingPlaythrough, villageEventsPlaythrough, worldCombatPlaythrough } from "./story.mjs";
 import { runParity } from "./parity.mjs";
 import {
   ROOT,
@@ -246,6 +246,20 @@ function reachabilityBatches(parityRows) {
         kind: "story",
         detail: okc
           ? "room/outside/global/marketing events + triggers + persist"
+          : JSON.stringify(play)
+      });
+      continue;
+    }
+    if (String(id) === "5" || id === 5) {
+      const play = worldCombatPlaythrough();
+      const okc = !!(play.radiusOk && play.atVillage && play.weaponOk && play.allEncounters && play.allPerks && play.perkPunch && play.persistBoxer && play.persistSize && play.fightChance && play.meatHeal && play.ate && play.villageNoFight);
+      out.push({
+        batch: 5,
+        title: meta.title,
+        pass: okc && gaps.length === 0,
+        kind: "story",
+        detail: okc
+          ? "world RADIUS 30 + weapons/perks/encounters + persist"
           : JSON.stringify(play)
       });
       continue;

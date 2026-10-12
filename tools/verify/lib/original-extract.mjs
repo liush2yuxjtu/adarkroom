@@ -327,7 +327,17 @@ export const EVENT_ALIASES = {
   "Plague": "plague",
   "A Military Raid": "military_raid",
   "The Thief": "thief",
-  "Penrose": "penrose"
+  "Penrose": "penrose",
+  "A Gaunt Man": "gaunt_man",
+  "A Strange Bird": "strange_bird",
+  "A Two-Headed Creature": "two_headed_creature",
+  "A Shivering Man": "shivering_man",
+  "A Man-Eater": "man_eater",
+  "A Scavenger": "scavenger",
+  "A Huge Lizard": "huge_lizard",
+  "A Feral Terror": "feral_terror",
+  "A Soldier": "soldier",
+  "A Sniper": "sniper"
 };
 export const LANDMARK_IDS = {
   HOUSE: "old_house", CAVE: "cave", TOWN: "town", CITY: "city", OUTPOST: "outpost", SHIP: "ship",
