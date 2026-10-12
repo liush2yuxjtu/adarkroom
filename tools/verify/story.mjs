@@ -660,6 +660,119 @@ export function shipSpacePlaythrough() {
   };
 }
 
+/** Headless batch-8 fabricator: executioner salvage, redeem, crafts, persist. */
+export function fabricatorPlaythrough() {
+  const sb = makeSandbox({ seed: 8 });
+  const events = loadEvents();
+  const g = new sb.ADR.Game({ director: "rule", time_scale: 1, stuck_minutes: 99 }, events);
+  const s = g.state;
+  const A = (n, a = {}) => g.act(n, a);
+  s.unlocked.path = true;
+  s.unlocked.world = true;
+  Object.assign(s.stores, { cured_meat: 20 });
+  A("pack", { item: "cured_meat", amount: 8 });
+  A("embark");
+  s.active_event = null;
+  s.combat = null;
+  g.applyCalls([{ tool: "spawn_event", args: { event_id: "executioner" } }], "test");
+  const flagOnVisit = !!(s.flags.world_executioner);
+  A("event_choice", { button: "search" });
+  const lootKeys = [
+    "hypo_blueprint", "kinetic_armour_blueprint", "disruptor_blueprint",
+    "plasma_rifle_blueprint", "stim_blueprint", "glowstone_blueprint",
+    "fleet_beacon", "laser_rifle"
+  ];
+  const lootOk = lootKeys.every((k) => (s.outfit[k] || 0) > 0);
+  A("event_choice", { button: "take" });
+  s.world.x = 30;
+  s.world.y = 29;
+  s.active_event = null;
+  s.combat = null;
+  A("world_move", { dx: 0, dy: 1 });
+  const unlockedOnReturn = !!s.unlocked.fabricator;
+  const bpKeys = ["hypo", "kinetic_armour", "disruptor", "plasma_rifle", "stim", "glowstone"];
+  const redeemed = bpKeys.every((k) => !!(s.blueprints && s.blueprints[k]));
+  const redeemNote = s.notifications.some((n) => /蓝图送进制造机|possibilities grow/.test(n.text));
+  const builderNote = s.notifications.some((n) => /一眼认出|doesn’t ask where it came from|doesn't ask where it came from/.test(n.text));
+  const laserHome = (s.stores.laser_rifle || 0) > 0;
+  const beaconHome = (s.stores.fleet_beacon || 0) > 0;
+  const travel = A("travel", { area: "fabricator" });
+  const seenNote = s.notifications.some((n) => /熟悉的流浪者机械|finally, real tools/.test(n.text));
+  s.blueprints.kinetic_armour = false;
+  s.stores.alien_alloy = 2;
+  const noBp = A("fabricate", { kind: "kinetic_armour" });
+  s.blueprints.kinetic_armour = true;
+  const kinds = [
+    "energy_blade", "fluid_recycler", "cargo_drone", "kinetic_armour",
+    "disruptor", "hypo", "stim", "plasma_rifle", "glowstone"
+  ];
+  s.stores.alien_alloy = 20;
+  const fabricated = {};
+  kinds.forEach((kind) => {
+    const r = A("fabricate", { kind });
+    fabricated[kind] = !!(r && r.ok && (s.stores[kind] || 0) > 0);
+  });
+  const hypoQty5 = s.stores.hypo === 5;
+  s.stores.alien_alloy = 2;
+  const maxAgain = A("fabricate", { kind: "cargo_drone" });
+  const bladeNote = s.notifications.some((n) => /刃身嗡鸣|charged particles sparking/.test(n.text));
+  const bag110 = sb.ADR.bagCapacity(s) === 110;
+  const water110 = sb.ADR.getMaxWater(s) === 110;
+  const hp85 = sb.ADR.getMaxHealth(s) === 85;
+  const costs = {
+    energy_blade: sb.ADR.fabricateCost("energy_blade"),
+    fluid_recycler: sb.ADR.fabricateCost("fluid_recycler"),
+    cargo_drone: sb.ADR.fabricateCost("cargo_drone"),
+    kinetic_armour: sb.ADR.fabricateCost("kinetic_armour"),
+    disruptor: sb.ADR.fabricateCost("disruptor"),
+    hypo: sb.ADR.fabricateCost("hypo"),
+    stim: sb.ADR.fabricateCost("stim"),
+    plasma_rifle: sb.ADR.fabricateCost("plasma_rifle"),
+    glowstone: sb.ADR.fabricateCost("glowstone")
+  };
+  const costsOk = costs.energy_blade && costs.energy_blade.alien_alloy === 1
+    && costs.fluid_recycler && costs.fluid_recycler.alien_alloy === 2
+    && costs.cargo_drone && costs.cargo_drone.alien_alloy === 2
+    && costs.kinetic_armour && costs.kinetic_armour.alien_alloy === 2
+    && costs.disruptor && costs.disruptor.alien_alloy === 1
+    && costs.hypo && costs.hypo.alien_alloy === 1
+    && costs.stim && costs.stim.alien_alloy === 1
+    && costs.plasma_rifle && costs.plasma_rifle.alien_alloy === 1
+    && costs.glowstone && costs.glowstone.alien_alloy === 1;
+  const locked = A("fabricate", { kind: "no_such_thing" });
+  const hydrated = sb.ADR.hydrateState(JSON.parse(JSON.stringify(s)));
+  return {
+    flagOnVisit,
+    lootOk,
+    unlockedOnReturn,
+    redeemed,
+    redeemNote,
+    builderNote,
+    laserHome,
+    beaconHome,
+    travelOk: !!(travel && travel.ok),
+    seenNote,
+    noBlueprintBlocked: !!(noBp && noBp.ok === false),
+    fabricated,
+    allFabricated: kinds.every((k) => fabricated[k]),
+    hypoQty5,
+    upgradeCapped: !!(maxAgain && maxAgain.ok === false),
+    bladeNote,
+    bag110,
+    water110,
+    hp85,
+    costs,
+    costsOk,
+    unknownBlocked: !!(locked && locked.ok === false),
+    persistFab: !!hydrated.unlocked.fabricator,
+    persistBp: bpKeys.every((k) => !!(hydrated.blueprints && hydrated.blueprints[k])),
+    persistBlade: (hydrated.stores.energy_blade || 0) > 0,
+    persistHypo: hydrated.stores.hypo === 5,
+    persistLaser: (hydrated.stores.laser_rifle || 0) > 0,
+    persistBeacon: (hydrated.stores.fleet_beacon || 0) > 0
+  };
+}
+
 /** Headless batch-3 trading post: costs, seen-unlock, compass max 1. */
 export function tradingPlaythrough() {
   const sb = makeSandbox({ seed: 3 });

@@ -373,6 +373,10 @@
   "strange bird": "怪鸟",
   "the strange bird is dead": "怪鸟倒下了",
   "a strange looking bird speeds across the plains": "一只模样古怪的鸟快速掠过平原",
+  "A Two-Headed Creature": "双头怪物",
+  "two-headed creature": "双头怪物",
+  "the two creatures are dead": "那两个生物倒下了",
+  "a two-headed creature appears, the smaller head trembling": "一只双头怪物出现了，较小的那颗头在发抖",
   "A Shivering Man": "颤抖的男子",
   "shivering man": "颤抖的男子",
   "the shivering man is dead": "颤抖的男子倒下了",
@@ -784,5 +788,10 @@
   "a shack stands at the center of the village.": "一栋小棚子矗立在村子中央",
   "there are still supplies inside.": "里头似乎还有些物资",
   "all the work of a previous generation is here.": "这里留存着前代人的所有劳动果实",
-  "ripe for the picking.": "是时候采摘它们了"
+  "ripe for the picking.": "是时候采摘它们了",
+  "Penrose": "彭罗斯",
+  "a strange thrumming, pounding and crashing. visions of people and places, of a huge machine and twisting curves.": "一阵奇异的嗡鸣、撞击与轰响。人与地方的幻象，巨大的机器与扭曲的曲线。",
+  "inviting. it would be so easy to give in, completely.": "诱人。只需完全屈服，就会变得很容易。",
+  "a strange thrumming, pounding and crashing. and then gone.": "一阵奇异的嗡鸣、撞击与轰响。然后消失了。",
+  "give in": "屈服"
 }
