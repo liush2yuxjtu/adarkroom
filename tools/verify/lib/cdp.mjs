@@ -108,6 +108,8 @@ export function parseSnapshot(snap) {
     const client = li == null ? null : rectFromBounds(layout.clientRects && layout.clientRects[li]);
     const scroll = li == null ? null : rectFromBounds(layout.scrollRects && layout.scrollRects[li]);
     const styles = li == null ? {} : parseStyle(strings, COMPUTED_STYLES, layout.styles && layout.styles[li]);
+    const parentIndex = nodes.parentIndex ? nodes.parentIndex[i] : -1;
+    const blendedIdx = li == null ? -1 : (layout.blendedBackgroundColors && layout.blendedBackgroundColors[li]);
     parsedNodes.push({
       index: i,
       name: str(strings, names[i]).toLowerCase(),
@@ -120,11 +122,13 @@ export function parseSnapshot(snap) {
       type: a.type || "",
       disabled: a.disabled != null && a.disabled !== "false",
       attrs: a,
+      parentIndex,
       layoutIndex: li,
       bounds,
       client,
       scroll,
       styles,
+      blendedBackground: blendedIdx == null || blendedIdx < 0 ? "" : str(strings, blendedIdx),
       paintOrder: li == null ? null : (layout.paintOrders && layout.paintOrders[li]) || 0,
       stacking: li == null ? null : (layout.stackingContexts && layout.stackingContexts[li]) || 0
     });
@@ -179,23 +183,34 @@ function matchesSimple(n, sel) {
 }
 
 export async function getDocumentRoot(client) {
-  const { root } = await client.send("DOM.getDocument", { depth: 0, pierce: false });
+  const { root } = await client.send("DOM.getDocument", { depth: 0, pierce: true });
   return root.nodeId;
 }
 
 export async function queryBox(client, selector, rootId) {
-  const nodeId = rootId || (await getDocumentRoot(client));
-  const res = await client.send("DOM.querySelector", { nodeId, selector });
-  if (!res.nodeId) return { selector, nodeId: 0, box: null, model: null };
+  const tryQuery = async (nodeId) => {
+    const res = await client.send("DOM.querySelector", { nodeId, selector });
+    if (!res.nodeId) return { selector, nodeId: 0, box: null, model: null };
+    try {
+      const { model } = await client.send("DOM.getBoxModel", { nodeId: res.nodeId });
+      return { selector, nodeId: res.nodeId, box: rectFromBoxModel(model), model };
+    } catch (e) {
+      return { selector, nodeId: res.nodeId, box: null, model: null, error: String(e.message || e) };
+    }
+  };
   try {
-    const { model } = await client.send("DOM.getBoxModel", { nodeId: res.nodeId });
-    return { selector, nodeId: res.nodeId, box: rectFromBoxModel(model), model };
+    return await tryQuery(rootId || (await getDocumentRoot(client)));
   } catch (e) {
-    return { selector, nodeId: res.nodeId, box: null, model: null, error: String(e.message || e) };
+    try {
+      return await tryQuery(await getDocumentRoot(client));
+    } catch (e2) {
+      return { selector, nodeId: 0, box: null, model: null, error: String(e2.message || e2) };
+    }
   }
 }
 
 export async function queryAllBoxes(client, selector) {
+  await getDocumentRoot(client);
   const { searchId, resultCount } = await client.send("DOM.performSearch", {
     query: selector,
     includeUserAgentShadowDOM: false
@@ -238,10 +253,9 @@ export async function queryAllBoxes(client, selector) {
 }
 
 export async function toolbarBoxes(client) {
-  const rootId = await getDocumentRoot(client);
   const out = {};
   for (const sel of TOOLBAR_SELECTORS) {
-    out[sel] = await queryBox(client, sel, rootId);
+    out[sel] = await queryBox(client, sel);
   }
   return out;
 }
@@ -254,8 +268,44 @@ export async function computedForNode(client, nodeId) {
   return map;
 }
 
+const PAPER_BG = "rgb(243, 241, 234)";
+const DIRT_RGB = { r: 28, g: 22, b: 18 };
+
+function isDirtWallpaper(rgb) {
+  return rgb && Math.abs(rgb.r - DIRT_RGB.r) < 3 && Math.abs(rgb.g - DIRT_RGB.g) < 3 && Math.abs(rgb.b - DIRT_RGB.b) < 3;
+}
+
+export function opaqueColor(color) {
+  const rgb = parseRgb(color);
+  if (!rgb || rgb.a < 0.95) return null;
+  return rgb;
+}
+
+/** Nearest opaque ancestor background. Never use the pixel dirt wallpaper for paper-backed captions. */
+export function contrastBackground(node, parsed) {
+  let cur = node;
+  const seen = new Set();
+  while (cur && !seen.has(cur.index)) {
+    seen.add(cur.index);
+    const own = opaqueColor(cur.styles && cur.styles["background-color"]);
+    if (own) {
+      if ((cur.name === "body" || cur.name === "html") && isDirtWallpaper(own)) {
+        return PAPER_BG;
+      }
+      return cur.styles["background-color"];
+    }
+    if (cur.parentIndex == null || cur.parentIndex < 0) break;
+    cur = parsed.nodes[cur.parentIndex];
+  }
+  const blended = opaqueColor(node.blendedBackground);
+  if (blended && !isDirtWallpaper(blended)) return node.blendedBackground;
+  return PAPER_BG;
+}
+
 export function visibleTextNodes(parsed) {
   return parsed.nodes.filter((n) => {
+    if (!n.name || n.name.startsWith("#")) return false;
+    if ((n.className || "").split(/\s+/).includes("px-icon")) return false;
     const fs = n.styles["font-size"];
     const color = n.styles.color || "";
     const display = n.styles.display || "";
@@ -263,7 +313,8 @@ export function visibleTextNodes(parsed) {
     if (display === "none" || vis === "hidden") return false;
     if (!n.bounds || n.bounds.w < 1 || n.bounds.h < 1) return false;
     if (fs === "0px" || fs === "0") return false;
-    if (!color || color === "transparent" || /rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*0\s*\)/.test(color)) {
+    if (fontPx(fs) < 8) return false;
+    if (!color || color === "transparent" || /rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*0(\.0+)?\s*\)/.test(color)) {
       return false;
     }
     return true;

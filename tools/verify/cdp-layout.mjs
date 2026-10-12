@@ -20,7 +20,7 @@ import {
   toolbarBoxes,
   getDocumentRoot
 } from "./lib/cdp.mjs";
-import { intersects, overflowX, clippedX, outsideViewport, overlapArea, roundRect } from "./lib/geometry.mjs";
+import { intersects, overflowX, clippedX, outsideViewport, overlapArea, overlapRect, roundRect } from "./lib/geometry.mjs";
 
 const NOTE_TEXT_RE = /px-note-text|note-text/;
 
@@ -28,10 +28,10 @@ function visible(box) {
   return !!(box && box.w >= 1 && box.h >= 1);
 }
 
-function occlusionFinding(kind, aName, bName, a, b) {
+function occlusionFinding(prefix, kind, aName, bName, a, b) {
   const ov = overlapArea(a, b);
   return {
-    id: `occlude:${kind}:${aName}×${bName}`,
+    id: `${prefix}:occlude:${kind}:${aName}×${bName}`,
     kind: "occlusion",
     region: kind,
     a: aName,
@@ -39,6 +39,8 @@ function occlusionFinding(kind, aName, bName, a, b) {
     overlapPx: Math.round(ov),
     aBox: roundRect(a),
     bBox: roundRect(b),
+    style: prefix.split("@")[0],
+    width: Number(prefix.split("@")[1]) || undefined,
     detail: `${aName} overlaps ${bName} by ${Math.round(ov)}px²`
   };
 }
@@ -132,7 +134,7 @@ export async function runCdpLayout({ browser, url, styles, widths, outDir }) {
           const notesBox = notesHost.box;
 
           if (visible(menuBox) && visible(sceneBox) && intersects(menuBox, sceneBox, 8)) {
-            fail(suite, occlusionFinding("toolbar-scene", "#menu", ".px-scene", menuBox, sceneBox));
+            fail(suite, occlusionFinding(prefix, "toolbar-scene", "#menu", ".px-scene", menuBox, sceneBox));
           } else {
             ok(suite, { id: `${prefix}:toolbar-scene`, kind: "occlusion", detail: "clear" });
           }
@@ -140,8 +142,10 @@ export async function runCdpLayout({ browser, url, styles, widths, outDir }) {
           const overlappingNotes = [];
           for (const card of noteCards) {
             if (!visible(card.box)) continue;
-            if (visible(menuBox) && intersects(menuBox, card.box, 8)) {
-              overlappingNotes.push(roundRect(card.box));
+            const visibleCard = notesBox ? overlapRect(card.box, notesBox) : card.box;
+            if (!visible(visibleCard)) continue;
+            if (visible(menuBox) && intersects(menuBox, visibleCard, 8)) {
+              overlappingNotes.push(roundRect(visibleCard));
             }
             if (clippedX(card.box)) {
               fail(suite, {
@@ -170,19 +174,19 @@ export async function runCdpLayout({ browser, url, styles, widths, outDir }) {
           }
 
           if (visible(menuBox) && visible(storesBox) && intersects(menuBox, storesBox, 8)) {
-            fail(suite, occlusionFinding("toolbar-stores", "#menu", "#stores", menuBox, storesBox));
+            fail(suite, occlusionFinding(prefix, "toolbar-stores", "#menu", "#stores", menuBox, storesBox));
           } else {
             ok(suite, { id: `${prefix}:toolbar-stores`, kind: "occlusion", detail: "clear" });
           }
 
           if (visible(sceneBox) && visible(storesBox) && intersects(sceneBox, storesBox, 8)) {
-            fail(suite, occlusionFinding("scene-stores", ".px-scene", "#stores", sceneBox, storesBox));
+            fail(suite, occlusionFinding(prefix, "scene-stores", ".px-scene", "#stores", sceneBox, storesBox));
           } else {
             ok(suite, { id: `${prefix}:scene-stores`, kind: "occlusion", detail: "clear" });
           }
 
           if (visible(sceneBox) && visible(notesBox) && intersects(sceneBox, notesBox, 8)) {
-            fail(suite, occlusionFinding("scene-notes", ".px-scene", "#notifications", sceneBox, notesBox));
+            fail(suite, occlusionFinding(prefix, "scene-notes", ".px-scene", "#notifications", sceneBox, notesBox));
           } else {
             ok(suite, { id: `${prefix}:scene-notes`, kind: "occlusion", detail: "clear" });
           }

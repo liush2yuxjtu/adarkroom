@@ -27,7 +27,8 @@ import {
   contrastRatio,
   fontPx,
   isLargeText,
-  visibleTextNodes
+  visibleTextNodes,
+  contrastBackground
 } from "./lib/cdp.mjs";
 import { roundRect } from "./lib/geometry.mjs";
 
@@ -47,6 +48,8 @@ function axeSource() {
 }
 
 function skipContrastNode(n) {
+  if (!n.name || n.name.startsWith("#")) return true;
+  if ((n.className || "").split(/\s+/).includes("px-icon")) return true;
   const fsPx = fontPx(n.styles["font-size"]);
   if (fsPx < 8) return true;
   const color = n.styles.color || "";
@@ -180,12 +183,7 @@ export async function runA11y({ browser, url, styles, widths }) {
 
           for (const n of visibleTextNodes(snap)) {
             if (skipContrastNode(n)) continue;
-            const bg =
-              n.styles["background-color"] && n.styles["background-color"] !== "rgba(0, 0, 0, 0)"
-                ? n.styles["background-color"]
-                : null;
-            const body = snap.nodes.find((x) => x.name === "body");
-            const bgUse = bg || (body && body.styles["background-color"]) || "rgb(243, 241, 234)";
+            const bgUse = contrastBackground(n, snap);
             const ratio = contrastRatio(n.styles.color, bgUse);
             if (ratio == null) continue;
             const need = isLargeText(n.styles) ? CONTRAST_LARGE : CONTRAST_NORMAL;

@@ -57,11 +57,17 @@ function baseState(over = {}) {
 
 async function telemetryNames(page) {
   const evs = await page.evaluate(() => {
+    var mem = [];
     try {
-      return JSON.parse(localStorage.getItem("adr.telemetry") || "[]");
-    } catch (e) {
-      return [];
-    }
+      if (window.ADRTelemetry && Array.isArray(window.ADRTelemetry.buffer)) {
+        mem = window.ADRTelemetry.buffer.slice();
+      }
+    } catch (e1) { /* ignore */ }
+    var ls = [];
+    try {
+      ls = JSON.parse(localStorage.getItem("adr.telemetry") || "[]");
+    } catch (e2) { /* ignore */ }
+    return mem.concat(Array.isArray(ls) ? ls : []);
   });
   return {
     names: evs.map((e) => e && e.event_name).filter(Boolean),

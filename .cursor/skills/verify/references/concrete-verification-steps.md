@@ -412,7 +412,7 @@ node tools/verify/run.mjs --url <live> --only a11y
 
 **Pass.** No serious/critical axe violations. `#director-label` must not put `aria-label` on a generic span (needs an allowed `role`, or visible text only). `main` landmark and one `h1` present. `#director-label` contrast ≥ 4.5:1 (pixel 「规则」 must not be `#1c1612` on `#1c1612`). Text-style `添柴` height ≥ 44px on mobile.
 
-**Failure handling.** **FAIL** with the axe rule id / contrast ratio / box. Skip `font-size:0` / `color:transparent` nodes (pixel icon chrome); still measure `.px-caption`, `.cd-sec`, `.px-note-text`, `#director-label`.
+**Failure handling.** **FAIL** with the axe rule id / contrast ratio / box. Skip `#text` nodes, `font-size:0`, and `color:transparent` (pixel icon chrome). For contrast, walk to the nearest opaque ancestor background and never treat the pixel dirt wallpaper (`#1c1612`) as the text background of paper-backed captions — default to paper `#f3f1ea`. Still measure `.px-caption`, `.cd-sec`, `.px-note-text`, `#director-label`.
 
 ## Step 10 — Extreme cases (long text, zero, 1e9, corrupt saves)
 
