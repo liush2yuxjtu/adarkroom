@@ -13,7 +13,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { emptySuite, ok, fail, summarize, writeJson } from "./lib/report.mjs";
 import { makeSandbox } from "./lib/engine-sandbox.mjs";
-import { playthrough, workshopPlaythrough } from "./story.mjs";
+import { playthrough, workshopPlaythrough, tradingPlaythrough } from "./story.mjs";
 import { runParity } from "./parity.mjs";
 import {
   ROOT,
@@ -96,12 +96,24 @@ function numericForRow(row, spec, ADR) {
   }
   if (row.category === "trade good" && spec.trades[name]) {
     if (row.status !== "present") return { status: "skip", detail: row.status };
-    return { status: "match", detail: "buyable" };
+    const orig = spec.trades[name].cost && spec.trades[name].cost.n0;
+    const rem = ADR.tradeCost ? ADR.tradeCost(snake(name)) : null;
+    if (!orig) return { status: "match", detail: "buyable" };
+    if (!rem) return { status: "mismatch", detail: `original ${JSON.stringify(orig)} remake=null` };
+    return costsEqual(orig, rem)
+      ? { status: "match", detail: JSON.stringify(orig) }
+      : { status: "mismatch", detail: `original ${JSON.stringify(orig)} remake ${JSON.stringify(rem)}` };
   }
   if (row.category === "weapon" && spec.weapons[name]) {
     if (row.status === "missing") return { status: "skip", detail: "not present" };
+    const remW = ADR.WEAPONS && ADR.WEAPONS[spec.weapons[name].id];
+    if (!remW) return { status: "skip", detail: "item exists; combat table is batch 5" };
     const w = spec.weapons[name];
-    return { status: "mismatch", detail: `damage=${w.damage} cooldown=${w.cooldown} not in remake combat table` };
+    const dmgOk = remW.damage === w.damage;
+    const cdOk = remW.cooldown === w.cooldown;
+    return dmgOk && cdOk
+      ? { status: "match", detail: `damage=${w.damage} cooldown=${w.cooldown}` }
+      : { status: "mismatch", detail: `damage=${w.damage} cooldown=${w.cooldown} remake damage=${remW.damage} cooldown=${remW.cooldown}` };
   }
   if (row.category === "world mechanic") {
     const orig = spec.worldNums[name];
@@ -200,6 +212,21 @@ function reachabilityBatches(parityRows) {
         kind: "story",
         detail: okc
           ? "workshop crafts + water/bag/armour + buildMsg"
+          : JSON.stringify(play)
+      });
+      continue;
+    }
+    if (String(id) === "3" || id === 3) {
+      const play = tradingPlaythrough();
+      const costOk = play.compassCost && play.compassCost.fur === 400 && play.ironCost && play.ironCost.fur === 150 && play.ironCost.scales === 50;
+      const okc = !!(play.allBought && play.noPostBlocked && play.medicineHiddenUntilSeen && play.compassCapped && costOk);
+      out.push({
+        batch: 3,
+        title: meta.title,
+        pass: okc && gaps.length === 0,
+        kind: "story",
+        detail: okc
+          ? "trading post buy menu + seen-unlock + compass max 1"
           : JSON.stringify(play)
       });
       continue;

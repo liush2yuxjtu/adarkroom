@@ -127,6 +127,13 @@ export function remakeContent() {
   }
   const buyable = new Set();
   for (const e of Object.values(ev)) for (const b of e.buttons || []) if (b.cost && b.reward) Object.keys(b.reward).forEach((x) => buyable.add(x));
+  const tradeTbl = eng.match(/var TRADEABLE = \{([\s\S]*?)\n  \};/);
+  if (tradeTbl) {
+    for (const m of tradeTbl[1].matchAll(/^\s+(\w+):/gm)) {
+      buyable.add(m[1]);
+      produced.add(m[1]);
+    }
+  }
   return { items, areas, buildingKinds, workers, landmarks, produced, buyable, events: ev };
 }
 
@@ -168,7 +175,7 @@ export function runParity() {
   for (const k of o.trade) {
     const id = snake(k);
     const st = r.buyable.has(id) ? "present" : r.items.includes(id) ? "no_producer" : "missing";
-    add("trade good", k, st, r.buyable.has(id) ? lineOf(EVENTS, `"buy_${id}"`) : null, st === "no_producer" ? "item exists but not tradeable" : "");
+    add("trade good", k, st, r.buyable.has(id) ? (lineOf(ENGINE, `${id}:`) || lineOf(EVENTS, `"buy_${id}"`)) : null, st === "no_producer" ? "item exists but not tradeable" : "");
   }
   for (const k of o.items) { const [s, w, n] = itemStatus(k); add("item/resource", k, s, w, n); }
   for (const [grp, list] of Object.entries(o.events)) {

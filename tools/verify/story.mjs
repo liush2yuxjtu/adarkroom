@@ -167,6 +167,48 @@ export function workshopPlaythrough() {
   };
 }
 
+/** Headless batch-3 trading post: costs, seen-unlock, compass max 1. */
+export function tradingPlaythrough() {
+  const sb = makeSandbox({ seed: 3 });
+  const g = new sb.ADR.Game({ director: "rule", time_scale: 1, stuck_minutes: 99 }, {});
+  const s = g.state;
+  s.builder_level = 4;
+  s.temperature = 4;
+  s.fire = 4;
+  s.wood_initialized = true;
+  s.location = "room";
+  Object.assign(s.stores, { fur: 8000, scales: 2000, teeth: 800 });
+  s.seen.fur = true;
+  s.seen.scales = true;
+  s.seen.teeth = true;
+  const noPost = g.act("buy", { kind: "scales" });
+  s.buildings.trading_post = 1;
+  const hiddenMed = g.act("buy", { kind: "medicine" });
+  const kinds = [
+    "scales", "teeth", "iron", "coal", "steel", "bullets",
+    "energy_cell", "bolas", "grenade", "bayonet", "alien_alloy", "compass"
+  ];
+  kinds.forEach((k) => { s.seen[k] = true; });
+  s.seen.medicine = true;
+  const bought = {};
+  kinds.concat(["medicine"]).forEach((kind) => {
+    const r = g.act("buy", { kind });
+    bought[kind] = !!(r && r.ok && (s.stores[kind] || 0) > 0);
+  });
+  const compassAgain = g.act("buy", { kind: "compass" });
+  const vis = g.visibleTrades ? g.visibleTrades() : sb.ADR.Game.prototype.visibleTrades.call(g);
+  return {
+    noPostBlocked: !!(noPost && noPost.ok === false),
+    medicineHiddenUntilSeen: !!(hiddenMed && hiddenMed.ok === false),
+    bought,
+    allBought: kinds.concat(["medicine"]).every((k) => bought[k]),
+    compassCapped: !!(compassAgain && compassAgain.ok === false),
+    compassCost: sb.ADR.tradeCost("compass"),
+    ironCost: sb.ADR.tradeCost("iron"),
+    listed: vis.map((x) => x.kind)
+  };
+}
+
 const TRIGGERS = {
   room_fire: "light_fire (fire > 0)",
   stranger: "fire > 1, builder arrives 30s later",
