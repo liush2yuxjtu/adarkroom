@@ -7,17 +7,11 @@ var header: HBoxContainer
 var body: VBoxContainer
 var stores: VBoxContainer
 var font: FontFile
-var cjk_font: FontFile
 
 func _ready() -> void:
 	font = FontFile.new()
-	if font.load_dynamic_font("res://fonts/JetBrainsMono-Regular.ttf") != OK:
-		push_warning("JetBrains Mono missing")
-	cjk_font = FontFile.new()
-	if cjk_font.load_dynamic_font("res://fonts/NotoSansSC-Regular-subset.otf") != OK:
-		push_warning("Noto Sans SC subset missing")
-	else:
-		font.fallbacks = [cjk_font]
+	if font.load_dynamic_font("res://fonts/SarasaMonoSC-Regular-subset.otf") != OK:
+		push_warning("Sarasa Mono SC subset missing")
 	theme = Theme.new()
 	theme.default_font = font
 	theme.default_font_size = 16
