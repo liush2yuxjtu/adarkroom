@@ -27,4 +27,17 @@ for f in favicon.ico mobileWarning.html browserWarning.html; do
   fi
 done
 
+# Static site: inject Vercel SUPABASE_* at build time (empty = localStorage-only).
+python3 - "$DIST/telemetry-config.js" "${SUPABASE_URL:-}" "${SUPABASE_ANON_KEY:-}" <<'PY'
+import json, sys
+dest, raw_url, key = sys.argv[1], sys.argv[2].strip(), sys.argv[3].strip()
+url = ""
+if raw_url and key:
+    base = raw_url.rstrip("/")
+    url = base if base.endswith("/rest/v1/playtest_events") else base + "/rest/v1/playtest_events"
+with open(dest, "w", encoding="utf-8") as f:
+    f.write("self.ADR_TELEMETRY = { url: %s, anonKey: %s };\n" % (json.dumps(url), json.dumps(key)))
+print("Wrote telemetry-config.js (%s)" % ("Supabase REST sink enabled" if url else "localStorage-only; SUPABASE_* unset"))
+PY
+
 echo "Prepared $DIST"

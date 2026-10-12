@@ -225,6 +225,24 @@
     state.stores[item] = Math.max(0, (state.stores[item] || 0) + amount);
   }
 
+  function visualSig(state) {
+    var n0 = state.notifications[0];
+    var ev = state.active_event;
+    return [
+      state.location, state.fire, state.temperature, state.builder_level,
+      state.stores.wood, state.stores.fur, state.stores.meat, state.stores.compass,
+      state.buildings.trap, state.buildings.cart, state.buildings.hut,
+      state.population, state.unlocked.outside ? 1 : 0, state.unlocked.path ? 1 : 0,
+      state.notifications.length, n0 ? n0.text : "",
+      ev ? ev.id : "", ev ? ev.scene : "",
+      state.combat ? state.combat.hp : "",
+      state.phase, state.slice_complete ? 1 : 0,
+      state.world.on_expedition ? 1 : 0, state.world.x, state.world.y,
+      state.world.hp, state.world.water,
+      state.outfit.meat, state.outfit.cured_meat
+    ].join("|");
+  }
+
   function hutTitle(n) {
     if (n <= 0) return t("A Silent Forest");
     if (n === 1) return t("A Lonely Hut");
@@ -542,8 +560,45 @@
     };
     this.buffer.push(ev);
     this._persist();
-    if (this.httpEnabled && this.httpEndpoint) this._post(ev);
+    if (this.enqueueHttp) this.enqueueHttp(ev);
+    else if (this.httpEnabled && this.httpEndpoint) this._post(ev);
     return ev;
+  };
+
+  Analytics.prototype.attachSupabase = function () {
+    var cfg = (typeof globalThis !== "undefined" && globalThis.ADR_TELEMETRY) || {};
+    var sink = typeof globalThis !== "undefined" ? globalThis.ADRSupabaseSink : null;
+    if (!cfg.url || !cfg.anonKey || !sink) return;
+    var queue = [];
+    function enqueue(ev) {
+      queue.push(sink.rowFromEvent(ev));
+      if (queue.length >= 50) flush();
+    }
+    function flush() {
+      if (!queue.length) return;
+      var rows = queue.splice(0, 200);
+      fetch(cfg.url, {
+        method: "POST",
+        keepalive: true,
+        headers: sink.headersFromAnonKey(cfg.anonKey),
+        body: JSON.stringify(rows)
+      }).then(function (r) {
+        if (!r.ok) throw new Error(String(r.status));
+      }).catch(function () {
+        for (var i = rows.length - 1; i >= 0; i--) queue.unshift(rows[i]);
+      });
+    }
+    this.enqueueHttp = enqueue;
+    this.flushHttp = flush;
+    this.httpEndpoint = cfg.url;
+    this.httpEnabled = true;
+    if (typeof setInterval === "function") setInterval(flush, 10000);
+    if (typeof addEventListener === "function") {
+      addEventListener("pagehide", flush);
+      addEventListener("visibilitychange", function () {
+        if (typeof document !== "undefined" && document.visibilityState === "hidden") flush();
+      });
+    }
   };
 
   Analytics.prototype._post = function (ev) {
@@ -607,6 +662,7 @@
     this.analytics = new Analytics(this.config);
     this.listeners = [];
     this._llmBusy = false;
+    this.analytics.attachSupabase();
     this.analytics.log(this.state, "session_start", { director: this.directorName });
     this.directorTick();
   }
@@ -623,7 +679,7 @@
 
   Game.prototype.applyCalls = function (calls, origin) {
     var self = this;
-    if (!Array.isArray(calls)) return;
+    if (!Array.isArray(calls) || !calls.length) return;
     calls.slice(0, 8).forEach(function (call) {
       var delay = typeof call.delay_sec === "number" ? call.delay_sec : 0;
       if (delay > 0) {
@@ -972,6 +1028,7 @@
 
   Game.prototype.tick = function (dtReal) {
     var s = this.state;
+    var beforeSig = visualSig(s);
     var dt = dtReal * this.timeScale;
     s.game_time_sec += dt;
     Object.keys(s.cooldowns).forEach(function (k) {
@@ -1057,7 +1114,8 @@
 
     s.phase = derivePhase(s);
     this.analytics.tickChecks(s);
-    this.emit();
+    if (visualSig(s) !== beforeSig) this.emit();
+    if (this.hud) this.hud();
   };
 
   Game.prototype.visibleCrafts = function () {
@@ -1094,6 +1152,7 @@
     terrainAt: terrainAt,
     hutTitle: hutTitle,
     roomTitle: roomTitle,
+    visualSig: visualSig,
     generateWorldSeed: generateWorldSeed
   };
 });

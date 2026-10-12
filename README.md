@@ -84,7 +84,7 @@ or play the latest on [GitHub](http://doublespeakgames.github.io/adarkroom)
 https://<project>.supabase.co/rest/v1/playtest_events
 ```
 
-并把 anon key 填进「遥测 apikey」。适配器见 `godot/build/web/sinks/supabase.js` 与 `godot/scripts/sinks/SupabaseSink.gd`。构建不需要任何密钥。
+并把 anon key 填进「遥测 apikey」。适配器见 `godot/build/web/sinks/supabase.js` 与 `godot/scripts/sinks/SupabaseSink.gd`。Vercel 预览/生产构建会把 `SUPABASE_URL` / `SUPABASE_ANON_KEY` 写入 `telemetry-config.js`，浏览器每 10 秒（以及 `pagehide`）批量 POST 到 `playtest_events`。新增埋点：在游戏逻辑里加一行 `this.analytics.log(this.state, "事件名", { 任意字段 })`。
 
 分析用 SQL 见 [`analysis/README.md`](analysis/README.md)。
 

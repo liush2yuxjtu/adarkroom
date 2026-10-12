@@ -6,6 +6,8 @@
   var events = {};
   var config = {};
   var lastRender = 0;
+  var lastViewSig = "";
+  var eventKey = "";
 
   function $(id) { return document.getElementById(id); }
 
@@ -15,50 +17,89 @@
     return left > 0 ? left / max : 0;
   }
 
-  function btn(label, disabled, onClick, cdId) {
-    var b = document.createElement("button");
-    b.className = "adr";
-    b.textContent = label;
-    if (disabled) b.disabled = true;
-    if (cdId && (game.state.cooldowns[cdId] || 0) > 0) {
-      b.disabled = true;
+  function upsertButton(parent, key, spec) {
+    var b = parent.querySelector('[data-key="' + key + '"]');
+    if (!b) {
+      b = document.createElement("button");
+      b.type = "button";
+      b.className = "adr";
+      b.dataset.key = key;
+      var lab = document.createElement("span");
+      lab.className = "btn-label";
+      b.appendChild(lab);
       var bar = document.createElement("span");
       bar.className = "cd";
-      bar.style.width = (cdRatio(cdId) * 100) + "%";
       b.appendChild(bar);
+      b.addEventListener("click", spec.onClick);
+      parent.appendChild(b);
     }
-    b.addEventListener("click", onClick);
+    var labEl = b.querySelector(".btn-label");
+    if (labEl.textContent !== spec.label) labEl.textContent = spec.label;
+    var onCd = !!(spec.cdId && (game.state.cooldowns[spec.cdId] || 0) > 0);
+    var disabled = !!spec.disabled || onCd;
+    if (b.disabled !== disabled) b.disabled = disabled;
+    var barEl = b.querySelector(".cd");
+    if (barEl) barEl.style.width = spec.cdId ? (cdRatio(spec.cdId) * 100) + "%" : "0%";
     return b;
+  }
+
+  function keepButtons(parent, keys) {
+    [].slice.call(parent.querySelectorAll("button.adr")).forEach(function (b) {
+      if (keys.indexOf(b.dataset.key) < 0) b.remove();
+    });
+  }
+
+  function paintCooldowns() {
+    if (!game) return;
+    document.querySelectorAll("button.adr[data-key]").forEach(function (b) {
+      var key = b.dataset.key;
+      var cdId = key === "fire" ? "stoke" : key === "gather" ? "gather" : key === "traps" ? "traps" : "";
+      if (!cdId) return;
+      var bar = b.querySelector(".cd");
+      if (bar) bar.style.width = (cdRatio(cdId) * 100) + "%";
+      var onCd = (game.state.cooldowns[cdId] || 0) > 0;
+      if (onCd) b.disabled = true;
+      else if (cdId === "stoke" || cdId === "gather" || cdId === "traps") b.disabled = false;
+    });
   }
 
   function renderHeader() {
     var h = $("header");
-    h.innerHTML = "";
     var tabs = [
       { id: "room", label: ADR.roomTitle(game.state) },
       { id: "outside", label: game.state.unlocked.outside ? ADR.hutTitle(game.state.buildings.hut) : ADR.t("Outside") },
       { id: "path", label: ADR.t("A Dusty Path") }
     ];
     tabs.forEach(function (tab) {
-      var b = document.createElement("button");
-      b.textContent = tab.label;
-      if (!game.state.unlocked[tab.id] && tab.id !== "room") b.disabled = true;
-      if (game.state.location === tab.id || (tab.id === "path" && game.state.location === "world")) b.className = "active";
-      b.addEventListener("click", function () {
-        if (game.state.world.on_expedition) return;
-        game.act("travel", { area: tab.id });
-      });
-      h.appendChild(b);
+      var b = h.querySelector('[data-tab="' + tab.id + '"]');
+      if (!b) {
+        b = document.createElement("button");
+        b.type = "button";
+        b.dataset.tab = tab.id;
+        b.addEventListener("click", function () {
+          if (game.state.world.on_expedition) return;
+          game.act("travel", { area: tab.id });
+        });
+        h.appendChild(b);
+      }
+      if (b.textContent !== tab.label) b.textContent = tab.label;
+      var locked = !game.state.unlocked[tab.id] && tab.id !== "room";
+      b.disabled = locked;
+      var active = game.state.location === tab.id || (tab.id === "path" && game.state.location === "world");
+      b.className = active ? "active" : "";
     });
   }
 
   function renderNotes() {
     var box = $("notifications");
+    var want = game.state.notifications.slice(0, 16).map(function (n) { return n.text; });
+    var have = [].slice.call(box.querySelectorAll(".note")).map(function (n) { return n.textContent; });
+    if (want.join("\n") === have.join("\n")) return;
     box.innerHTML = "";
-    game.state.notifications.slice(0, 16).forEach(function (n) {
+    want.forEach(function (text) {
       var d = document.createElement("div");
       d.className = "note";
-      d.textContent = n.text;
+      d.textContent = text;
       box.appendChild(d);
     });
   }
@@ -73,110 +114,181 @@
       return;
     }
     box.style.display = "block";
-    box.innerHTML = '<div class="legend">' + ADR.t("stores") + "</div>";
+    var html = '<div class="legend">' + ADR.t("stores") + "</div>";
     ADR.ITEMS.forEach(function (k) {
       var n = game.state.stores[k] || 0;
       if (n <= 0 && k !== "wood") return;
       if (k === "wood" && !game.state.wood_initialized) return;
-      var row = document.createElement("div");
-      row.className = "store-row";
-      row.innerHTML = "<span>" + (ADR.ITEM_CN[k] || k) + '</span><span class="n">' + n + "</span>";
-      box.appendChild(row);
+      html += '<div class="store-row"><span>' + (ADR.ITEM_CN[k] || k) + '</span><span class="n">' + n + "</span></div>";
     });
     if (game.state.buildings.hut > 0 || game.state.population > 0) {
-      var pop = document.createElement("div");
-      pop.className = "store-row";
-      pop.innerHTML = "<span>" + ADR.t("pop ") + '</span><span class="n">' + game.state.population + "</span>";
-      box.appendChild(pop);
+      html += '<div class="store-row"><span>' + ADR.t("pop ") + '</span><span class="n">' + game.state.population + "</span></div>";
+    }
+    if (box.dataset.html !== html) {
+      box.innerHTML = html;
+      box.dataset.html = html;
     }
   }
 
-  function renderRoom() {
-    var p = $("panel-room");
+  function ensureScaffold(panelId, titleId, statusId, btnsId, hintId) {
+    var p = $(panelId);
+    if (p.dataset.ready) return p;
     p.innerHTML = "";
     var h = document.createElement("h1");
     h.className = "title";
-    h.textContent = ADR.roomTitle(game.state);
+    h.id = titleId;
     p.appendChild(h);
     var st = document.createElement("div");
     st.className = "status-line";
-    st.innerHTML = "房间" + ADR.TEMP[game.state.temperature] + "<br>火堆" + ADR.FIRE[game.state.fire];
+    st.id = statusId;
     p.appendChild(st);
     var col = document.createElement("div");
     col.className = "btn-col";
-    var fireLabel = game.state.fire <= 0 ? ADR.t("light fire") : ADR.t("stoke fire");
-    col.appendChild(btn(fireLabel, false, function () {
-      game.act(game.state.fire <= 0 ? "light_fire" : "stoke_fire");
-    }, "stoke"));
+    col.id = btnsId;
+    p.appendChild(col);
+    if (hintId) {
+      var hint = document.createElement("div");
+      hint.className = "hint";
+      hint.id = hintId;
+      p.appendChild(hint);
+    }
+    p.dataset.ready = "1";
+    return p;
+  }
+
+  function renderRoom() {
+    ensureScaffold("panel-room", "room-title", "room-status", "room-btns", "room-hint");
+    $("room-title").textContent = ADR.roomTitle(game.state);
+    $("room-status").innerHTML = "房间" + ADR.TEMP[game.state.temperature] + "<br>火堆" + ADR.FIRE[game.state.fire];
+    var keys = ["fire"];
+    upsertButton($("room-btns"), "fire", {
+      label: game.state.fire <= 0 ? ADR.t("light fire") : ADR.t("stoke fire"),
+      cdId: "stoke",
+      onClick: function () {
+        game.act(game.state.fire <= 0 ? "light_fire" : "stoke_fire");
+      }
+    });
     ADR.Game.prototype.visibleCrafts.call(game).forEach(function (c) {
       var name = { trap: "陷阱", cart: "货车", hut: "小屋" }[c.kind];
       var cost = Object.keys(c.cost).map(function (k) {
         return (ADR.ITEM_CN[k] || k) + c.cost[k];
       }).join(" ");
-      col.appendChild(btn(name + " (" + cost + ")", !c.can, function () {
-        game.act("build", { kind: c.kind });
-      }));
+      keys.push("build-" + c.kind);
+      upsertButton($("room-btns"), "build-" + c.kind, {
+        label: name + " (" + cost + ")",
+        disabled: !c.can,
+        onClick: function () { game.act("build", { kind: c.kind }); }
+      });
     });
-    p.appendChild(col);
+    keepButtons($("room-btns"), keys);
+    var hint = $("room-hint");
     if (game.state.builder_level >= 1 && game.state.builder_level < 4) {
-      var hint = document.createElement("div");
-      hint.className = "hint";
       hint.textContent = "角落里有人。把屋子烧暖些。";
-      p.appendChild(hint);
+      hint.style.display = "";
+    } else {
+      hint.textContent = "";
+      hint.style.display = "none";
     }
   }
 
   function renderOutside() {
-    var p = $("panel-outside");
-    p.innerHTML = "";
-    var h = document.createElement("h1");
-    h.className = "title";
-    h.textContent = ADR.hutTitle(game.state.buildings.hut);
-    p.appendChild(h);
-    var st = document.createElement("div");
-    st.className = "status-line";
-    st.textContent = game.state.buildings.hut > 0 ? ADR.t("the sky is grey and the wind blows relentlessly") : ADR.t("dry brush and dead branches litter the forest floor");
-    p.appendChild(st);
-    var col = document.createElement("div");
-    col.className = "btn-col";
-    col.appendChild(btn(ADR.t("gather wood"), false, function () { game.act("gather_wood"); }, "gather"));
+    ensureScaffold("panel-outside", "out-title", "out-status", "out-btns", "out-hint");
+    $("out-title").textContent = ADR.hutTitle(game.state.buildings.hut);
+    $("out-status").textContent = game.state.buildings.hut > 0
+      ? ADR.t("the sky is grey and the wind blows relentlessly")
+      : ADR.t("dry brush and dead branches litter the forest floor");
+    var keys = ["gather"];
+    upsertButton($("out-btns"), "gather", {
+      label: ADR.t("gather wood"),
+      cdId: "gather",
+      onClick: function () { game.act("gather_wood"); }
+    });
     if (game.state.buildings.trap > 0) {
-      col.appendChild(btn(ADR.t("check traps"), false, function () { game.act("check_traps"); }, "traps"));
+      keys.push("traps");
+      upsertButton($("out-btns"), "traps", {
+        label: ADR.t("check traps"),
+        cdId: "traps",
+        onClick: function () { game.act("check_traps"); }
+      });
     }
-    p.appendChild(col);
+    keepButtons($("out-btns"), keys);
+    var hint = $("out-hint");
     if (game.state.population > 0) {
-      var w = document.createElement("div");
-      w.className = "hint";
-      w.textContent = "伐木者 " + (game.state.workers.gatherer || 0) + " · " + ADR.t("pop ") + game.state.population;
-      p.appendChild(w);
+      hint.textContent = "伐木者 " + (game.state.workers.gatherer || 0) + " · " + ADR.t("pop ") + game.state.population;
+      hint.style.display = "";
+    } else {
+      hint.textContent = "";
+      hint.style.display = "none";
     }
   }
 
   function renderPath() {
     var p = $("panel-path");
-    p.innerHTML = "";
-    var h = document.createElement("h1");
-    h.className = "title";
-    h.textContent = game.state.location === "world" ? ADR.t("A Barren World") : ADR.t("A Dusty Path");
-    p.appendChild(h);
+    if (game.state.world.on_expedition) {
+      if (p.dataset.mode !== "world") {
+        p.innerHTML = "";
+        p.dataset.ready = "";
+        p.dataset.mode = "world";
+        ensureScaffold("panel-path", "path-title", "path-status", "path-btns", "path-hint");
+      }
+      $("path-title").textContent = ADR.t("A Barren World");
+      var s = game.state.world;
+      $("path-status").textContent = "生命 " + s.hp + "/" + s.max_hp + "  ·  水 " + s.water + "  ·  肉 " + ((game.state.outfit.meat || 0) + (game.state.outfit.cured_meat || 0));
+      var map = $("world-map");
+      if (!map) {
+        map = document.createElement("div");
+        map.id = "world-map";
+        $("path-status").insertAdjacentElement("afterend", map);
+      }
+      var lines = [];
+      for (var y = 0; y < s.size; y++) {
+        var row = "";
+        for (var x = 0; x < s.size; x++) {
+          if (x === s.x && y === s.y) row += "@";
+          else if (s.landmarks[x + "," + y]) row += "H";
+          else if (!s.visited[x + "," + y]) row += " ";
+          else {
+            var ter = ADR.terrainAt(x, y, s.size);
+            row += ter === "village" ? "A" : ter === "forest" ? "#" : ter === "grass" ? "," : ".";
+          }
+        }
+        lines.push(row);
+      }
+      map.textContent = lines.join("\n");
+      var dirs = [["north", "北", 0, -1], ["west", "西", -1, 0], ["east", "东", 1, 0], ["south", "南", 0, 1]];
+      dirs.forEach(function (d) {
+        upsertButton($("path-btns"), d[0], {
+          label: d[1],
+          onClick: function () { game.act("world_move", { dx: d[2], dy: d[3] }); }
+        });
+      });
+      keepButtons($("path-btns"), ["north", "west", "east", "south"]);
+      $("path-hint").textContent = "WASD 或方向键移动。H 是旧房子，A 是村落。";
+      return;
+    }
+    if (p.dataset.mode !== "path") {
+      p.innerHTML = "";
+      p.dataset.ready = "";
+      p.dataset.mode = "path";
+      ensureScaffold("panel-path", "path-title", "path-status", "path-btns", "path-hint");
+      var extra = document.createElement("div");
+      extra.id = "path-extra";
+      $("path-status").insertAdjacentElement("afterend", extra);
+    }
+    $("path-title").textContent = ADR.t("A Dusty Path");
+    $("path-status").textContent = ADR.t("the compass points east");
+    var extraBox = $("path-extra");
+    extraBox.innerHTML = "";
     if (game.state.slice_complete) {
       var ban = document.createElement("div");
       ban.id = "slice-banner";
       ban.className = "show";
       ban.textContent = "尘途的第一段已经走完。你可以继续在林中经营，或导出这次试玩的遥测。";
-      p.appendChild(ban);
+      extraBox.appendChild(ban);
     }
-    if (game.state.world.on_expedition) {
-      renderWorld(p);
-      return;
-    }
-    var st = document.createElement("div");
-    st.className = "status-line";
-    st.textContent = ADR.t("the compass points east");
-    p.appendChild(st);
     var supplies = document.createElement("div");
     supplies.textContent = ADR.t("supplies:");
-    p.appendChild(supplies);
+    extraBox.appendChild(supplies);
     ["meat", "cured_meat", "fur"].forEach(function (item) {
       var row = document.createElement("div");
       row.className = "pack-row";
@@ -184,60 +296,25 @@
       var packed = game.state.outfit[item] || 0;
       row.innerHTML = "<span>" + (ADR.ITEM_CN[item] || item) + " 库存" + have + " / 行装" + packed + "</span>";
       var minus = document.createElement("button");
+      minus.type = "button";
       minus.textContent = "−";
       minus.addEventListener("click", function () { game.act("pack", { item: item, amount: -1 }); });
       var plus = document.createElement("button");
+      plus.type = "button";
       plus.textContent = "+";
       plus.addEventListener("click", function () { game.act("pack", { item: item, amount: 1 }); });
       row.appendChild(minus);
       row.appendChild(plus);
-      p.appendChild(row);
+      extraBox.appendChild(row);
     });
-    var col = document.createElement("div");
-    col.className = "btn-col";
     var food = (game.state.outfit.meat || 0) + (game.state.outfit.cured_meat || 0);
-    col.appendChild(btn(ADR.t("embark"), food <= 0, function () { game.act("embark"); }));
-    p.appendChild(col);
-    var hint = document.createElement("div");
-    hint.className = "hint";
-    hint.textContent = "带上肉再出发。向东北走，能看见一座旧房子。回到村子格子即可回家。";
-    p.appendChild(hint);
-  }
-
-  function renderWorld(p) {
-    var s = game.state.world;
-    var st = document.createElement("div");
-    st.className = "status-line";
-    st.textContent = "生命 " + s.hp + "/" + s.max_hp + "  ·  水 " + s.water + "  ·  肉 " + ((game.state.outfit.meat || 0) + (game.state.outfit.cured_meat || 0));
-    p.appendChild(st);
-    var map = document.createElement("div");
-    map.id = "world-map";
-    var lines = [];
-    for (var y = 0; y < s.size; y++) {
-      var row = "";
-      for (var x = 0; x < s.size; x++) {
-        if (x === s.x && y === s.y) row += "@";
-        else if (s.landmarks[x + "," + y]) row += "H";
-        else if (!s.visited[x + "," + y]) row += " ";
-        else {
-          var ter = ADR.terrainAt(x, y, s.size);
-          row += ter === "village" ? "A" : ter === "forest" ? "#" : ter === "grass" ? "," : ".";
-        }
-      }
-      lines.push(row);
-    }
-    map.textContent = lines.join("\n");
-    p.appendChild(map);
-    var pad = document.createElement("div");
-    pad.className = "btn-col";
-    [["北", 0, -1], ["西", -1, 0], ["东", 1, 0], ["南", 0, 1]].forEach(function (d) {
-      pad.appendChild(btn(d[0], false, function () { game.act("world_move", { dx: d[1], dy: d[2] }); }));
+    upsertButton($("path-btns"), "embark", {
+      label: ADR.t("embark"),
+      disabled: food <= 0,
+      onClick: function () { game.act("embark"); }
     });
-    p.appendChild(pad);
-    var hint = document.createElement("div");
-    hint.className = "hint";
-    hint.textContent = "WASD 或方向键移动。H 是旧房子，A 是村落。";
-    p.appendChild(hint);
+    keepButtons($("path-btns"), ["embark"]);
+    $("path-hint").textContent = "带上肉再出发。向东北走，能看见一座旧房子。回到村子格子即可回家。";
   }
 
   function renderEvent() {
@@ -245,21 +322,32 @@
     var ev = game.state.active_event;
     var combat = game.state.combat;
     if (!ev && !combat) {
-      ov.className = "";
-      ov.innerHTML = "";
+      if (ov.dataset.mode === "settings") return;
+      if (ov.dataset.mode) {
+        ov.className = "";
+        ov.innerHTML = "";
+        ov.dataset.mode = "";
+        ov.dataset.eventKey = "";
+      }
+      eventKey = "";
       return;
     }
+    var key = combat ? "combat:" + combat.hp + ":" + game.state.world.hp : (ev.id + ":" + ev.scene);
+    if (ov.dataset.mode === "event" && ov.dataset.eventKey === key) return;
     ov.className = "show";
     ov.innerHTML = "";
+    ov.dataset.mode = "event";
+    ov.dataset.eventKey = key;
+    eventKey = key;
     var modal = document.createElement("div");
     modal.className = "modal";
     if (combat) {
       modal.innerHTML = "<h2>" + combat.name + "</h2><div class='body'><p>一只野兽从灌木丛里蹿了出来。</p><p>野兽生命 " + combat.hp + " · 你 " + game.state.world.hp + "</p></div>";
-      var acts = document.createElement("div");
-      acts.className = "modal-actions";
-      acts.appendChild(btn("挥拳", false, function () { game.act("combat", { move: "punch" }); }));
-      acts.appendChild(btn("逃跑", false, function () { game.act("combat", { move: "flee" }); }));
-      modal.appendChild(acts);
+      var actsC = document.createElement("div");
+      actsC.className = "modal-actions";
+      upsertButton(actsC, "punch", { label: "挥拳", onClick: function () { game.act("combat", { move: "punch" }); } });
+      upsertButton(actsC, "flee", { label: "逃跑", onClick: function () { game.act("combat", { move: "flee" }); } });
+      modal.appendChild(actsC);
       ov.appendChild(modal);
       return;
     }
@@ -288,7 +376,11 @@
       if (b.cost) {
         label += "（" + Object.keys(b.cost).map(function (k) { return (ADR.ITEM_CN[k] || k) + b.cost[k]; }).join(" ") + "）";
       }
-      acts.appendChild(btn(label, disabled, function () { game.act("event_choice", { button: b.id }); }));
+      upsertButton(acts, "ev-" + b.id, {
+        label: label,
+        disabled: disabled,
+        onClick: function () { game.act("event_choice", { button: b.id }); }
+      });
     });
     modal.appendChild(acts);
     ov.appendChild(modal);
@@ -307,6 +399,7 @@
     if (loc === "path" || loc === "world") renderPath();
     renderEvent();
     $("director-label").textContent = game.directorName === "llm" ? "导演：语言模型" : "导演：规则";
+    lastViewSig = ADR.visualSig(game.state);
   }
 
   function toast(msg) {
@@ -328,6 +421,8 @@
   function openSettings() {
     var ov = $("overlay");
     ov.className = "show";
+    ov.dataset.mode = "settings";
+    ov.dataset.eventKey = "";
     ov.innerHTML = "";
     var modal = document.createElement("div");
     modal.className = "modal";
@@ -340,7 +435,7 @@
       "<input id='cfg-llm' placeholder='https://example.com/director' />" +
       "<label>语言模型密钥（只存在本机）</label>" +
       "<input id='cfg-llm-key' type='password' autocomplete='off' />" +
-      "<label>遥测 HTTP 端点（可选，如 Supabase REST）</label>" +
+      "<label>遥测 HTTP 端点（可选，覆盖构建时写入的 Supabase）</label>" +
       "<input id='cfg-an' placeholder='https://xxx.supabase.co/rest/v1/playtest_events' />" +
       "<label>遥测 apikey / Authorization（可选）</label>" +
       "<input id='cfg-an-key' type='password' autocomplete='off' />" +
@@ -349,7 +444,11 @@
       "</form>";
     var acts = document.createElement("div");
     acts.className = "modal-actions";
-    acts.appendChild(btn("保存", false, function () {
+    var save = document.createElement("button");
+    save.type = "button";
+    save.className = "adr";
+    save.innerHTML = '<span class="btn-label">保存</span>';
+    save.addEventListener("click", function () {
       var dir = $("cfg-director").value;
       var llm = $("cfg-llm").value.trim();
       var key = $("cfg-llm-key").value;
@@ -371,9 +470,21 @@
         }));
       } catch (e) { /* ignore */ }
       ov.className = "";
+      ov.dataset.mode = "";
+      ov.innerHTML = "";
       toast("已保存");
-    }));
-    acts.appendChild(btn("关闭", false, function () { ov.className = ""; }));
+    });
+    var close = document.createElement("button");
+    close.type = "button";
+    close.className = "adr";
+    close.innerHTML = '<span class="btn-label">关闭</span>';
+    close.addEventListener("click", function () {
+      ov.className = "";
+      ov.dataset.mode = "";
+      ov.innerHTML = "";
+    });
+    acts.appendChild(save);
+    acts.appendChild(close);
     modal.appendChild(acts);
     ov.appendChild(modal);
     $("cfg-director").value = game.directorName;
@@ -399,6 +510,7 @@
     });
     window.addEventListener("beforeunload", function () {
       game.act("quit");
+      if (game.analytics.flushHttp) game.analytics.flushHttp();
     });
     window.addEventListener("keydown", function (e) {
       if (!game.state.world.on_expedition) return;
@@ -455,6 +567,7 @@
       game = new ADR.Game(config, events);
       window.__ADR_GAME = game;
       game.on(renderAll);
+      game.hud = paintCooldowns;
       bindMenu();
       renderAll();
       requestAnimationFrame(loop);
