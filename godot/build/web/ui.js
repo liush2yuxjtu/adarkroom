@@ -128,6 +128,7 @@
     var sc = panel.querySelector(".px-scene");
     if (sc) {
       sc.className = "px-scene px-scene-" + kind;
+      fitPixelScene();
       return sc;
     }
     sc = document.createElement("div");
@@ -140,14 +141,41 @@
       '<div class="px-animal" aria-hidden="true"></div>' +
       '<div class="px-cues"><span class="px-temp px-icon"></span></div>' +
       '<div class="px-builder px-icon px-person" aria-hidden="true"></div>';
+    var host = document.createElement("div");
+    host.className = "px-scene-host";
+    host.appendChild(sc);
     var title = panel.querySelector(".title");
-    if (title) panel.insertBefore(sc, title);
-    else panel.insertBefore(sc, panel.firstChild);
+    if (title) panel.insertBefore(host, title);
+    else panel.insertBefore(host, panel.firstChild);
+    fitPixelScene();
     return sc;
+  }
+
+  function fitPixelScene() {
+    if (!isPixel()) return;
+    var availParent = $("wrapper") || document.body;
+    var pad = 32;
+    var avail = Math.max(160, (availParent.clientWidth || window.innerWidth) - pad);
+    var native = 640;
+    var scale = Math.floor(avail / native);
+    if (scale < 1) {
+      scale = avail >= 320 ? 0.5 : Math.max(0.25, Math.floor((avail / native) * 4) / 4);
+    }
+    if (scale > 2) scale = 2;
+    document.querySelectorAll(".px-scene").forEach(function (sc) {
+      var host = sc.parentElement;
+      sc.style.setProperty("--px-scale", String(scale));
+      if (host && host.classList.contains("px-scene-host")) {
+        host.style.width = Math.round(native * scale) + "px";
+        host.style.height = Math.round(384 * scale) + "px";
+      }
+    });
+    return scale;
   }
 
   function paintAmbient() {
     if (!isPixel() || !game) return;
+    fitPixelScene();
     var loc = game.state.location;
     var kind = loc === "outside" ? "outside" : loc === "world" ? "world" : loc;
     var panel = loc === "outside" ? $("panel-outside") : loc === "path" || loc === "world" ? $("panel-path") : $("panel-room");
@@ -157,13 +185,19 @@
     var fireEl = sc.querySelector(".px-fire");
     if (fireEl) {
       var hf = hearthFrame(game.state.fire);
-      fireEl.style.backgroundPosition = "-" + (hf * 128) + "px 0";
+      var hw = fireEl.offsetWidth || 128;
+      fireEl.style.backgroundPosition = "-" + (hf * hw) + "px 0";
       fireEl.classList.toggle("lit", game.state.fire >= 3);
     }
     var sky = sc.querySelector(".px-sky");
     if (sky) sky.style.backgroundPosition = "-" + (skyIndex(game.state) * 640) + "px 0";
     var pile = sc.querySelector(".px-woodpile");
-    if (pile) pile.style.backgroundPosition = "-" + (woodpileFrame(game.state.stores.wood || 0) * 64) + "px 0";
+    if (pile) {
+      var woodN = game.state.stores.wood || 0;
+      var pw = pile.offsetWidth || 96;
+      pile.style.backgroundPosition = "-" + (woodpileFrame(woodN) * pw) + "px 0";
+      pile.classList.toggle("empty", woodN <= 0);
+    }
     var hot = game.state.temperature >= 4 || game.state.fire >= 4;
     sc.classList.toggle("overheat", hot);
     var smoke = sc.querySelector(".px-smoke");
@@ -226,7 +260,8 @@
         var flame = b.querySelector(".px-flame");
         if (flame && game) {
           var fr = stokeFrame(ratio, game.state.fire);
-          flame.style.backgroundPosition = "-" + (fr * 64) + "px 0";
+          var fw = flame.offsetWidth || 80;
+          flame.style.backgroundPosition = "-" + (fr * fw) + "px 0";
           flame.classList.toggle("ready", left <= 0);
         }
         if (barEl) barEl.style.width = "0%";
@@ -926,16 +961,47 @@
   function emitViewportLayout() {
     if (!window.ADRTelemetry || !ADRTelemetry.log) return;
     var w = window.innerWidth || 0;
+    var h = window.innerHeight || 0;
     var layout = w <= 768 ? "mobile" : "desktop";
     var box = $("notifications");
     var r = box ? box.getBoundingClientRect() : null;
-    var visible = !!(r && r.width > 0 && r.height > 0 && r.right > 0 && r.left < w && r.bottom > 0 && r.top < (window.innerHeight || 0));
+    var visible = !!(r && r.width > 0 && r.height > 0 && r.right > 0 && r.left < w && r.bottom > 0 && r.top < h);
+    var scene = document.querySelector(".px-scene");
+    var host = document.querySelector(".px-scene-host");
+    var stores = $("stores");
+    var hearth = document.querySelector(".px-hearth");
+    var hostR = host ? host.getBoundingClientRect() : null;
+    var storesR = stores && stores.style.display !== "none" ? stores.getBoundingClientRect() : null;
+    var hearthR = hearth ? hearth.getBoundingClientRect() : null;
+    var sceneVisible = 0;
+    if (hostR && hostR.width > 0) {
+      var visW = Math.min(hostR.right, w) - Math.max(hostR.left, 0);
+      sceneVisible = visW / hostR.width;
+    }
+    var overlap = false;
+    if (storesR && hostR && storesR.width > 0 && hostR.width > 0) {
+      overlap = !(storesR.right <= hostR.left || storesR.left >= hostR.right || storesR.bottom <= hostR.top || storesR.top >= hostR.bottom);
+    }
+    var scale = scene ? parseFloat(getComputedStyle(scene).getPropertyValue("--px-scale")) || 1 : null;
     ADRTelemetry.log("viewport_layout", {
       width: w,
-      height: window.innerHeight || 0,
+      height: h,
       layout: layout,
       notif_visible: visible
     });
+    if (isPixel()) {
+      ADRTelemetry.log("pixel_layout", {
+        width: w,
+        height: h,
+        layout: layout,
+        scale: scale,
+        scene_visible: Math.round(sceneVisible * 1000) / 1000,
+        hearth_in_view: !!(hearthR && hearthR.width > 0 && hearthR.left >= -1 && hearthR.right <= w + 1),
+        stores_overlap: overlap,
+        notes_x: r ? Math.round(r.x) : null,
+        notes_visible: visible && !!(r && r.x >= -1)
+      });
+    }
   }
 
   function bindMenu() {
@@ -1065,11 +1131,15 @@
       game.hud = paintCooldowns;
       bindMenu();
       renderAll();
+      fitPixelScene();
       emitViewportLayout();
       var resizeTimer = 0;
       window.addEventListener("resize", function () {
         if (resizeTimer) clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(emitViewportLayout, 250);
+        resizeTimer = setTimeout(function () {
+          fitPixelScene();
+          emitViewportLayout();
+        }, 250);
       });
       if (window.ADRTelemetry) ADRTelemetry.markFirstFrame();
       requestAnimationFrame(loop);
