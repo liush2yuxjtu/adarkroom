@@ -90,7 +90,7 @@
     document.querySelectorAll(".px-scene-host").forEach(function (el) {
       if (el.parentNode) el.parentNode.removeChild(el);
     });
-    ["panel-room", "panel-outside", "panel-path", "panel-ship", "panel-space"].forEach(function (id) {
+    ["panel-room", "panel-outside", "panel-path", "panel-ship", "panel-space", "panel-fabricator"].forEach(function (id) {
       var p = $(id);
       if (!p) return;
       delete p.dataset.ready;
@@ -380,6 +380,7 @@
       : loc === "path" || loc === "world" ? $("panel-path")
       : loc === "ship" ? $("panel-ship")
       : loc === "space" ? $("panel-space")
+      : loc === "fabricator" ? $("panel-fabricator")
       : $("panel-room");
     if (!panel) return;
     var sc = panel.querySelector(".px-scene");
@@ -588,6 +589,9 @@
       { id: "outside", label: game.state.unlocked.outside ? ADR.hutTitle(game.state.buildings.hut) : ADR.t("Outside") },
       { id: "path", label: ADR.t("A Dusty Path") }
     ];
+    if (game.state.unlocked.fabricator) {
+      tabs.push({ id: "fabricator", label: ADR.t("A Whirring Fabricator") });
+    }
     if (game.state.unlocked.ship) {
       tabs.push({ id: "ship", label: ADR.t("An Old Starship") });
     }
@@ -1335,6 +1339,40 @@
     $("space-hint").textContent = isPixel() ? "" : (game.state.flags.space_escaped ? "冲出大气层。" : "方向键或 WASD 躲避陨石。");
   }
 
+  function renderFabricator() {
+    ensureScaffold("panel-fabricator", "fab-title", "fab-status", "fab-btns", "fab-hint");
+    if (isPixel()) {
+      $("fab-title").textContent = "";
+      $("fab-title").setAttribute("aria-label", ADR.t("A Whirring Fabricator"));
+      $("fab-status").textContent = "";
+    } else {
+      $("fab-title").textContent = ADR.t("A Whirring Fabricator");
+      var known = Object.keys(game.state.blueprints || {}).filter(function (k) { return game.state.blueprints[k]; });
+      $("fab-status").textContent = known.length
+        ? ADR.t("blueprints") + " " + known.map(function (k) { return ADR.ITEM_CN[k] || k; }).join(" · ")
+        : "";
+    }
+    var keys = [];
+    var list = ADR.Game.prototype.visibleFabrications ? ADR.Game.prototype.visibleFabrications.call(game) : [];
+    list.forEach(function (c) {
+      var name = (ADR.ITEM_CN && ADR.ITEM_CN[c.kind]) || c.kind;
+      if ((c.quantity || 1) > 1) name += " (x" + c.quantity + ")";
+      var cost = Object.keys(c.cost || {}).map(function (k) {
+        return (ADR.ITEM_CN[k] || k) + c.cost[k];
+      }).join(" ");
+      var btnKey = "fab-" + c.kind;
+      keys.push(btnKey);
+      upsertButton($("fab-btns"), btnKey, {
+        label: name + (cost ? " (" + cost + ")" : ""),
+        icon: "spark",
+        disabled: !c.can,
+        onClick: function () { game.act("fabricate", { kind: c.kind }); }
+      });
+    });
+    keepButtons($("fab-btns"), keys);
+    $("fab-hint").textContent = isPixel() ? "" : "用外星合金制造流浪者装置。有的图纸要先带回家。";
+  }
+
   function renderEvent() {
     var ov = $("overlay");
     var ev = game.state.active_event;
@@ -1453,6 +1491,7 @@
     $("panel-path").className = "panel" + (loc === "path" || loc === "world" ? " active" : "");
     if ($("panel-ship")) $("panel-ship").className = "panel" + (loc === "ship" ? " active" : "");
     if ($("panel-space")) $("panel-space").className = "panel" + (loc === "space" ? " active" : "");
+    if ($("panel-fabricator")) $("panel-fabricator").className = "panel" + (loc === "fabricator" ? " active" : "");
     renderHeader();
     renderNotes();
     renderStores();
@@ -1461,6 +1500,7 @@
     if (loc === "path" || loc === "world") renderPath();
     if (loc === "ship") renderShip();
     if (loc === "space") renderSpace();
+    if (loc === "fabricator") renderFabricator();
     renderEvent();
     playPhaseWipe(loc);
     if (isPixel()) {

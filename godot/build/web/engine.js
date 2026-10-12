@@ -8,8 +8,8 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
 
-  var ITEMS = ["wood", "fur", "meat", "scales", "teeth", "cloth", "bait", "charm", "compass", "cured_meat", "leather", "iron", "coal", "steel", "sulphur", "bullets", "torch", "waterskin", "cask", "water_tank", "bone_spear", "rucksack", "wagon", "convoy", "l_armour", "i_armour", "s_armour", "iron_sword", "steel_sword", "rifle", "medicine", "energy_cell", "bolas", "grenade", "bayonet", "alien_alloy", "laser_rifle", "plasma_rifle", "energy_blade", "disruptor"];
-  var AREAS = ["room", "outside", "path", "world", "ship", "space"];
+  var ITEMS = ["wood", "fur", "meat", "scales", "teeth", "cloth", "bait", "charm", "compass", "cured_meat", "leather", "iron", "coal", "steel", "sulphur", "bullets", "torch", "waterskin", "cask", "water_tank", "bone_spear", "rucksack", "wagon", "convoy", "l_armour", "i_armour", "s_armour", "iron_sword", "steel_sword", "rifle", "medicine", "energy_cell", "bolas", "grenade", "bayonet", "alien_alloy", "laser_rifle", "plasma_rifle", "energy_blade", "disruptor", "fluid_recycler", "cargo_drone", "kinetic_armour", "hypo", "stim", "glowstone", "fleet_beacon", "hypo_blueprint", "kinetic_armour_blueprint", "disruptor_blueprint", "plasma_rifle_blueprint", "stim_blueprint", "glowstone_blueprint"];
+  var AREAS = ["room", "outside", "path", "world", "ship", "space", "fabricator"];
   var NPCS = ["builder", "nomad", "villagers"];
   var MOODS = ["unknown", "collapsed", "shivering", "sleeping", "helping", "neutral", "wary", "grateful"];
   var FIRE = ["熄灭了", "开始冒烟", "冒出火苗", "燃烧着", "熊熊燃烧"];
@@ -23,7 +23,12 @@
     s_armour: "钢甲", iron_sword: "铁剑", steel_sword: "钢剑", rifle: "步枪",
     medicine: "药剂", energy_cell: "能量元件", bolas: "套索", grenade: "手雷",
     bayonet: "刺刀", alien_alloy: "外星合金",
-    laser_rifle: "激光步枪", plasma_rifle: "等离子步枪", energy_blade: "能量刃", disruptor: "扰乱器"
+    laser_rifle: "激光步枪", plasma_rifle: "等离子步枪", energy_blade: "能量刃", disruptor: "扰乱器",
+    fluid_recycler: "流体回收器", cargo_drone: "货运无人机", kinetic_armour: "动能护甲",
+    hypo: "针剂", stim: "兴奋剂", glowstone: "辉光石", fleet_beacon: "舰队信标",
+    hypo_blueprint: "针剂蓝图", kinetic_armour_blueprint: "动能护甲蓝图",
+    disruptor_blueprint: "扰乱器蓝图", plasma_rifle_blueprint: "等离子步枪蓝图",
+    stim_blueprint: "兴奋剂蓝图", glowstone_blueprint: "辉光石蓝图"
   };
   var BUILDING_CN = {
     trap: "陷阱", cart: "货车", hut: "小屋", lodge: "狩猎小屋", trading_post: "贸易站",
@@ -92,6 +97,27 @@
     rifle: { type: "weapon", cost: { wood: 200, steel: 50, sulphur: 50 }, buildMsg: "black powder and bullets, like the old days." }
   };
   var CRAFT_KEYS = Object.keys(CRAFTABLE);
+  /* Faithful copy of script/fabricator.js Craftables (batch 8). */
+  var FABRICABLE = {
+    energy_blade: { type: "weapon", cost: { alien_alloy: 1 }, buildMsg: "the blade hums, charged particles sparking and fizzing." },
+    fluid_recycler: { type: "upgrade", max: 1, cost: { alien_alloy: 2 }, buildMsg: "water out, water in. waste not, want not." },
+    cargo_drone: { type: "upgrade", max: 1, cost: { alien_alloy: 2 }, buildMsg: "the workhorse of the wanderer fleet." },
+    kinetic_armour: { type: "upgrade", max: 1, blueprint: true, cost: { alien_alloy: 2 }, buildMsg: "wanderer soldiers succeed by subverting the enemy's rage." },
+    disruptor: { type: "weapon", blueprint: true, cost: { alien_alloy: 1 }, buildMsg: "somtimes it is best not to fight." },
+    hypo: { type: "tool", blueprint: true, quantity: 5, cost: { alien_alloy: 1 }, buildMsg: "a handful of hypos. life in a vial." },
+    stim: { type: "tool", blueprint: true, cost: { alien_alloy: 1 }, buildMsg: "sometimes it is best to fight without restraint." },
+    plasma_rifle: { type: "weapon", blueprint: true, cost: { alien_alloy: 1 }, buildMsg: "the peak of wanderer weapons technology, sleek and deadly." },
+    glowstone: { type: "tool", blueprint: true, cost: { alien_alloy: 1 }, buildMsg: "a smooth, perfect sphere. its light is inextinguishable." }
+  };
+  var FABRICATE_KEYS = Object.keys(FABRICABLE);
+  var BLUEPRINT_REDEEM = {
+    hypo_blueprint: "hypo",
+    kinetic_armour_blueprint: "kinetic_armour",
+    disruptor_blueprint: "disruptor",
+    plasma_rifle_blueprint: "plasma_rifle",
+    stim_blueprint: "stim",
+    glowstone_blueprint: "glowstone"
+  };
   /* Faithful copy of script/room.js TradeGoods (n=0). Compass is always listed once a trading post exists; others after the store has been seen. */
   var TRADEABLE = {
     scales: { type: "good", cost: { fur: 150 } },
@@ -370,7 +396,37 @@
     "Mesosphere": "中气层",
     "Thermosphere": "增温层",
     "Exosphere": "外逸层",
-    "Space": "太空"
+    "Space": "太空",
+    "Fabricator": "制造机",
+    "A Whirring Fabricator": "嗡鸣制造机",
+    "fabricate:": "制造:",
+    "blueprints": "蓝图",
+    "energy blade": "能量刃",
+    "fluid recycler": "流体回收器",
+    "cargo drone": "货运无人机",
+    "kinetic armour": "动能护甲",
+    "hypo": "针剂",
+    "stim": "兴奋剂",
+    "glow stone": "辉光石",
+    "fleet beacon": "舰队信标",
+    "hypo blueprint": "针剂蓝图",
+    "kinetic armour blueprint": "动能护甲蓝图",
+    "disruptor blueprint": "扰乱器蓝图",
+    "plasma rifle blueprint": "等离子步枪蓝图",
+    "stim blueprint": "兴奋剂蓝图",
+    "glowstone blueprint": "辉光石蓝图",
+    "the blade hums, charged particles sparking and fizzing.": "刃身嗡鸣，带电微粒噼啪作响",
+    "water out, water in. waste not, want not.": "水出，水进。物尽其用",
+    "the workhorse of the wanderer fleet.": "流浪者舰队的驮马",
+    "wanderer soldiers succeed by subverting the enemy's rage.": "流浪者士兵靠化解敌人的怒火取胜",
+    "somtimes it is best not to fight.": "有时候，不打才是上策",
+    "a handful of hypos. life in a vial.": "几支针剂。小瓶里的性命",
+    "sometimes it is best to fight without restraint.": "有时候，该放手一搏",
+    "the peak of wanderer weapons technology, sleek and deadly.": "流浪者武器技术的巅峰，流畅而致命",
+    "a smooth, perfect sphere. its light is inextinguishable.": "一颗光滑完美的球体。它的光无法熄灭",
+    "the familiar hum of wanderer machinery coming to life. finally, real tools.": "熟悉的流浪者机械嗡鸣苏醒了。终于，真正的工具",
+    "builder knows the strange device when she sees it. takes it for herself real quick. doesn’t ask where it came from.": "建造者一眼认出那件古怪装置。她很快据为己有。也不问从哪来的",
+    "blueprints feed into the fabricator data port. possibilities grow.": "蓝图送进制造机数据口。可能性在增长"
   };
 
   function t(key) {
@@ -410,7 +466,8 @@
       population: 0,
       workers: { gatherer: 0, hunter: 0, trapper: 0, tanner: 0, charcutier: 0, iron_miner: 0, coal_miner: 0, sulphur_miner: 0, steelworker: 0, armourer: 0 },
       seen: {},
-      unlocked: { room: true, outside: false, path: false, world: false, ship: false, space: false },
+      unlocked: { room: true, outside: false, path: false, world: false, ship: false, space: false, fabricator: false },
+      blueprints: { hypo: false, kinetic_armour: false, disruptor: false, plasma_rifle: false, stim: false, glowstone: false },
       location: "room",
       spaceShip: { hull: BASE_HULL, thrusters: BASE_THRUSTERS, seenShip: false, seenWarning: false },
       space: null,
@@ -451,7 +508,7 @@
 
   var SAVE_KEY = "adr.save.v1";
   var SAVE_VERSION = 1;
-  var OBJECT_KEYS = ["stores", "buildings", "unlocked", "npc_moods", "workers", "outfit", "income_acc", "world", "flags", "cooldowns", "cooldown_ends_at", "seen", "perks", "spaceShip"];
+  var OBJECT_KEYS = ["stores", "buildings", "unlocked", "npc_moods", "workers", "outfit", "income_acc", "world", "flags", "cooldowns", "cooldown_ends_at", "seen", "perks", "spaceShip", "blueprints"];
   var ARRAY_KEYS = ["notifications", "scheduled"];
   var NUMBER_KEYS = ["fire", "temperature", "game_time_sec", "builder_level", "population", "punches"];
 
@@ -687,6 +744,15 @@
       state.unlocked.ship = true;
       state.unlocked.space = true;
     }
+    if (!isPlainObject(state.blueprints)) state.blueprints = {};
+    Object.keys(BLUEPRINT_REDEEM).forEach(function (bp) {
+      var item = BLUEPRINT_REDEEM[bp];
+      if (typeof state.blueprints[item] !== "boolean") state.blueprints[item] = !!state.blueprints[item];
+    });
+    if (typeof state.unlocked.fabricator !== "boolean") state.unlocked.fabricator = !!state.unlocked.fabricator;
+    if (state.flags.world_executioner && state.world && !state.world.on_expedition) {
+      state.unlocked.fabricator = true;
+    }
     if (state.location === "space" && (!state.space || !state.space.active)) {
       state.location = state.unlocked.ship ? "ship" : "path";
     }
@@ -908,6 +974,12 @@
       state.world.hp, state.world.water,
       state.outfit.meat, state.outfit.cured_meat,
       state.unlocked.ship ? 1 : 0,
+      state.unlocked.fabricator ? 1 : 0,
+      JSON.stringify(state.blueprints),
+      state.stores.laser_rifle, state.stores.energy_blade, state.stores.disruptor,
+      state.stores.plasma_rifle, state.stores.fluid_recycler, state.stores.cargo_drone,
+      state.stores.kinetic_armour, state.stores.hypo, state.stores.stim, state.stores.glowstone,
+      state.stores.fleet_beacon,
       state.spaceShip ? state.spaceShip.hull : "",
       state.spaceShip ? state.spaceShip.thrusters : "",
       state.space ? state.space.altitude : "",
@@ -963,6 +1035,7 @@
           state.unlocked.ship = true;
           state.unlocked.space = true;
         }
+        if (a.area === "fabricator") state.unlocked.fabricator = true;
         break;
       case "set_flag":
         state.flags[a.key] = a.value;
@@ -1121,6 +1194,7 @@
   }
 
   function bagCapacity(state) {
+    if ((state.stores.cargo_drone || 0) > 0) return 110;
     if ((state.stores.convoy || 0) > 0) return 70;
     if ((state.stores.wagon || 0) > 0) return 40;
     if ((state.stores.rucksack || 0) > 0) return 20;
@@ -1135,6 +1209,7 @@
   }
 
   function getMaxWater(state) {
+    if ((state.stores.fluid_recycler || 0) > 0) return BASE_WATER + 100;
     if ((state.stores.water_tank || 0) > 0) return BASE_WATER + 50;
     if ((state.stores.cask || 0) > 0) return BASE_WATER + 20;
     if ((state.stores.waterskin || 0) > 0) return BASE_WATER + 10;
@@ -1142,10 +1217,44 @@
   }
 
   function getMaxHealth(state) {
+    if ((state.stores.kinetic_armour || 0) > 0) return BASE_HEALTH + 75;
     if ((state.stores.s_armour || 0) > 0) return BASE_HEALTH + 35;
     if ((state.stores.i_armour || 0) > 0) return BASE_HEALTH + 15;
     if ((state.stores.l_armour || 0) > 0) return BASE_HEALTH + 5;
     return BASE_HEALTH;
+  }
+
+  function hasBlueprint(state, item) {
+    return !!(state.blueprints && state.blueprints[item]);
+  }
+
+  function canFabricate(state, kind) {
+    var spec = FABRICABLE[kind];
+    if (!spec) return false;
+    if (spec.blueprint && !hasBlueprint(state, kind)) return false;
+    return true;
+  }
+
+  function fabricateCost(kind) {
+    var spec = FABRICABLE[kind];
+    if (!spec || !spec.cost) return null;
+    var out = {};
+    Object.keys(spec.cost).forEach(function (k) { out[k] = spec.cost[k]; });
+    return out;
+  }
+
+  function redeemBlueprints(state) {
+    var redeemed = false;
+    Object.keys(BLUEPRINT_REDEEM).forEach(function (bp) {
+      if ((state.outfit[bp] || 0) > 0) {
+        if (!state.blueprints) state.blueprints = {};
+        state.blueprints[BLUEPRINT_REDEEM[bp]] = true;
+        state.outfit[bp] = 0;
+        redeemed = true;
+      }
+    });
+    if (redeemed) pushNote(state, t("blueprints feed into the fabricator data port. possibilities grow."), "path");
+    return redeemed;
   }
 
   function assignedWorkers(state) {
@@ -1610,6 +1719,13 @@
     if (!ship.seenShip) {
       pushNote(state, t("somewhere above the debris cloud, the wanderer fleet hovers. been on this rock too long."), "ship");
       ship.seenShip = true;
+    }
+  }
+
+  function maybeSeeFabricator(state) {
+    if (!state.flags.fabricator_seen) {
+      pushNote(state, t("the familiar hum of wanderer machinery coming to life. finally, real tools."), "fabricator");
+      state.flags.fabricator_seen = true;
     }
   }
 
@@ -2625,6 +2741,7 @@
         if (s.world.on_expedition) return { ok: false, error: "away" };
         s.location = args.area;
         if (args.area === "ship") maybeSeeShip(s);
+        if (args.area === "fabricator") maybeSeeFabricator(s);
         break;
       case "assign_worker":
         var job = args.job;
@@ -2852,6 +2969,24 @@
           startSpace(s);
         }
         break;
+      case "fabricate":
+        if (!s.unlocked.fabricator) return { ok: false, error: "locked" };
+        var fabKind = args.kind;
+        var fabSpec = FABRICABLE[fabKind];
+        if (!fabSpec) return { ok: false, error: "unknown" };
+        if (!canFabricate(s, fabKind)) return { ok: false, error: "blueprint" };
+        var haveFab = s.stores[fabKind] || 0;
+        var fabCap = fabSpec.max || 0;
+        if (fabCap > 0 && haveFab >= fabCap) return { ok: false, error: "max" };
+        var fabPay = fabricateCost(fabKind);
+        if (!fabPay || !canAfford(s, fabPay)) {
+          pushNote(s, t("not enough alien alloy"), "fabricator");
+          return { ok: false, error: "cost" };
+        }
+        pay(s, fabPay);
+        addItem(s, fabKind, fabSpec.quantity || 1);
+        if (fabSpec.buildMsg) pushNote(s, t(fabSpec.buildMsg), "fabricator");
+        break;
       case "space_steer":
         if (s.location !== "space" || !s.space || !s.space.active) return { ok: false, error: "grounded" };
         var dir = args.dir;
@@ -2886,6 +3021,7 @@
 
   Game.prototype._goHome = function (success) {
     var s = this.state;
+    redeemBlueprints(s);
     for (var k in s.outfit) {
       if (s.outfit[k] > 0) addItem(s, k, s.outfit[k]);
       s.outfit[k] = 0;
@@ -2897,6 +3033,10 @@
       ensureSpaceShip(s);
       s.unlocked.ship = true;
       s.unlocked.space = true;
+    }
+    if (s.flags.world_executioner && !s.unlocked.fabricator) {
+      s.unlocked.fabricator = true;
+      pushNote(s, t("builder knows the strange device when she sees it. takes it for herself real quick. doesn’t ask where it came from."), "path");
     }
     if (s.flags.visited_old_house && success && !s.slice_complete) {
       s.slice_complete = true;
@@ -3216,6 +3356,31 @@
     return out;
   };
 
+  Game.prototype.visibleFabrications = function () {
+    var s = this.state;
+    if (!s.unlocked.fabricator) return [];
+    var out = [];
+    FABRICATE_KEYS.forEach(function (kind) {
+      var spec = FABRICABLE[kind];
+      if (!canFabricate(s, kind)) return;
+      var n = s.stores[kind] || 0;
+      var max = spec.max || 0;
+      var cost = fabricateCost(kind);
+      var qty = spec.quantity || 1;
+      var underMax = max <= 0 || n < max;
+      out.push({
+        kind: kind,
+        cost: cost,
+        have: n,
+        max: max,
+        quantity: qty,
+        can: canAfford(s, cost) && underMax,
+        type: spec.type
+      });
+    });
+    return out;
+  };
+
   return {
     ITEMS: ITEMS,
     AREAS: AREAS,
@@ -3226,6 +3391,10 @@
     BUILDABLE: BUILDABLE,
     CRAFTABLE: CRAFTABLE,
     CRAFT_KEYS: CRAFT_KEYS,
+    FABRICABLE: FABRICABLE,
+    FABRICATE_KEYS: FABRICATE_KEYS,
+    fabricateCost: fabricateCost,
+    canFabricate: canFabricate,
     TRADEABLE: TRADEABLE,
     TRADE_KEYS: TRADE_KEYS,
     JOB_BUILDING: JOB_BUILDING,

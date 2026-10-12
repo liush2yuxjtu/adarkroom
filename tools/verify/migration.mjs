@@ -13,7 +13,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { emptySuite, ok, fail, summarize, writeJson } from "./lib/report.mjs";
 import { makeSandbox } from "./lib/engine-sandbox.mjs";
-import { playthrough, workshopPlaythrough, tradingPlaythrough, villageEventsPlaythrough, worldCombatPlaythrough, landmarksPlaythrough, shipSpacePlaythrough } from "./story.mjs";
+import { playthrough, workshopPlaythrough, tradingPlaythrough, villageEventsPlaythrough, worldCombatPlaythrough, landmarksPlaythrough, shipSpacePlaythrough, fabricatorPlaythrough } from "./story.mjs";
 import { runParity } from "./parity.mjs";
 import {
   ROOT,
@@ -143,6 +143,16 @@ function numericForRow(row, spec, ADR) {
       ? { status: "match", detail: String(spec.spaceNums[name]) }
       : { status: "mismatch", detail: `original ${spec.spaceNums[name]} remake ${rem}` };
   }
+  if (row.category === "fabricator" && spec.fab[name]) {
+    if (row.status !== "present") return { status: "skip", detail: row.status };
+    const orig = spec.fab[name].cost && spec.fab[name].cost.n0;
+    const rem = ADR.fabricateCost ? ADR.fabricateCost(snake(name)) : null;
+    if (!orig) return { status: "match", detail: "no original cost" };
+    if (!rem) return { status: "mismatch", detail: `original ${JSON.stringify(orig)} remake=null` };
+    return costsEqual(orig, rem)
+      ? { status: "match", detail: JSON.stringify(orig) }
+      : { status: "mismatch", detail: `original ${JSON.stringify(orig)} remake ${JSON.stringify(rem)}` };
+  }
   if (row.status === "missing" || row.status === "no_producer") return { status: "skip", detail: row.status };
   return { status: "match", detail: "n/a" };
 }
@@ -188,7 +198,7 @@ function persistForRow(row, persist) {
   const id = snake(row.name.replace(/ \(punch\)$/, "").replace(/ /g, "_"));
   if (row.category === "building") return { status: persist.buildings.has(id) ? "ok" : "no_save", detail: id };
   if (row.category === "worker/income") return { status: persist.workers.has(id) ? "ok" : "no_save", detail: id };
-  if (row.category === "item/resource" || row.category === "trade good" || row.category === "tool/weapon/upgrade") {
+  if (row.category === "item/resource" || row.category === "trade good" || row.category === "tool/weapon/upgrade" || row.category === "fabricator") {
     if (row.name === "fists (punch)") return { status: "ok", detail: "combat move" };
     return { status: persist.stores.has(id) ? "ok" : "no_save", detail: id };
   }
@@ -321,6 +331,27 @@ function reachabilityBatches(parityRows) {
         kind: "story",
         detail: okc
           ? "ship unlock-on-return + hull/engine + lift-off warning + space crash/ascent + persist"
+          : JSON.stringify(play)
+      });
+      continue;
+    }
+    if (String(id) === "8" || id === 8) {
+      const play = fabricatorPlaythrough();
+      const okc = !!(
+        play.flagOnVisit && play.lootOk && play.unlockedOnReturn && play.redeemed
+        && play.redeemNote && play.builderNote && play.travelOk && play.seenNote
+        && play.noBlueprintBlocked && play.allFabricated && play.hypoQty5
+        && play.upgradeCapped && play.bladeNote && play.bag110 && play.water110
+        && play.hp85 && play.costsOk && play.persistFab && play.persistBp
+        && play.persistBlade && play.persistHypo
+      );
+      out.push({
+        batch: 8,
+        title: meta.title,
+        pass: okc && gaps.length === 0,
+        kind: "story",
+        detail: okc
+          ? "executioner salvage + blueprint redeem + fabricator unlock/crafts + persist"
           : JSON.stringify(play)
       });
       continue;

@@ -113,7 +113,7 @@ export function remakeContent() {
   const produced = new Set(["wood"]);
   for (const m of eng.matchAll(/\{ name: "(\w+)", roll:/g)) produced.add(m[1]);
   for (const m of eng.matchAll(/give_item", args: \{ item: "(\w+)"/g)) produced.add(m[1]);
-  const walk = (o) => { if (o && typeof o === "object") { for (const [k, v] of Object.entries(o)) { if (k === "reward") Object.keys(v).forEach((x) => produced.add(x)); walk(v); } } };
+  const walk = (o) => { if (o && typeof o === "object") { for (const [k, v] of Object.entries(o)) { if (k === "reward" || k === "loot") Object.keys(v).forEach((x) => produced.add(x)); walk(v); } } };
   walk(ev);
   const inc = eng.match(/var INCOME = \{([\s\S]*?)\n  \};/);
   if (inc) {
@@ -124,6 +124,10 @@ export function remakeContent() {
   const craftTbl = eng.match(/var CRAFTABLE = \{([\s\S]*?)\n  \};/);
   if (craftTbl) {
     for (const m of craftTbl[1].matchAll(/^\s+(\w+):/gm)) produced.add(m[1]);
+  }
+  const fabTbl = eng.match(/var FABRICABLE = \{([\s\S]*?)\n  \};/);
+  if (fabTbl) {
+    for (const m of fabTbl[1].matchAll(/^\s+(\w+):/gm)) produced.add(m[1]);
   }
   const buyable = new Set();
   for (const e of Object.values(ev)) for (const b of e.buttons || []) if (b.cost && b.reward) Object.keys(b.reward).forEach((x) => buyable.add(x));

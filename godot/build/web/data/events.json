@@ -5441,12 +5441,41 @@
           "舱门紧闭，内部的通道尚不可及。"
         ],
         "onload": {
-          "mark_visited": true
+          "mark_visited": true,
+          "world_flag": "executioner"
         },
         "buttons": [
           {
+            "id": "search",
+            "text": "搜寻残骸",
+            "next": "salvage"
+          },
+          {
             "id": "leave",
             "text": "离开",
+            "next": "end"
+          }
+        ]
+      },
+      "salvage": {
+        "text": [
+          "舱壁内侧嵌着数据板与未完工的装置。",
+          "几卷蓝图和一枚舰队信标还压在尘土下。"
+        ],
+        "loot": {
+          "hypo_blueprint": { "min": 1, "max": 1, "chance": 1 },
+          "kinetic_armour_blueprint": { "min": 1, "max": 1, "chance": 1 },
+          "disruptor_blueprint": { "min": 1, "max": 1, "chance": 1 },
+          "plasma_rifle_blueprint": { "min": 1, "max": 1, "chance": 1 },
+          "stim_blueprint": { "min": 1, "max": 1, "chance": 1 },
+          "glowstone_blueprint": { "min": 1, "max": 1, "chance": 1 },
+          "fleet_beacon": { "min": 1, "max": 1, "chance": 1 },
+          "laser_rifle": { "min": 1, "max": 1, "chance": 1 }
+        },
+        "buttons": [
+          {
+            "id": "take",
+            "text": "带走",
             "next": "end"
           }
         ]
