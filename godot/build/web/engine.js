@@ -302,6 +302,7 @@
     "the rickety cart will carry more wood from the forest": "摇摇晃晃的货车满载从森林运出的木头",
     "builder says there are more wanderers. says they'll work, too.": "建造者说这里有许多流浪者，他们也会来工作",
     "builder puts up a hut, out in the forest. says word will get around.": "建造者在林中建起一栋小屋，她说消息很快就会流传出去",
+    "no more room for huts.": "再没有可以建小屋的空地了",
     "A Dusty Path": "漫漫尘途",
     "embark": "出发",
     "supplies:": "供应:",
@@ -2833,7 +2834,10 @@
         }
         var max = buildingMax(kind);
         if (!max) return { ok: false, error: "unknown_building" };
-        if ((s.buildings[kind] || 0) >= max) return { ok: false, error: "max" };
+        if ((s.buildings[kind] || 0) >= max) {
+          if (kind === "hut") pushNote(s, t("no more room for huts."), "room");
+          return { ok: false, error: "max" };
+        }
         var cost = buildingCost(kind, s.buildings[kind] || 0);
         if (!cost || !canAfford(s, cost)) return { ok: false, error: "cost" };
         pay(s, cost);
@@ -2843,6 +2847,7 @@
         if (kind === "cart") pushNote(s, t("the rickety cart will carry more wood from the forest"), "room");
         if (kind === "hut") {
           pushNote(s, t("builder puts up a hut, out in the forest. says word will get around."), "room");
+          if ((s.buildings.hut || 0) >= max) pushNote(s, t("no more room for huts."), "room");
           // @pacing kind=interval id=pop_timer_min value=30s phase=village
           // @pacing kind=interval id=pop_timer_span value=150s phase=village
           if (s.pop_timer == null) s.pop_timer = s.game_time_sec + 30 + Math.random() * 150;
