@@ -18,10 +18,12 @@ Analytics 有事件等级：`info`（默认，始终上报）和 `debug`。`dire
 
 打开 debug 的方式（任一即可）：
 
-- URL：`/?telemetry_debug=1`
+- URL：`/?telemetry_debug=1`（`0` 可强制关）
 - `localStorage.setItem('adr.telemetry_debug', '1')`（`0` 可关）
-- `data/config.json` 的 `telemetry_debug: true`
-- 构建环境变量 `TELEMETRY_DEBUG=1`（写入 `telemetry-config.js` 的 `ADR_TELEMETRY.debug`）
+- 项目设置：`data/config.json` 的 `telemetry_debug: true`
+- 导出/构建环境变量 `TELEMETRY_DEBUG=1`（`scripts/prepare-vercel.sh` 写入 `telemetry-config.js` 的 `ADR_TELEMETRY.debug`）
+
+默认跑一局 **不应** 在 Supabase `playtest_events` 出现 `director_think` 行；加上上述任一开关后再跑，才会写入。关着时 `director_think` 只打 `console.debug('[adr:debug]', ...)`，不进队列、不上报。
 
 `resource_snapshot` 默认 **15s**，资源变化时额外打点（最短间隔 2s）。鼠标轨迹仅在移动时每 **300ms** 采样，满 6 点或停住再发一条。滚动 400ms、可见性 500ms 去重。
 

@@ -404,14 +404,14 @@
     var type = nav ? nav.type : (typeof performance !== "undefined" && performance.navigation ? ({ 0: "navigate", 1: "reload", 2: "back_forward" }[performance.navigation.type] || "navigate") : "navigate");
     var prev = safeJsonParse(storageGet(UNLOAD_KEY));
     if (type === "reload" && prev && prev.session_id) {
-      log("page_reload", {
+      T.pendingReload = {
         previous_session_id: prev.session_id,
         time_since_unload_ms: prev.unloaded_at ? Date.now() - prev.unloaded_at : null,
         nav_type: type,
         previous_phase: prev.phase || "",
         previous_game_time_sec: prev.game_time_sec || 0,
         previous_last_action: prev.last_action || null
-      });
+      };
     }
     return type;
   }
@@ -499,6 +499,11 @@
   function bindGame(game) {
     T.game = game;
     if (game && game.state && game.state.session_id) T.sessionId = game.state.session_id;
+    if (T.pendingReload) {
+      var info = T.pendingReload;
+      T.pendingReload = null;
+      log("page_reload", info);
+    }
   }
 
   function rotateSession() {
@@ -638,6 +643,7 @@
     bindGame: bindGame,
     rotateSession: rotateSession,
     sessionId: function () { return T.sessionId; },
+    setSessionId: function (id) { if (id) T.sessionId = id; return T.sessionId; },
     ensureSessionId: function () { return T.sessionId; },
     markFirstFrame: markFirstFrame,
     playTone: playTone,

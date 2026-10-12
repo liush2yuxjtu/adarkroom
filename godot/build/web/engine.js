@@ -191,11 +191,16 @@
       return null;
     }
     if (tel) {
+      var loadedId = doc.save_id || (doc.state && doc.state.session_id) || null;
+      if (loadedId && typeof ADRTelemetry !== "undefined") {
+        if (ADRTelemetry.setSessionId) ADRTelemetry.setSessionId(loadedId);
+        else if (ADRTelemetry._state) ADRTelemetry._state.sessionId = loadedId;
+      }
       tel.onSaveLoad({
         ok: true,
         backend: "localStorage",
         size: raw.length,
-        save_id: doc.save_id || (doc.state && doc.state.session_id) || null,
+        save_id: loadedId,
         save_version: doc.v,
         checksum: doc.checksum || (check && check.checksum),
         phase: doc.state.phase,
@@ -784,8 +789,11 @@
       return evT;
     }
     if (level === "debug") {
-      if (typeof console !== "undefined" && console.debug) console.debug("[adr:debug]", name, payload || {});
-      return null;
+      var debugOn = !!(this.opts && (this.opts.telemetry_debug === true || this.opts.telemetry_debug === 1 || this.opts.telemetry_debug === "1"));
+      if (!debugOn) {
+        if (typeof console !== "undefined" && console.debug) console.debug("[adr:debug]", name, payload || {});
+        return null;
+      }
     }
     var ev = {
       session_id: state.session_id,

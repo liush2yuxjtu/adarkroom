@@ -13,7 +13,6 @@ from playwright.sync_api import sync_playwright
 NEED = [
     "session_start",
     "player_action",
-    "director_think",
     "director_tool",
     "dialogue",
     "resource_snapshot",
@@ -30,6 +29,7 @@ NEED = [
     "page_unload",
     "page_reload",
 ]
+DEBUG_ONLY = ["director_think"]
 
 
 def names_from(page):
@@ -180,10 +180,21 @@ def main() -> int:
         page.wait_for_timeout(4000)
         result["local_names"] = sorted(set(names_from(page)))
         result["session_id_final"] = session_id(page)
+        result["default_has_director_think"] = "director_think" in result["local_names"]
         page.screenshot(path=str(out / "telemetry.png"))
+
+        page.goto(sys.argv[1].rstrip("/") + "/?fast=1&fresh=1&telemetry_debug=1", wait_until="networkidle", timeout=60000)
+        page.wait_for_function("() => window.__ADR_GAME && window.__ADR_GAME.state", timeout=15000)
+        result["session_id_debug"] = session_id(page)
+        page.wait_for_timeout(4500)
+        result["debug_names"] = sorted(set(names_from(page)))
+        result["debug_has_director_think"] = "director_think" in result["debug_names"]
+        page.screenshot(path=str(out / "telemetry_debug.png"))
         browser.close()
 
-    result["ok"] = True
+    missing = [n for n in NEED if n not in result.get("local_names", [])]
+    result["missing_info_events"] = missing
+    result["ok"] = not result["default_has_director_think"] and result["debug_has_director_think"]
     (out / "telemetry_result.json").write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
     print(json.dumps(result, indent=2, ensure_ascii=False))
     return 0
