@@ -818,10 +818,14 @@
     this.state = createState();
     var boot = parseBootQuery();
     var restored = false;
-    if (!boot.fresh) {
-      if (boot.importB64) restored = this.applyImportedSave(boot.importB64);
-      else if (boot.restore) restored = this.restoreFromTelemetry(boot.restore);
-      else restored = this.loadPersistedSave();
+    if (boot.fresh) {
+      clearSave();
+    } else if (boot.importB64) {
+      restored = this.applyImportedSave(boot.importB64);
+    } else if (boot.restore) {
+      restored = this.restoreFromTelemetry(boot.restore);
+    } else {
+      restored = this.loadPersistedSave();
     }
     this.analytics.attachSupabase();
     this.analytics.log(this.state, "session_start", {
@@ -829,11 +833,18 @@
       restored: restored,
       save_key: SAVE_KEY
     });
-    this.persistSave();
+    this.persistSave(!!boot.fresh || restored);
     this.directorTick();
   }
 
-  Game.prototype.persistSave = function () {
+  Game.prototype.persistSave = function (force) {
+    var existing = force ? null : readSaveRaw();
+    if (existing && existing.state) {
+      var prev = existing.state;
+      var blank = this.state.fire === 0 && this.state.game_time_sec < 0.5 && !(this.state.stores && this.state.stores.wood);
+      var richer = (prev.fire || 0) > 0 || (prev.game_time_sec || 0) > 1 || (prev.stores && prev.stores.wood);
+      if (blank && richer) return;
+    }
     writeSave(this.state);
     this._saveDirty = false;
     this._lastSaveAt = Date.now();
