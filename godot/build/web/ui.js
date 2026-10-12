@@ -11,10 +11,22 @@
 
   function $(id) { return document.getElementById(id); }
 
+  function cdLeft(id) {
+    return game.state.cooldowns[id] || 0;
+  }
+
   function cdRatio(id) {
-    var left = game.state.cooldowns[id] || 0;
+    var left = cdLeft(id);
     var max = { stoke: 10, gather: 60, traps: 90 }[id] || 1;
     return left > 0 ? left / max : 0;
+  }
+
+  function paintCdBar(b, cdId) {
+    var barEl = b.querySelector(".cd");
+    var secEl = b.querySelector(".cd-sec");
+    var left = cdId ? cdLeft(cdId) : 0;
+    if (barEl) barEl.style.width = cdId ? (cdRatio(cdId) * 100) + "%" : "0%";
+    if (secEl) secEl.textContent = left > 0 ? String(Math.ceil(left)) : "";
   }
 
   function upsertButton(parent, key, spec) {
@@ -27,19 +39,30 @@
       var lab = document.createElement("span");
       lab.className = "btn-label";
       b.appendChild(lab);
+      var sec = document.createElement("span");
+      sec.className = "cd-sec";
+      sec.setAttribute("aria-hidden", "true");
+      b.appendChild(sec);
       var bar = document.createElement("span");
       bar.className = "cd";
       b.appendChild(bar);
       b.addEventListener("click", spec.onClick);
       parent.appendChild(b);
     }
+    if (!b.querySelector(".cd-sec")) {
+      var injected = document.createElement("span");
+      injected.className = "cd-sec";
+      injected.setAttribute("aria-hidden", "true");
+      var existingLab = b.querySelector(".btn-label");
+      if (existingLab) existingLab.insertAdjacentElement("afterend", injected);
+      else b.appendChild(injected);
+    }
     var labEl = b.querySelector(".btn-label");
     if (labEl.textContent !== spec.label) labEl.textContent = spec.label;
-    var onCd = !!(spec.cdId && (game.state.cooldowns[spec.cdId] || 0) > 0);
+    var onCd = !!(spec.cdId && cdLeft(spec.cdId) > 0);
     var disabled = !!spec.disabled || onCd;
     if (b.disabled !== disabled) b.disabled = disabled;
-    var barEl = b.querySelector(".cd");
-    if (barEl) barEl.style.width = spec.cdId ? (cdRatio(spec.cdId) * 100) + "%" : "0%";
+    paintCdBar(b, spec.cdId);
     return b;
   }
 
@@ -55,9 +78,8 @@
       var key = b.dataset.key;
       var cdId = key === "fire" ? "stoke" : key === "gather" ? "gather" : key === "traps" ? "traps" : "";
       if (!cdId) return;
-      var bar = b.querySelector(".cd");
-      if (bar) bar.style.width = (cdRatio(cdId) * 100) + "%";
-      var onCd = (game.state.cooldowns[cdId] || 0) > 0;
+      paintCdBar(b, cdId);
+      var onCd = cdLeft(cdId) > 0;
       if (onCd) b.disabled = true;
       else if (cdId === "stoke" || cdId === "gather" || cdId === "traps") b.disabled = false;
     });

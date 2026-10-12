@@ -12,7 +12,7 @@ html, body {
   margin: 0;
   background: #f3f1ea;
   color: #111;
-  font-family: "Noto Serif SC", serif;
+  font-family: "Noto Serif SC", "Noto Sans SC", serif;
   font-size: 16px;
   font-weight: 500;
 }
@@ -102,14 +102,42 @@ button.adr {
   overflow: hidden;
 }
 
+button.adr .btn-label,
+button.adr .cd-sec {
+  position: relative;
+  z-index: 1;
+}
+
+button.adr .cd-sec {
+  margin-left: 0.45em;
+  font-variant-numeric: tabular-nums;
+  min-width: 1.6em;
+  text-align: right;
+}
+
 button.adr:hover:not([disabled]) { background: #111; color: #fff; }
-button.adr[disabled] { opacity: 0.4; cursor: default; }
+button.adr:hover:not([disabled]) .cd { background: rgba(255, 255, 255, 0.22); }
+
+button.adr[disabled] {
+  cursor: default;
+  border-color: #b2b2b2;
+  color: #b2b2b2;
+}
+
+button.adr[disabled] .btn-label,
+button.adr[disabled] .cd-sec {
+  color: #b2b2b2;
+}
 
 button.adr .cd {
   position: absolute;
-  left: 0; bottom: 0;
-  height: 3px;
-  background: #111;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  height: 100%;
+  width: 0;
+  background: rgba(17, 17, 17, 0.16);
+  pointer-events: none;
 }
 
 #stores {
@@ -184,7 +212,7 @@ button.adr .cd {
 .modal-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 
 #world-map {
-  font-family: "Noto Serif SC", serif;
+  font-family: "Noto Serif SC", "Noto Sans SC", serif;
   font-size: 18px;
   line-height: 1.05;
   letter-spacing: 2px;

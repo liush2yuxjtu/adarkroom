@@ -13,5 +13,4 @@ at /classic/ in the web deployment. Chinese strings are reused from
 lang/zh_cn/strings.js of the original project.
 
 Bundled fonts (SIL Open Font License 1.1; see fonts/OFL-*.txt):
-- JetBrains Mono © JetBrains
-- Noto Sans SC / Source Han Sans © Google / Adobe
+- Noto Serif SC / Source Han Serif © Google / Adobe
