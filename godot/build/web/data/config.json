@@ -9,5 +9,6 @@
   "telemetry_debug": false,
   "time_scale": 1,
   "fast_url_param": "fast",
-  "slice_goal": "visit_old_house_and_return"
+  "slice_goal": "visit_old_house_and_return",
+  "style": "text"
 }

@@ -7,6 +7,10 @@ rm -rf "$DIST"
 mkdir -p "$DIST" "$DIST/classic"
 
 cp -a "$ROOT/godot/build/web/." "$DIST/"
+if [[ -d "$ROOT/assets/pixel" ]]; then
+  mkdir -p "$DIST/assets/pixel"
+  cp -a "$ROOT/assets/pixel/." "$DIST/assets/pixel/"
+fi
 mkdir -p "$DIST/data"
 if [[ -d "$ROOT/godot/data" ]]; then
   cp -a "$ROOT/godot/data/." "$DIST/data/"
