@@ -22,6 +22,10 @@
     "build-wagon": "cart", "build-convoy": "cart", "build-l_armour": "fur",
     "build-i_armour": "spark", "build-s_armour": "spark", "build-iron_sword": "punch",
     "build-steel_sword": "punch", "build-rifle": "spark",
+    "buy-scales": "fur", "buy-teeth": "fur", "buy-iron": "spark", "buy-coal": "spark",
+    "buy-steel": "spark", "buy-medicine": "stores", "buy-bullets": "spark",
+    "buy-energy_cell": "spark", "buy-bolas": "punch", "buy-grenade": "spark",
+    "buy-bayonet": "punch", "buy-alien_alloy": "spark", "buy-compass": "compass",
     north: "north", west: "west", east: "east", south: "south",
     embark: "embark", punch: "punch", flee: "flee"
   };
@@ -781,6 +785,20 @@
       craftWrap.appendChild(legend);
       craftWrap.appendChild(craftCol);
       p.appendChild(craftWrap);
+      var buyWrap = document.createElement("div");
+      buyWrap.id = "room-buy-wrap";
+      buyWrap.className = "craft-wrap";
+      buyWrap.hidden = true;
+      var buyLegend = document.createElement("div");
+      buyLegend.className = "btn-legend";
+      buyLegend.id = "room-buy-legend";
+      buyLegend.textContent = ADR.t("buy:");
+      var buyCol = document.createElement("div");
+      buyCol.className = "btn-col";
+      buyCol.id = "room-buy-btns";
+      buyWrap.appendChild(buyLegend);
+      buyWrap.appendChild(buyCol);
+      p.appendChild(buyWrap);
     }
     if (hintId) {
       var hint = document.createElement("div");
@@ -845,6 +863,35 @@
       if (isPixel()) {
         var lg = $("room-craft-legend");
         if (lg) lg.textContent = showCraft ? ADR.t("craft:") : "";
+      }
+    }
+    var buyHost = $("room-buy-btns");
+    var buyWrapEl = $("room-buy-wrap");
+    var buyKeys = [];
+    if (ADR.Game.prototype.visibleTrades) {
+      ADR.Game.prototype.visibleTrades.call(game).forEach(function (c) {
+        var name = (ADR.ITEM_CN && ADR.ITEM_CN[c.kind]) || c.kind;
+        var cost = Object.keys(c.cost).map(function (k) {
+          return (ADR.ITEM_CN[k] || k) + c.cost[k];
+        }).join(" ");
+        var btnKey = "buy-" + c.kind;
+        buyKeys.push(btnKey);
+        if (!buyHost) return;
+        upsertButton(buyHost, btnKey, {
+          label: name + " (" + cost + ")",
+          icon: PX_ICON[btnKey] || "trade",
+          disabled: !c.can,
+          onClick: function () { game.act("buy", { kind: c.kind }); }
+        });
+      });
+    }
+    if (buyHost) keepButtons(buyHost, buyKeys);
+    if (buyWrapEl) {
+      var showBuy = buyKeys.length > 0;
+      buyWrapEl.hidden = !showBuy;
+      if (isPixel()) {
+        var bl = $("room-buy-legend");
+        if (bl) bl.textContent = showBuy ? ADR.t("buy:") : "";
       }
     }
     var hint = $("room-hint");
@@ -1138,11 +1185,11 @@
     if (isPixel()) supplies.appendChild(pxIconEl("stores"));
     else supplies.textContent = ADR.t("supplies:");
     extraBox.appendChild(supplies);
-    var packItems = ["meat", "cured_meat", "fur", "torch", "bone_spear", "iron_sword", "steel_sword", "rifle", "bullets"];
+    var packItems = ["meat", "cured_meat", "fur", "torch", "bone_spear", "iron_sword", "steel_sword", "rifle", "bullets", "medicine", "energy_cell", "bolas", "grenade", "bayonet", "alien_alloy"];
     packItems.forEach(function (item) {
       var have = game.state.stores[item] || 0;
       var packed = game.state.outfit[item] || 0;
-      if (["torch", "bone_spear", "iron_sword", "steel_sword", "rifle", "bullets"].indexOf(item) >= 0 && have <= 0 && packed <= 0) return;
+      if (["torch", "bone_spear", "iron_sword", "steel_sword", "rifle", "bullets", "medicine", "energy_cell", "bolas", "grenade", "bayonet", "alien_alloy"].indexOf(item) >= 0 && have <= 0 && packed <= 0) return;
       var row = document.createElement("div");
       row.className = "pack-row";
       if (isPixel()) {

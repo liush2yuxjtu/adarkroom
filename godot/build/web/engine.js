@@ -8,7 +8,7 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
 
-  var ITEMS = ["wood", "fur", "meat", "scales", "teeth", "cloth", "bait", "charm", "compass", "cured_meat", "leather", "iron", "coal", "steel", "sulphur", "bullets", "torch", "waterskin", "cask", "water_tank", "bone_spear", "rucksack", "wagon", "convoy", "l_armour", "i_armour", "s_armour", "iron_sword", "steel_sword", "rifle"];
+  var ITEMS = ["wood", "fur", "meat", "scales", "teeth", "cloth", "bait", "charm", "compass", "cured_meat", "leather", "iron", "coal", "steel", "sulphur", "bullets", "torch", "waterskin", "cask", "water_tank", "bone_spear", "rucksack", "wagon", "convoy", "l_armour", "i_armour", "s_armour", "iron_sword", "steel_sword", "rifle", "medicine", "energy_cell", "bolas", "grenade", "bayonet", "alien_alloy"];
   var AREAS = ["room", "outside", "path", "world"];
   var NPCS = ["builder", "nomad", "villagers"];
   var MOODS = ["unknown", "collapsed", "shivering", "sleeping", "helping", "neutral", "wary", "grateful"];
@@ -20,7 +20,9 @@
     leather: "皮革", iron: "铁", coal: "煤", steel: "钢", sulphur: "硫磺", bullets: "子弹",
     torch: "火把", waterskin: "水壶", cask: "水桶", water_tank: "水罐", bone_spear: "骨枪",
     rucksack: "双肩包", wagon: "篷车", convoy: "车队", l_armour: "皮甲", i_armour: "铁甲",
-    s_armour: "钢甲", iron_sword: "铁剑", steel_sword: "钢剑", rifle: "步枪"
+    s_armour: "钢甲", iron_sword: "铁剑", steel_sword: "钢剑", rifle: "步枪",
+    medicine: "药剂", energy_cell: "能量元件", bolas: "套索", grenade: "手雷",
+    bayonet: "刺刀", alien_alloy: "外星合金"
   };
   var BUILDING_CN = {
     trap: "陷阱", cart: "货车", hut: "小屋", lodge: "狩猎小屋", trading_post: "贸易站",
@@ -89,6 +91,23 @@
     rifle: { type: "weapon", cost: { wood: 200, steel: 50, sulphur: 50 }, buildMsg: "black powder and bullets, like the old days." }
   };
   var CRAFT_KEYS = Object.keys(CRAFTABLE);
+  /* Faithful copy of script/room.js TradeGoods (n=0). Compass is always listed once a trading post exists; others after the store has been seen. */
+  var TRADEABLE = {
+    scales: { type: "good", cost: { fur: 150 } },
+    teeth: { type: "good", cost: { fur: 300 } },
+    iron: { type: "good", cost: { fur: 150, scales: 50 } },
+    coal: { type: "good", cost: { fur: 200, teeth: 50 } },
+    steel: { type: "good", cost: { fur: 300, scales: 50, teeth: 50 } },
+    medicine: { type: "good", cost: { scales: 50, teeth: 30 } },
+    bullets: { type: "good", cost: { scales: 10 } },
+    energy_cell: { type: "good", cost: { scales: 10, teeth: 10 } },
+    bolas: { type: "weapon", cost: { teeth: 10 } },
+    grenade: { type: "weapon", cost: { scales: 100, teeth: 50 } },
+    bayonet: { type: "weapon", cost: { scales: 500, teeth: 250 } },
+    alien_alloy: { type: "good", cost: { fur: 1500, scales: 750, teeth: 300 } },
+    compass: { type: "special", max: 1, cost: { fur: 400, scales: 20, teeth: 10 } }
+  };
+  var TRADE_KEYS = Object.keys(TRADEABLE);
   var TOOL_NAMES = ["spawn_event", "give_item", "change_npc_mood", "narrate", "unlock_area", "set_flag"];
 
   var STRINGS = {
@@ -111,6 +130,13 @@
     "builder just shivers": "建造者还在瑟瑟发抖",
     "build:": "建筑物:",
     "craft:": "制造:",
+    "buy:": "购买:",
+    "medicine": "药剂",
+    "energy cell": "能量元件",
+    "bolas": "套索",
+    "grenade": "手雷",
+    "bayonet": "刺刀",
+    "alien alloy": "外星合金",
     "stores": "库存",
     "torch": "火把",
     "a torch to keep the dark away": "驱散黑暗的火把",
@@ -684,6 +710,8 @@
       state.stores.bone_spear, state.stores.rucksack, state.stores.wagon, state.stores.convoy,
       state.stores.l_armour, state.stores.i_armour, state.stores.s_armour,
       state.stores.iron_sword, state.stores.steel_sword, state.stores.rifle,
+      state.stores.medicine, state.stores.energy_cell, state.stores.bolas,
+      state.stores.grenade, state.stores.bayonet, state.stores.alien_alloy,
       state.population, state.unlocked.outside ? 1 : 0, state.unlocked.path ? 1 : 0,
       state.notifications.length, n0 ? n0.text : "", n0 ? (n0.count || 1) : "",
       ev ? ev.id : "", ev ? ev.scene : "",
@@ -852,7 +880,40 @@
     if (item === "steel_sword") return 5;
     if (item === "rifle") return 5;
     if (item === "bullets") return 0.1;
+    if (item === "energy_cell") return 0.2;
+    if (item === "bolas") return 0.5;
     return 1;
+  }
+
+  function tradeCost(kind) {
+    var spec = TRADEABLE[kind];
+    if (!spec || !spec.cost) return null;
+    var out = {};
+    Object.keys(spec.cost).forEach(function (k) { out[k] = spec.cost[k]; });
+    return out;
+  }
+
+  function tradeMax(kind) {
+    var spec = TRADEABLE[kind];
+    if (!spec) return 0;
+    return spec.max || 0;
+  }
+
+  function buyVisible(state, kind) {
+    if ((state.buildings.trading_post || 0) <= 0) return false;
+    if (!TRADEABLE[kind]) return false;
+    if (kind === "compass") return true;
+    if (state.flags["buy_unlocked_" + kind] || (state.seen && state.seen[kind])) return true;
+    return false;
+  }
+
+  function checkBuyUnlocks(state) {
+    if ((state.buildings.trading_post || 0) <= 0) return;
+    TRADE_KEYS.forEach(function (kind) {
+      if (state.flags["buy_unlocked_" + kind]) return;
+      if (!buyVisible(state, kind)) return;
+      state.flags["buy_unlocked_" + kind] = true;
+    });
   }
 
   function bagCapacity(state) {
@@ -1871,6 +1932,28 @@
           path: Object.keys(s.buildings).filter(function (k) { return s.buildings[k] > 0; })
         });
         break;
+      case "buy":
+        if ((s.buildings.trading_post || 0) <= 0) return { ok: false, error: "no_post" };
+        var buyKind = args.kind;
+        var buySpec = TRADEABLE[buyKind];
+        if (!buySpec) return { ok: false, error: "unknown_good" };
+        if (!buyVisible(s, buyKind)) return { ok: false, error: "locked" };
+        var haveBuy = s.stores[buyKind] || 0;
+        var buyCap = buySpec.max || 0;
+        if (buyCap > 0 && haveBuy >= buyCap) return { ok: false, error: "max" };
+        var buyPay = tradeCost(buyKind);
+        if (!buyPay || !canAfford(s, buyPay)) return { ok: false, error: "cost" };
+        pay(s, buyPay);
+        addItem(s, buyKind, 1);
+        s.flags["buy_unlocked_" + buyKind] = true;
+        this.analytics.log(s, "buy", {
+          kind: buyKind,
+          type: buySpec.type,
+          cost: buyPay,
+          have: s.stores[buyKind],
+          stores: deepClone(s.stores)
+        });
+        break;
       case "travel":
         if (!s.unlocked[args.area] && args.area !== "room") return { ok: false, error: "locked" };
         if (s.world.on_expedition) return { ok: false, error: "away" };
@@ -2202,6 +2285,7 @@
     // @pacing kind=income id=charcutier value=1cured_meat/10s phase=village note=consumes 5 meat + 5 wood
     applyWorkerIncome(s, dt, this.analytics);
     checkCraftUnlocks(s);
+    checkBuyUnlocks(s);
 
     if (s.pop_timer != null && s.game_time_sec >= s.pop_timer) {
       var cap = s.buildings.hut * 4;
@@ -2292,6 +2376,30 @@
     return out;
   };
 
+  Game.prototype.visibleTrades = function () {
+    var s = this.state;
+    if ((s.buildings.trading_post || 0) <= 0) return [];
+    var out = [];
+    TRADE_KEYS.forEach(function (kind) {
+      var spec = TRADEABLE[kind];
+      var n = s.stores[kind] || 0;
+      var max = spec.max || 0;
+      var cost = tradeCost(kind);
+      if (!cost) return;
+      if (!buyVisible(s, kind)) return;
+      var underMax = max <= 0 || n < max;
+      out.push({
+        kind: kind,
+        cost: cost,
+        have: n,
+        max: max,
+        can: canAfford(s, cost) && underMax,
+        type: spec.type
+      });
+    });
+    return out;
+  };
+
   return {
     ITEMS: ITEMS,
     ITEM_CN: ITEM_CN,
@@ -2301,6 +2409,8 @@
     BUILDABLE: BUILDABLE,
     CRAFTABLE: CRAFTABLE,
     CRAFT_KEYS: CRAFT_KEYS,
+    TRADEABLE: TRADEABLE,
+    TRADE_KEYS: TRADE_KEYS,
     JOB_BUILDING: JOB_BUILDING,
     FIRE: FIRE,
     TEMP: TEMP,
@@ -2331,6 +2441,9 @@
     bagUsed: bagUsed,
     getMaxWater: getMaxWater,
     getMaxHealth: getMaxHealth,
+    tradeCost: tradeCost,
+    tradeMax: tradeMax,
+    buyVisible: buyVisible,
     applyWorkerIncome: applyWorkerIncome,
     visibleJobs: visibleJobs,
     workerUnlocked: workerUnlocked,
