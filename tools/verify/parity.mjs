@@ -121,6 +121,10 @@ export function remakeContent() {
       if (Number(m[2]) > 0) produced.add(m[1]);
     }
   }
+  const craftTbl = eng.match(/var CRAFTABLE = \{([\s\S]*?)\n  \};/);
+  if (craftTbl) {
+    for (const m of craftTbl[1].matchAll(/^\s+(\w+):/gm)) produced.add(m[1]);
+  }
   const buyable = new Set();
   for (const e of Object.values(ev)) for (const b of e.buttons || []) if (b.cost && b.reward) Object.keys(b.reward).forEach((x) => buyable.add(x));
   return { items, areas, buildingKinds, workers, landmarks, produced, buyable, events: ev };

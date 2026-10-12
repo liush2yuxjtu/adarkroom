@@ -167,6 +167,15 @@ h1.title {
 
 .btn-col { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
 
+.craft-wrap { margin-top: 12px; }
+.btn-legend {
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  margin: 0 0 8px;
+  color: #333;
+}
+.path-outfit-meta { margin: 8px 0; font-size: 14px; line-height: 1.5; }
+
 button.adr {
   background: #fff;
   border: 1px solid #111;

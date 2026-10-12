@@ -124,6 +124,49 @@ export function playthrough({ maxGameSec = 9000, seed = 1 } = {}) {
   };
 }
 
+/** Headless batch-2 workshop crafts: costs, caps, notifications, water/bag/armour. */
+export function workshopPlaythrough() {
+  const sb = makeSandbox({ seed: 2 });
+  const g = new sb.ADR.Game({ director: "rule", time_scale: 1, stuck_minutes: 99 }, {});
+  const s = g.state;
+  s.builder_level = 4;
+  s.temperature = 4;
+  s.fire = 4;
+  s.wood_initialized = true;
+  s.unlocked.outside = true;
+  s.location = "room";
+  Object.assign(s.stores, {
+    wood: 8000, cloth: 40, leather: 2500, iron: 800, steel: 400,
+    teeth: 40, scales: 40, sulphur: 80
+  });
+  const noShop = g.act("build", { kind: "torch" });
+  s.buildings.workshop = 1;
+  const kinds = [
+    "torch", "waterskin", "cask", "water_tank", "bone_spear", "rucksack", "wagon", "convoy",
+    "l_armour", "i_armour", "s_armour", "iron_sword", "steel_sword", "rifle"
+  ];
+  const crafted = {};
+  kinds.forEach((kind) => {
+    const r = g.act("build", { kind });
+    crafted[kind] = !!(r && r.ok && (s.stores[kind] || 0) > 0);
+  });
+  const waterskinAgain = g.act("build", { kind: "waterskin" });
+  const notes = (s.notifications || []).map((n) => n.text || "");
+  const hasTorchNote = notes.some((t) => /驱散黑暗的火把/.test(t));
+  const hasRifleNote = notes.some((t) => /黑火药和子弹/.test(t));
+  return {
+    noWorkshopBlocked: !!(noShop && noShop.ok === false),
+    crafted,
+    allCrafted: kinds.every((k) => crafted[k]),
+    waterskinCapped: !!(waterskinAgain && waterskinAgain.ok === false),
+    water: sb.ADR.getMaxWater(s),
+    bag: sb.ADR.bagCapacity(s),
+    hp: sb.ADR.getMaxHealth(s),
+    hasTorchNote,
+    hasRifleNote
+  };
+}
+
 const TRIGGERS = {
   room_fire: "light_fire (fire > 0)",
   stranger: "fire > 1, builder arrives 30s later",

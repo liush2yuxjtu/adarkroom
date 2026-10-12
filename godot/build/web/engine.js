@@ -8,7 +8,7 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
 
-  var ITEMS = ["wood", "fur", "meat", "scales", "teeth", "cloth", "bait", "charm", "compass", "cured_meat", "leather", "iron", "coal", "steel", "sulphur", "bullets"];
+  var ITEMS = ["wood", "fur", "meat", "scales", "teeth", "cloth", "bait", "charm", "compass", "cured_meat", "leather", "iron", "coal", "steel", "sulphur", "bullets", "torch", "waterskin", "cask", "water_tank", "bone_spear", "rucksack", "wagon", "convoy", "l_armour", "i_armour", "s_armour", "iron_sword", "steel_sword", "rifle"];
   var AREAS = ["room", "outside", "path", "world"];
   var NPCS = ["builder", "nomad", "villagers"];
   var MOODS = ["unknown", "collapsed", "shivering", "sleeping", "helping", "neutral", "wary", "grateful"];
@@ -17,7 +17,10 @@
   var ITEM_CN = {
     wood: "木头", fur: "毛皮", meat: "肉", scales: "鳞片", teeth: "牙齿",
     cloth: "布料", bait: "诱饵", charm: "符咒", compass: "罗盘", cured_meat: "熏肉",
-    leather: "皮革", iron: "铁", coal: "煤", steel: "钢", sulphur: "硫磺", bullets: "子弹"
+    leather: "皮革", iron: "铁", coal: "煤", steel: "钢", sulphur: "硫磺", bullets: "子弹",
+    torch: "火把", waterskin: "水壶", cask: "水桶", water_tank: "水罐", bone_spear: "骨枪",
+    rucksack: "双肩包", wagon: "篷车", convoy: "车队", l_armour: "皮甲", i_armour: "铁甲",
+    s_armour: "钢甲", iron_sword: "铁剑", steel_sword: "钢剑", rifle: "步枪"
   };
   var BUILDING_CN = {
     trap: "陷阱", cart: "货车", hut: "小屋", lodge: "狩猎小屋", trading_post: "贸易站",
@@ -68,6 +71,24 @@
     steelworks: "a haze falls over the village as the steelworks fires up",
     armoury: "armoury's done, welcoming back the weapons of the past."
   };
+  /* Faithful copy of script/room.js Craftables tools/weapons/upgrades (batch 2). Costs are n=0. */
+  var CRAFTABLE = {
+    torch: { type: "tool", cost: { wood: 1, cloth: 1 }, buildMsg: "a torch to keep the dark away" },
+    waterskin: { type: "upgrade", max: 1, cost: { leather: 50 }, buildMsg: "this waterskin'll hold a bit of water, at least" },
+    cask: { type: "upgrade", max: 1, cost: { leather: 100, iron: 20 }, buildMsg: "the cask holds enough water for longer expeditions" },
+    water_tank: { type: "upgrade", max: 1, cost: { iron: 100, steel: 50 }, buildMsg: "never go thirsty again" },
+    bone_spear: { type: "weapon", cost: { wood: 100, teeth: 5 }, buildMsg: "this spear's not elegant, but it's pretty good at stabbing" },
+    rucksack: { type: "upgrade", max: 1, cost: { leather: 200 }, buildMsg: "carrying more means longer expeditions to the wilds" },
+    wagon: { type: "upgrade", max: 1, cost: { wood: 500, iron: 100 }, buildMsg: "the wagon can carry a lot of supplies" },
+    convoy: { type: "upgrade", max: 1, cost: { wood: 1000, iron: 200, steel: 100 }, buildMsg: "the convoy can haul mostly everything" },
+    l_armour: { type: "upgrade", max: 1, cost: { leather: 200, scales: 20 }, buildMsg: "leather's not strong. better than rags, though." },
+    i_armour: { type: "upgrade", max: 1, cost: { leather: 200, iron: 100 }, buildMsg: "iron's stronger than leather" },
+    s_armour: { type: "upgrade", max: 1, cost: { leather: 200, steel: 100 }, buildMsg: "steel's stronger than iron" },
+    iron_sword: { type: "weapon", cost: { wood: 200, leather: 50, iron: 20 }, buildMsg: "sword is sharp. good protection out in the wilds." },
+    steel_sword: { type: "weapon", cost: { wood: 500, leather: 100, steel: 20 }, buildMsg: "the steel is strong, and the blade true." },
+    rifle: { type: "weapon", cost: { wood: 200, steel: 50, sulphur: 50 }, buildMsg: "black powder and bullets, like the old days." }
+  };
+  var CRAFT_KEYS = Object.keys(CRAFTABLE);
   var TOOL_NAMES = ["spawn_event", "give_item", "change_npc_mood", "narrate", "unlock_area", "set_flag"];
 
   var STRINGS = {
@@ -89,7 +110,43 @@
     "the stranger is standing by the fire. she says she can help. says she builds things.": "那名陌生人站在火堆旁。她说她可以帮忙。她说她会建东西",
     "builder just shivers": "建造者还在瑟瑟发抖",
     "build:": "建筑物:",
+    "craft:": "制造:",
     "stores": "库存",
+    "torch": "火把",
+    "a torch to keep the dark away": "驱散黑暗的火把",
+    "waterskin": "水壶",
+    "this waterskin'll hold a bit of water, at least": "起码能装那么点儿水",
+    "cask": "水桶",
+    "the cask holds enough water for longer expeditions": "为更长的探索之旅提供充足的水源",
+    "water tank": "水罐",
+    "never go thirsty again": "再也不担心口渴",
+    "bone spear": "骨枪",
+    "this spear's not elegant, but it's pretty good at stabbing": "这柄标枪不怎么精致，但用来戳刺手感不错",
+    "rucksack": "双肩包",
+    "carrying more means longer expeditions to the wilds": "荒野旅行时携带更多物资",
+    "wagon": "篷车",
+    "the wagon can carry a lot of supplies": "篷车能够携带许多物资",
+    "convoy": "车队",
+    "the convoy can haul mostly everything": "车队几乎能把所有东西都装下",
+    "l armour": "皮甲",
+    "leather's not strong. better than rags, though.": "皮革不算结实。总比披块破布强",
+    "i armour": "铁甲",
+    "iron's stronger than leather": "铁比皮要结实",
+    "s armour": "钢甲",
+    "steel's stronger than iron": "钢的总比铁的强",
+    "iron sword": "铁剑",
+    "sword is sharp. good protection out in the wilds.": "剑很锋利。能在野外提供不错的防护",
+    "steel sword": "钢剑",
+    "the steel is strong, and the blade true.": "好钢出利刃",
+    "rifle": "步枪",
+    "black powder and bullets, like the old days.": "黑火药和子弹，就像过去那样",
+    "none": "无",
+    "armour": "护甲",
+    "leather": "皮革",
+    "iron": "铁",
+    "steel": "钢",
+    "water": "水",
+    "free {0}/{1}": "余量 {0}/{1}",
     "Room": "房间",
     "Outside": "野外",
     "A Silent Forest": "静寂森林",
@@ -623,6 +680,10 @@
       state.buildings.trading_post, state.buildings.workshop, state.buildings.steelworks, state.buildings.armoury,
       JSON.stringify(state.workers),
       state.stores.leather, state.stores.cured_meat, state.stores.iron, state.stores.coal, state.stores.steel, state.stores.sulphur,
+      state.stores.torch, state.stores.waterskin, state.stores.cask, state.stores.water_tank,
+      state.stores.bone_spear, state.stores.rucksack, state.stores.wagon, state.stores.convoy,
+      state.stores.l_armour, state.stores.i_armour, state.stores.s_armour,
+      state.stores.iron_sword, state.stores.steel_sword, state.stores.rifle,
       state.population, state.unlocked.outside ? 1 : 0, state.unlocked.path ? 1 : 0,
       state.notifications.length, n0 ? n0.text : "", n0 ? (n0.count || 1) : "",
       ev ? ev.id : "", ev ? ev.scene : "",
@@ -767,6 +828,61 @@
     return null;
   }
 
+  function needsWorkshop(type) {
+    return type === "weapon" || type === "upgrade" || type === "tool";
+  }
+
+  function craftCost(kind) {
+    var spec = CRAFTABLE[kind];
+    if (!spec || !spec.cost) return null;
+    var out = {};
+    Object.keys(spec.cost).forEach(function (k) { out[k] = spec.cost[k]; });
+    return out;
+  }
+
+  function craftMax(kind) {
+    var spec = CRAFTABLE[kind];
+    if (!spec) return 0;
+    return spec.max || 0;
+  }
+
+  function itemWeight(item) {
+    if (item === "bone_spear") return 2;
+    if (item === "iron_sword") return 3;
+    if (item === "steel_sword") return 5;
+    if (item === "rifle") return 5;
+    if (item === "bullets") return 0.1;
+    return 1;
+  }
+
+  function bagCapacity(state) {
+    if ((state.stores.convoy || 0) > 0) return 70;
+    if ((state.stores.wagon || 0) > 0) return 40;
+    if ((state.stores.rucksack || 0) > 0) return 20;
+    return 10;
+  }
+
+  function bagUsed(state) {
+    var n = 0;
+    var k;
+    for (k in state.outfit) n += (state.outfit[k] || 0) * itemWeight(k);
+    return n;
+  }
+
+  function getMaxWater(state) {
+    if ((state.stores.water_tank || 0) > 0) return 60;
+    if ((state.stores.cask || 0) > 0) return 30;
+    if ((state.stores.waterskin || 0) > 0) return 20;
+    return 10;
+  }
+
+  function getMaxHealth(state) {
+    if ((state.stores.s_armour || 0) > 0) return 45;
+    if ((state.stores.i_armour || 0) > 0) return 25;
+    if ((state.stores.l_armour || 0) > 0) return 15;
+    return 10;
+  }
+
   function assignedWorkers(state) {
     var n = 0;
     WORKER_KEYS.forEach(function (k) {
@@ -816,9 +932,7 @@
     return out;
   }
 
-  function craftVisible(state, kind) {
-    if (state.flags["craft_unlocked_" + kind] || (state.buildings[kind] || 0) > 0) return true;
-    var cost = buildingCost(kind, state.buildings[kind] || 0);
+  function costSeen(state, cost) {
     if (!cost) return false;
     if ((state.stores.wood || 0) < (cost.wood || 0) * 0.5) return false;
     for (var k in cost) {
@@ -826,6 +940,16 @@
       if (!(state.stores[k] > 0)) return false;
     }
     return true;
+  }
+
+  function craftVisible(state, kind) {
+    if (CRAFTABLE[kind]) {
+      if ((state.buildings.workshop || 0) <= 0) return false;
+      if (state.flags["craft_unlocked_" + kind]) return true;
+      return costSeen(state, CRAFTABLE[kind].cost);
+    }
+    if (state.flags["craft_unlocked_" + kind] || (state.buildings[kind] || 0) > 0) return true;
+    return costSeen(state, buildingCost(kind, state.buildings[kind] || 0));
   }
 
   function checkCraftUnlocks(state) {
@@ -836,6 +960,12 @@
       state.flags["craft_unlocked_" + kind] = true;
       var msg = BUILD_AVAILABLE[kind];
       if (msg) pushNote(state, t(msg), "room");
+    });
+    if ((state.buildings.workshop || 0) <= 0) return;
+    CRAFT_KEYS.forEach(function (kind) {
+      if (state.flags["craft_unlocked_" + kind] || state.flags["craft_hint_" + kind]) return;
+      if (!craftVisible(state, kind)) return;
+      state.flags["craft_unlocked_" + kind] = true;
     });
   }
 
@@ -1691,6 +1821,29 @@
           return { ok: false, error: "too_cold" };
         }
         var kind = args.kind;
+        var craftSpec = CRAFTABLE[kind];
+        if (craftSpec) {
+          if (needsWorkshop(craftSpec.type) && (s.buildings.workshop || 0) <= 0) {
+            return { ok: false, error: "no_workshop" };
+          }
+          var haveCraft = s.stores[kind] || 0;
+          var craftCap = craftSpec.max || 0;
+          if (craftCap > 0 && haveCraft >= craftCap) return { ok: false, error: "max" };
+          var craftPay = craftCost(kind);
+          if (!craftPay || !canAfford(s, craftPay)) return { ok: false, error: "cost" };
+          pay(s, craftPay);
+          addItem(s, kind, 1);
+          s.flags["craft_unlocked_" + kind] = true;
+          if (craftSpec.buildMsg) pushNote(s, t(craftSpec.buildMsg), "room");
+          this.analytics.log(s, "build", {
+            kind: kind,
+            type: craftSpec.type,
+            cost: craftPay,
+            have: s.stores[kind],
+            stores: deepClone(s.stores)
+          });
+          break;
+        }
         var max = buildingMax(kind);
         if (!max) return { ok: false, error: "unknown_building" };
         if ((s.buildings[kind] || 0) >= max) return { ok: false, error: "max" };
@@ -1757,7 +1910,11 @@
         if (ITEMS.indexOf(item) < 0) return { ok: false, error: "item" };
         if (n > 0) {
           var have = s.stores[item] || 0;
-          var take = Math.min(n, have);
+          var w = itemWeight(item);
+          var free = bagCapacity(s) - bagUsed(s);
+          var bySpace = w > 0 ? Math.floor(free / w + 1e-9) : have;
+          var take = Math.min(n, have, bySpace);
+          if (take <= 0) return { ok: false, error: "space" };
           addItem(s, item, -take);
           s.outfit[item] = (s.outfit[item] || 0) + take;
         } else {
@@ -1772,8 +1929,9 @@
         s.world.on_expedition = true;
         s.world.x = 5;
         s.world.y = 5;
-        s.world.water = 10;
-        s.world.hp = 10;
+        s.world.water = getMaxWater(s);
+        s.world.hp = getMaxHealth(s);
+        s.world.max_hp = getMaxHealth(s);
         s.world.food_moves = 0;
         s.location = "world";
         s.world.visited["5,5"] = true;
@@ -1956,7 +2114,7 @@
         var sc = spec.scenes[pick];
         if (sc.reward) grant(s, sc.reward);
         if (sc.set_flag) s.flags[sc.set_flag] = true;
-        if (sc.water && s.world.on_expedition) s.world.water = Math.min(10, s.world.water + sc.water);
+        if (sc.water && s.world.on_expedition) s.world.water = Math.min(getMaxWater(s), s.world.water + sc.water);
         return;
       }
     }
@@ -1965,7 +2123,7 @@
       var sc2 = spec.scenes[btn.next];
       if (sc2.reward) grant(s, sc2.reward);
       if (sc2.set_flag) s.flags[sc2.set_flag] = true;
-      if (sc2.water && s.world.on_expedition) s.world.water = Math.min(10, s.world.water + sc2.water);
+      if (sc2.water && s.world.on_expedition) s.world.water = Math.min(getMaxWater(s), s.world.water + sc2.water);
       return;
     }
     if (spec.scenes && scene !== spec && scene.set_flag) s.flags[scene.set_flag] = true;
@@ -2109,8 +2267,28 @@
       if (!cost || !max) return;
       // @pacing kind=threshold id=craft_visible_ratio value=0.5 phase=forest
       if (!craftVisible(s, kind)) return;
-      out.push({ kind: kind, cost: cost, have: n, max: max, can: canAfford(s, cost) && n < max && s.temperature > 1 });
+      out.push({ kind: kind, cost: cost, have: n, max: max, can: canAfford(s, cost) && n < max && s.temperature > 1, section: "build" });
     });
+    if ((s.buildings.workshop || 0) > 0) {
+      CRAFT_KEYS.forEach(function (kind) {
+        var spec = CRAFTABLE[kind];
+        var n = s.stores[kind] || 0;
+        var max = spec.max || 0;
+        var cost = craftCost(kind);
+        if (!cost) return;
+        if (!craftVisible(s, kind)) return;
+        var underMax = max <= 0 || n < max;
+        out.push({
+          kind: kind,
+          cost: cost,
+          have: n,
+          max: max,
+          can: canAfford(s, cost) && underMax && s.temperature > 1,
+          section: "craft",
+          type: spec.type
+        });
+      });
+    }
     return out;
   };
 
@@ -2121,6 +2299,8 @@
     WORKER_CN: WORKER_CN,
     INCOME: INCOME,
     BUILDABLE: BUILDABLE,
+    CRAFTABLE: CRAFTABLE,
+    CRAFT_KEYS: CRAFT_KEYS,
     JOB_BUILDING: JOB_BUILDING,
     FIRE: FIRE,
     TEMP: TEMP,
@@ -2143,6 +2323,14 @@
     clearSave: clearSave,
     buildingCost: buildingCost,
     buildingMax: buildingMax,
+    craftCost: craftCost,
+    craftMax: craftMax,
+    needsWorkshop: needsWorkshop,
+    itemWeight: itemWeight,
+    bagCapacity: bagCapacity,
+    bagUsed: bagUsed,
+    getMaxWater: getMaxWater,
+    getMaxHealth: getMaxHealth,
     applyWorkerIncome: applyWorkerIncome,
     visibleJobs: visibleJobs,
     workerUnlocked: workerUnlocked,

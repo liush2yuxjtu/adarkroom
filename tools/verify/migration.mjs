@@ -13,7 +13,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { emptySuite, ok, fail, summarize, writeJson } from "./lib/report.mjs";
 import { makeSandbox } from "./lib/engine-sandbox.mjs";
-import { playthrough } from "./story.mjs";
+import { playthrough, workshopPlaythrough } from "./story.mjs";
 import { runParity } from "./parity.mjs";
 import {
   ROOT,
@@ -87,7 +87,12 @@ function numericForRow(row, spec, ADR) {
   }
   if ((row.category === "tool/weapon/upgrade" || row.category === "weapon") && spec.crafts[name] && spec.crafts[name].cost.n0) {
     if (row.status === "missing") return { status: "skip", detail: "not present" };
-    return { status: "mismatch", detail: "craft cost not implemented in remake buildingCost" };
+    const orig = spec.crafts[name].cost.n0;
+    const rem = ADR.craftCost ? ADR.craftCost(snake(name)) : null;
+    if (!rem) return { status: "mismatch", detail: `original ${JSON.stringify(orig)} remake=null` };
+    return costsEqual(orig, rem)
+      ? { status: "match", detail: JSON.stringify(orig) }
+      : { status: "mismatch", detail: `original ${JSON.stringify(orig)} remake ${JSON.stringify(rem)}` };
   }
   if (row.category === "trade good" && spec.trades[name]) {
     if (row.status !== "present") return { status: "skip", detail: row.status };
@@ -182,6 +187,20 @@ function reachabilityBatches(parityRows) {
         detail: okv
           ? `lodge/smokehouse/charcutier/cured_meat packed (cured=${v.cured_meat})`
           : JSON.stringify(v)
+      });
+      continue;
+    }
+    if (String(id) === "2" || id === 2) {
+      const play = workshopPlaythrough();
+      const okc = !!(play.allCrafted && play.noWorkshopBlocked && play.waterskinCapped && play.water === 60 && play.bag === 70 && play.hp === 45 && play.hasTorchNote && play.hasRifleNote);
+      out.push({
+        batch: 2,
+        title: meta.title,
+        pass: okc && gaps.length === 0,
+        kind: "story",
+        detail: okc
+          ? "workshop crafts + water/bag/armour + buildMsg"
+          : JSON.stringify(play)
       });
       continue;
     }
