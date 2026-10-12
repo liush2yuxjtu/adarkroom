@@ -6,6 +6,8 @@ This is the **only trigger path**. Do not schedule a GitHub Action, cron, or a m
 
 This surface is **not** `behavior-timeline-vs-mechanics` (does frequency match the cooldown/cost constants?). That check can conclude "not a bug, sitting on the cap." This one asks whether the resulting slow stretch was a design choice. It is also **not** `pr-telemetry-required` and **not** the backend telemetry sink check.
 
+After you read `early_phase_slow` / `ratio`, run [`art-style-boredom-mitigation`](art-style-boredom-mitigation.md) on the same wait: `?style=text` can use Rajan timed text; `?style=pixel` cannot.
+
 ## When to run
 
 Automatically, on every `/verify` when `tools/pacing_analyzer.py` is at the repository root. Skip with a note when that file is missing, or when the JSON / playtest data is absent.
@@ -95,7 +97,7 @@ Then stop and wait for the answer.
 
 Do not retune constants. Suggest ways to fill the wait, and give **timing points derived from the curve** (mid-cooldown and remaining idle after the last capped action):
 
-1. **Rajan's approach.** Insert text messages or narrative beats at those timing points during the slow stretch, so the wait carries story instead of empty time.
+1. **Rajan's approach.** Insert text messages or narrative beats at those timing points during the slow stretch, so the wait carries story instead of empty time. Only when the active style has a text channel (`?style=text`). On `?style=pixel`, skip this and use `art-style-boredom-mitigation` instead.
 2. **Visible cooldown countdown.** Show remaining seconds (and/or a full-height bar) so the player is not polling readiness.
 3. **Ambient events.** Light world ticks that do not skip the wait: weather, passing sound, a stranger, a room change that does not grant the gated resource.
 4. **Small flavor messages.** One-line color at the same timing points; keep them skippable and non-blocking.
