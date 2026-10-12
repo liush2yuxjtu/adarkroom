@@ -193,6 +193,13 @@
   }
 
   function cdLeft(id) {
+    if (game && typeof game.cooldownLeft === "function") return game.cooldownLeft(id);
+    if (!game || !game.state) return 0;
+    var end = game.state.cooldown_ends_at && game.state.cooldown_ends_at[id];
+    if (end) {
+      var scale = game.timeScale > 0 ? game.timeScale : 1;
+      return Math.max(0, ((Number(end) - Date.now()) / 1000) * scale);
+    }
     return game.state.cooldowns[id] || 0;
   }
 
@@ -212,22 +219,27 @@
     var barEl = b.querySelector(".cd");
     var secEl = b.querySelector(".cd-sec");
     var left = cdId ? cdLeft(cdId) : 0;
+    var ratio = cdId ? cdRatio(cdId) : 0;
     if (isPixel()) {
       if (secEl) secEl.textContent = "";
       if (cdId === "stoke") {
         var flame = b.querySelector(".px-flame");
         if (flame && game) {
-          var fr = stokeFrame(cdRatio("stoke"), game.state.fire);
+          var fr = stokeFrame(ratio, game.state.fire);
           flame.style.backgroundPosition = "-" + (fr * 64) + "px 0";
           flame.classList.toggle("ready", left <= 0);
         }
         if (barEl) barEl.style.width = "0%";
         return;
       }
-      if (barEl) barEl.style.width = cdId ? (cdRatio(cdId) * 100) + "%" : "0%";
+      if (barEl) barEl.style.width = (ratio * 100) + "%";
       return;
     }
-    if (barEl) barEl.style.width = cdId ? (cdRatio(cdId) * 100) + "%" : "0%";
+    if (barEl) {
+      barEl.style.width = (ratio * 100) + "%";
+      var max = { stoke: 10, gather: 60, traps: 90 }[cdId] || 1;
+      barEl.style.animationDelay = left > 0 ? (-(max - left)) + "s" : "0s";
+    }
     if (secEl) secEl.textContent = left > 0 ? String(Math.ceil(left)) : "";
   }
 
@@ -350,25 +362,45 @@
     });
   }
 
+  function noteLabel(n) {
+    var text = n && n.text ? n.text : "";
+    var count = n && n.count > 1 ? n.count : 0;
+    return count ? text + " ×" + count : text;
+  }
+
   function renderNotes() {
     var box = $("notifications");
-    var want = game.state.notifications.slice(0, 16).map(function (n) {
-      return isPixel() ? cueForNote(n.text) : n.text;
+    var notes = game.state.notifications.slice(0, 30);
+    var want = notes.map(function (n) {
+      if (isPixel()) return cueForNote(n.text) + (n.count > 1 ? ":" + n.count : "");
+      return noteLabel(n);
     });
     var have = [].slice.call(box.querySelectorAll(".note")).map(function (n) {
-      return isPixel() ? n.dataset.cue : n.textContent;
+      if (isPixel()) return (n.dataset.cue || "") + (n.dataset.count || "");
+      return n.textContent;
     });
     if (want.join("\n") === have.join("\n")) return;
     box.innerHTML = "";
-    want.forEach(function (text) {
+    notes.forEach(function (n, i) {
       var d = document.createElement("div");
-      d.className = "note";
+      d.className = i >= 8 ? "note fade" : "note";
       if (isPixel()) {
-        d.dataset.cue = text;
-        d.setAttribute("aria-label", text);
-        d.appendChild(pxIconEl(text));
+        var cue = cueForNote(n.text);
+        d.dataset.cue = cue;
+        if (n.count > 1) d.dataset.count = ":" + n.count;
+        d.setAttribute("aria-label", noteLabel(n));
+        d.appendChild(pxIconEl(cue));
       } else {
-        d.textContent = text;
+        var label = document.createElement("span");
+        label.className = "note-text";
+        label.textContent = n.text;
+        d.appendChild(label);
+        if (n.count > 1) {
+          var times = document.createElement("span");
+          times.className = "times";
+          times.textContent = " ×" + n.count;
+          d.appendChild(times);
+        }
       }
       box.appendChild(d);
     });
@@ -891,6 +923,21 @@
     });
   }
 
+  function emitViewportLayout() {
+    if (!window.ADRTelemetry || !ADRTelemetry.log) return;
+    var w = window.innerWidth || 0;
+    var layout = w <= 768 ? "mobile" : "desktop";
+    var box = $("notifications");
+    var r = box ? box.getBoundingClientRect() : null;
+    var visible = !!(r && r.width > 0 && r.height > 0 && r.right > 0 && r.left < w && r.bottom > 0 && r.top < (window.innerHeight || 0));
+    ADRTelemetry.log("viewport_layout", {
+      width: w,
+      height: window.innerHeight || 0,
+      layout: layout,
+      notif_visible: visible
+    });
+  }
+
   function bindMenu() {
     decorateMenuIcons();
     $("btn-hyper").addEventListener("click", function () {
@@ -916,7 +963,16 @@
     }
     window.addEventListener("pagehide", persistNow);
     document.addEventListener("visibilitychange", function () {
-      if (document.visibilityState === "hidden") persistNow();
+      if (document.visibilityState === "hidden") {
+        persistNow();
+        if (game && game.logCooldownVisibility) game.logCooldownVisibility("hidden");
+        return;
+      }
+      lastRender = 0;
+      if (game && game.syncCooldowns) game.syncCooldowns();
+      paintCooldowns();
+      if (game && game.emit) game.emit();
+      if (game && game.logCooldownVisibility) game.logCooldownVisibility("visible");
     });
     window.addEventListener("beforeunload", function () {
       persistNow();
@@ -925,7 +981,6 @@
       game.analytics.log(game.state, "session_end", { reason: "quit" });
       if (window.ADRTelemetry) {
         ADRTelemetry.pageUnload("beforeunload");
-        ADRTelemetry.flush("beforeunload");
       } else if (game.analytics.flushHttp) {
         game.analytics.flushHttp("unload");
       }
@@ -1010,6 +1065,12 @@
       game.hud = paintCooldowns;
       bindMenu();
       renderAll();
+      emitViewportLayout();
+      var resizeTimer = 0;
+      window.addEventListener("resize", function () {
+        if (resizeTimer) clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(emitViewportLayout, 250);
+      });
       if (window.ADRTelemetry) ADRTelemetry.markFirstFrame();
       requestAnimationFrame(loop);
     });

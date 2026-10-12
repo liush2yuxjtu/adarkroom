@@ -39,6 +39,8 @@ Analytics 有事件等级：`info`（默认，始终上报）和 `debug`。`dire
 | `stuck` | N 分钟无进度 | `phase`, `idle_sec` | 阈值边沿一次 |
 | `death` / `quit` / `slice_complete` | 远征死 / 关页 / 切片完成 | 视事件 | 每次 |
 | `tab_hidden` / `tab_visible` | `visibilitychange`、`window` blur/focus、Godot focus | `source`, `active_play_ms`, `last_hidden_ms?` | 500ms 去重 |
+| `cooldown_set` | 生火/添柴/伐木/查陷阱进入冷却 | `id` (`stoke`/`gather`/`traps`), `duration_sec`, `ends_at`, `time_scale` | 每次设置 |
+| `cooldown_visibility` | 标签隐藏/回到前台时的冷却快照 | `visibility`, `remaining{stoke,gather,traps}`, `ends_at`, `wall_now`, `hidden_ms`, `source` | 每次显隐 |
 | `mouse_trajectory` | 鼠标移动 | `samples[{t,x,y,nx,ny}]`, `reason`, `n` | 300ms，仅移动 |
 | `button_hover_enter` / `button_hover_exit` | 按钮悬停 | `element_id`, `label`, `duration_ms?` | 进入/离开 |
 | `click_heat` | 点击 | `x`, `y`, `nx`, `ny`, `element_id`, `tag`, `label` | 每次点击 |
@@ -57,6 +59,12 @@ Analytics 有事件等级：`info`（默认，始终上报）和 `debug`。`dire
 | `save_load` | 启动/手动读档 | `ok`, `backend` (`localStorage`/`IndexedDB`), `error`, `size`, `save_id`, `save_version` | 每次 |
 | `save_corrupt` | 读档完整性失败 | `reason`, `backend`, `error`, `backup_key`, `save_id` | 每次 |
 | `new_game_start` | 重开且已有旧档 | `overwritten`, `previous_save_id`, `previous_phase`, `previous_play_time_sec`, `previous_last_action`, `previous_last_save_at`, `recent_actions`, `last_phase` | 每次重开 |
+| `viewport_layout` | 首屏渲染、窗口缩放（250ms 去抖） | `width`, `height`, `layout` (`mobile`≤768 / `desktop`), `notif_visible` | 每次布局变化 |
+| `notification_dedup` | 连续相同通知合并为 ×N | `text`, `count` | 每次叠次 |
+| `telemetry_send_fail` | POST `playtest_events` 失败（CORS/网络/HTTP/中止） | `status`, `attempt`, `reason`, `n` | 每次失败 |
+| `telemetry_retry_ok` | 同一批在退避重试后成功 | `status`, `attempt`, `via` | 重试成功 |
+
+HTTP 上报：构建时把 sink 写成同源 `/api/playtest_events`（`vercel.json` rewrite 到 Supabase REST），避免跨域预检。`mode: cors` + `credentials: omit`。页面隐藏/卸载只走 `sendBeacon`；平时 `fetch` 不用 `keepalive`（Chromium 会把 keepalive POST 记成 `requestfailed`/`ERR_ABORTED`，即使 201）。`pagehide`/`beforeunload` 只 flush 一次。批次最多 20 条且 JSON 小于 55KB；失败指数退避（0.5s×2^n，封顶 30s，最多 8 次）并累加 `ADRTelemetry.failCount()`。anon INSERT 本身是通的——审计里成对的 `ERR_ABORTED`+`201` 是浏览器噪音，不是丢行。
 
 存档埋点挂在现有存档模块上（`save-telemetry.js` 包装 `save`/`load`/`autosave` 以及约定的 storage key），**不另做一套存档**。损坏存档会备份到 `localStorage` 键 `adr.save.corrupt.<ts>`，不把整份档塞进 payload（RLS 限制 `pg_column_size(payload) < 16384`）。
 

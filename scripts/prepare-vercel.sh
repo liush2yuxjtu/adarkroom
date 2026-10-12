@@ -37,8 +37,9 @@ import json, sys
 dest, raw_url, key, debug_raw = sys.argv[1], sys.argv[2].strip(), sys.argv[3].strip(), sys.argv[4].strip().lower()
 url = ""
 if raw_url and key:
-    base = raw_url.rstrip("/")
-    url = base if base.endswith("/rest/v1/playtest_events") else base + "/rest/v1/playtest_events"
+    # Same-origin path: Vercel rewrites /api/playtest_events → Supabase REST.
+    # Avoids CORS preflight (Playwright records those as requestfailed/ERR_ABORTED).
+    url = "/api/playtest_events"
 debug = debug_raw in ("1", "true", "yes")
 with open(dest, "w", encoding="utf-8") as f:
     f.write("self.ADR_TELEMETRY = { url: %s, anonKey: %s, debug: %s };\n" % (
