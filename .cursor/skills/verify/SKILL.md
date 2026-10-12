@@ -255,6 +255,10 @@ Worked example (2026-10-12 stoke cooldown): original buttons are plain text in a
 
 ## Execution layer (before merge)
 
+Engine/telemetry/story changes also run the headless checks (no network, mocked sink):
+`node tools/verify/telemetry.mjs` and `node tools/verify/story.mjs` (both included in `node tools/verify/run.mjs`).
+See [`references/telemetry-and-story-checks.md`](references/telemetry-and-story-checks.md).
+
 Surfaces above are judgment. The pre-merge checklist is execution: [`references/concrete-verification-steps.md`](references/concrete-verification-steps.md).
 
 Run only the steps the mapping table selects for the diff. Each step has a trigger, Playwright or SQL, pass criteria, and failure handling.

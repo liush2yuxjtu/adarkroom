@@ -436,6 +436,17 @@ node tools/verify/run.mjs --url <live>
 
 prints one JSON object `{ pass, exitCode, failures, suites, perWidth }` and exits **non-zero** on any failure.
 
+## Step 11 — Telemetry contract + story progression (headless)
+
+Any change to `godot/build/web/engine.js`, `telemetry.js`, `save-telemetry.js`, `sinks/*`, or `godot/data/events.json`:
+
+```bash
+node tools/verify/telemetry.mjs
+node tools/verify/story.mjs --runs 5
+```
+
+Both must exit 0. Details and the bug each check guards: [`telemetry-and-story-checks.md`](telemetry-and-story-checks.md).
+
 ## Worked example: 2026-10-12 12-issue audit
 
 UI-fix [PR #7](https://github.com/liush2yuxjtu/adarkroom/pull/7), merged into live `cursor/godot-chinese-remake-5c3a` at `2361374` (`23613748bb349ec44147cb458eaf600f80bd03f6`). Live export `godot/build/web`. In-repo auditor `godot/tools/verify_uifix.mjs`. Screenshots `/opt/cursor/artifacts/uifix/`.

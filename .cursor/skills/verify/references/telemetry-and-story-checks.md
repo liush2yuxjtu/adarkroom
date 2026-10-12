@@ -1,0 +1,46 @@
+# Telemetry contract + story progression checks
+
+Runnable, headless, no network: `engine.js` (+ `telemetry.js`, `sinks/supabase.js`) is loaded into a
+Node `vm` sandbox (`tools/verify/lib/engine-sandbox.mjs`) with a fake wall clock, in-memory
+`localStorage`, a mocked sink, and optional seeded `Math.random`. Production Supabase is never written.
+
+```bash
+node tools/verify/telemetry.mjs          # 9 checks, JSON, exit 1 on FAIL
+node tools/verify/story.mjs --runs 5     # phase ladder to slice_complete, per-node table
+node tools/verify/run.mjs --only telemetry,story
+```
+
+`run.mjs` includes both suites by default (story with 3 seeded runs).
+
+## Telemetry checks (`tools/verify/telemetry.mjs`)
+
+| id | Bug it guards (found in `playtest_events`, 2026-10-12) | Pass condition |
+|---|---|---|
+| `phase-resync-after-load` | restored session logged `phase_time {"phase":"room_dark","seconds":4086.2}` | after a save load, the next `phase_time` names the restored phase with small seconds |
+| `failed-action-reported` | `act()` returned errors before logging, so `player_action` never had ok/error | rejected action logs `player_action {ok:false,error}`; successes carry `ok:true` |
+| `stuck-detector-fires` | 0 `stuck` rows ever: passive store income reset the timer and a 1.2s window was skipped by large ticks | idle 1200 game-sec at time_scale 20 yields >= 1 `stuck` |
+| `client-dedup` | 245 exact duplicate rows | identical event in the same tick is logged once (engine and telemetry.js paths) |
+| `resend-carries-event-id` | duplicates could not be told apart from real repeats | every posted row has `payload.event_id`; a re-sent row keeps its id; already-acked ids are not re-queued |
+| `telemetry-requeue-skips-sent` | — | event ids unique; `sentIds` ledger present |
+| `session-start-first` | 32 sessions without `session_start` | first engine event of any session is `session_start` (synthetic `{synthetic:true,reason:"missing_session_start"}` if needed) |
+| `automation-flagged` | 236/251 sessions were headless test traffic, indistinguishable from players | `payload.is_automation` true for `navigator.webdriver` / headless UA, false for a normal UA |
+| `cap-keeps-milestones` | a real session lost ~3,650 game-sec (village, compass, path) once the 2,500-row cap tripped on hover/mouse noise | after the cap, milestone events (`phase_time`, `player_action`, `build`, `unlock`, `death`, ...) are kept, UI noise dropped |
+
+Analysis queries should filter `coalesce((payload->>'is_automation')::boolean,false) = false` and
+collapse on `payload->>'event_id'`.
+
+## Story check (`tools/verify/story.mjs`)
+
+Drives the rule director with a deterministic player script. Per run, per node:
+
+| node | trigger |
+|---|---|
+| room_fire | `light_fire` |
+| stranger | fire > 1, builder 30s later |
+| forest | 15s later, outside unlocked + 4 wood |
+| village | builder_level 4, 100 wood, warm room, build hut |
+| path | hut >= 1 and fur >= 1, compass event, take |
+| world | path unlocked + packed meat, embark |
+| slice_complete | visit old_house (8,3), return home alive |
+
+FAIL = any node not reached. Gameplay numbers are not touched by this check.

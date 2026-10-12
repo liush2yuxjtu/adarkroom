@@ -16,10 +16,12 @@ import { runCdpLayout } from "./cdp-layout.mjs";
 import { runScreenshotDiff } from "./screenshot-diff.mjs";
 import { runA11y } from "./a11y.mjs";
 import { runExtremes } from "./extremes.mjs";
+import { runTelemetry } from "./telemetry.mjs";
+import { runStory } from "./story.mjs";
 
 const HELP = `adr verify suite
   node tools/verify/run.mjs [--url URL] [--styles pixel,text] [--widths 360,390,768,1024,1280,1440,1920]
-                            [--out artifacts] [--only cdp,screenshots,a11y,extremes] [--update-baselines]
+                            [--out artifacts] [--only cdp,screenshots,a11y,extremes,telemetry,story] [--update-baselines]
 
   node tools/verify/screenshot-diff.mjs --update   # rewrite committed baselines
 
@@ -34,8 +36,9 @@ async function main() {
     process.exit(0);
   }
   fs.mkdirSync(args.outDir, { recursive: true });
-  const only = args.only && args.only.length ? args.only : ["cdp", "screenshots", "a11y", "extremes"];
-  const browser = await launchBrowser();
+  const only = args.only && args.only.length ? args.only : ["cdp", "screenshots", "a11y", "extremes", "telemetry", "story"];
+  const needsBrowser = only.some((k) => !["telemetry", "story"].includes(k));
+  const browser = needsBrowser ? await launchBrowser() : null;
   const suites = [];
   const shared = { browser, ...args };
   try {
@@ -51,8 +54,11 @@ async function main() {
     if (only.includes("extremes")) {
       suites.push(await runExtremes(shared));
     }
+    // Headless engine checks (mocked sink, no network): telemetry contract + story progression.
+    if (only.includes("telemetry")) suites.push(runTelemetry());
+    if (only.includes("story")) suites.push(runStory({ runs: 3 }));
   } finally {
-    await browser.close();
+    if (browser) await browser.close();
   }
   const summary = summarize(suites, {
     url: args.url,
