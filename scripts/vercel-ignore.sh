@@ -23,6 +23,7 @@ if git diff --quiet HEAD^ HEAD -- . \
   ':(exclude)reports/' \
   ':(exclude)tools/' \
   ':(exclude)agent/skills/' \
+  ':(exclude).cursor/skills/' \
   ':(exclude).github/'; then
   echo "vercel-ignore: skip (docs/tools-only commit on ${REF})"
   exit 0
