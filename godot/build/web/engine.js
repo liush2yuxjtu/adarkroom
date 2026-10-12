@@ -152,7 +152,9 @@
   var OBJECT_KEYS = ["stores", "buildings", "unlocked", "npc_moods", "workers", "outfit", "income_acc", "world", "flags", "cooldowns"];
   var ARRAY_KEYS = ["notifications", "scheduled"];
 
-  function readSaveRaw() {
+  function readSaveRaw(opts) {
+    opts = opts || {};
+    var silent = !!opts.silent;
     if (typeof localStorage === "undefined") return null;
     var raw = null;
     try {
@@ -161,12 +163,12 @@
       raw = null;
     }
     if (!raw) {
-      if (typeof ADRSaveTelemetry !== "undefined") {
+      if (!silent && typeof ADRSaveTelemetry !== "undefined") {
         ADRSaveTelemetry.onSaveLoad({ ok: false, backend: "localStorage", error: "missing", size: 0 });
       }
       return null;
     }
-    var tel = typeof ADRSaveTelemetry !== "undefined" ? ADRSaveTelemetry : null;
+    var tel = (!silent && typeof ADRSaveTelemetry !== "undefined") ? ADRSaveTelemetry : null;
     var check = tel
       ? tel.validateBlob(raw, { maxVersion: SAVE_VERSION, require: ["v", "state"] })
       : null;
@@ -954,7 +956,7 @@
   }
 
   Game.prototype.persistSave = function (force) {
-    var existing = force ? null : readSaveRaw();
+    var existing = force ? null : readSaveRaw({ silent: true });
     if (existing && existing.state) {
       var prev = existing.state;
       var blank = this.state.fire === 0 && this.state.game_time_sec < 0.5 && !(this.state.stores && this.state.stores.wood);
