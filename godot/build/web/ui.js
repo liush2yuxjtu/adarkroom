@@ -509,8 +509,15 @@
       window.location.href = "/classic/?lang=zh_cn";
     });
     window.addEventListener("beforeunload", function () {
-      game.act("quit");
-      if (game.analytics.flushHttp) game.analytics.flushHttp();
+      if (!game) return;
+      game.analytics.log(game.state, "quit", {});
+      game.analytics.log(game.state, "session_end", { reason: "quit" });
+      if (window.ADRTelemetry) {
+        ADRTelemetry.pageUnload("beforeunload");
+        ADRTelemetry.flush("beforeunload");
+      } else if (game.analytics.flushHttp) {
+        game.analytics.flushHttp("unload");
+      }
     });
     window.addEventListener("keydown", function (e) {
       if (!game.state.world.on_expedition) return;
@@ -566,10 +573,13 @@
       }
       game = new ADR.Game(config, events);
       window.__ADR_GAME = game;
+      if (window.ADRTelemetry) ADRTelemetry.bindGame(game);
+      if (window.ADRSaveTelemetry && ADRSaveTelemetry.hookGame) ADRSaveTelemetry.hookGame(game);
       game.on(renderAll);
       game.hud = paintCooldowns;
       bindMenu();
       renderAll();
+      if (window.ADRTelemetry) ADRTelemetry.markFirstFrame();
       requestAnimationFrame(loop);
     });
   }

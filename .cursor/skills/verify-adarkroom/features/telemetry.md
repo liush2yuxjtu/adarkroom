@@ -1,7 +1,7 @@
 # Telemetry
 
 ## Sub-features
-- Events stored in `localStorage['adr.telemetry']` (JSON array: `session_start`, `director_think`, `director_tool`, `player_action`, `phase_time`).
+- Events stored in `localStorage['adr.telemetry']` (JSON array). `director_think` only when the director emits tools. Browser also writes visibility, mouse, hover, click, scroll, load, audio, page_unload/reload, and save lifecycle events.
 - `导出遥测.` downloads `adr-telemetry-<id>.json`.
 
 ## How to get to it (user POV)
