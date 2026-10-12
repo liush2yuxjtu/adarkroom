@@ -506,7 +506,8 @@ body.style-pixel .px-note-text {
 }
 
 body.style-pixel .px-notes-legend {
-  flex: 1 0 100%;
+  flex: 0 0 auto;
+  width: 100%;
   align-self: stretch;
   padding: 6px 8px;
   background: #f3f1ea url("assets/pixel/paper-tile.png") repeat;
@@ -1093,16 +1094,79 @@ body.style-pixel .px-animal {
     order: 1;
   }
 
-  body.style-pixel #notifications {
+  body.style-pixel #stores {
     order: 2;
+    display: flex;
+    flex-flow: row wrap;
+    align-items: center;
+    gap: 4px 8px;
+    width: 100%;
+    max-width: 100%;
     margin-top: 8px;
-    max-height: 22vh;
+    margin-bottom: 4px;
+    padding: 4px 8px 6px;
+    max-height: none;
+    overflow: visible;
   }
 
-  body.style-pixel #stores {
+  body.style-pixel #stores .legend,
+  body.style-pixel #stores .px-icon {
+    transform: scale(0.5);
+    transform-origin: center;
+    margin: -16px;
+  }
+
+  body.style-pixel .px-stores-caption,
+  body.style-pixel #stores .px-caption.px-stores-caption,
+  body.style-pixel #stores .px-caption.px-store-n {
+    display: inline-block !important;
+    margin: 0 4px 0 0;
+    max-width: none;
+    text-align: left;
+  }
+
+  body.style-pixel .store-row {
+    margin-bottom: 0;
+  }
+
+  body.style-pixel #notifications {
     order: 3;
     margin-top: 8px;
-    max-height: min(28vh, calc(100vh - var(--adr-menu-h, 108px) - 24px));
+    max-height: 26vh;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+  }
+
+  body.style-pixel #notifications .note {
+    flex: 0 0 auto;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    min-height: 0;
+    height: auto;
+    padding: 4px 6px;
+  }
+
+  body.style-pixel #notifications .note .px-icon {
+    transform: scale(0.5);
+    transform-origin: center;
+    margin: -16px;
+    flex: 0 0 32px;
+  }
+
+  body.style-pixel #notifications .px-note-cat {
+    flex: 0 0 auto;
+    max-width: 2.5em;
+  }
+
+  body.style-pixel #notifications .px-note-text {
+    flex: 1 1 auto;
+    text-align: left;
+    white-space: nowrap;
   }
 
   body.style-pixel .panel {
@@ -1201,6 +1265,15 @@ body.style-pixel .px-animal {
     gap: 4px;
     overflow-x: auto;
     justify-content: space-between;
+  }
+
+  body.style-text #menu button,
+  body.style-text #director-label {
+    white-space: nowrap;
+    font-size: 13px;
+    padding: 8px 6px;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   body.style-pixel #menu button,
