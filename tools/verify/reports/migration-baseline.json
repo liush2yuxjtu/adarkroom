@@ -1,14 +1,14 @@
 {
-  "pass": false,
+  "pass": true,
   "gate": {
-    "missing": 1,
+    "missing": 0,
     "no_producer": 0,
     "numeric_mismatch": 0,
     "allowlist": 0
   },
   "counts": {
-    "present": 298,
-    "missing": 1,
+    "present": 299,
+    "missing": 0,
     "no_producer": 0,
     "mismatch": 0,
     "no_zh": 0,
@@ -177,8 +177,8 @@
       "total": 1
     },
     "notification": {
-      "present": 110,
-      "missing": 1,
+      "present": 111,
+      "missing": 0,
       "no_producer": 0,
       "mismatch": 0,
       "total": 111
@@ -249,8 +249,8 @@
       "total": 8
     },
     "core": {
-      "present": 26,
-      "missing": 1,
+      "present": 27,
+      "missing": 0,
       "no_producer": 0,
       "mismatch": 0,
       "total": 27
@@ -323,18 +323,10 @@
     {
       "batch": "core",
       "title": "Early room / forest slice already in the remake",
-      "pass": false,
+      "pass": true,
       "kind": "inventory",
-      "detail": "1 core gaps"
+      "detail": "early slice present"
     }
   ],
-  "gaps": [
-    {
-      "id": "notification:craft:hut: no more room for huts.",
-      "status": "missing",
-      "batch": "core",
-      "numeric": "skip",
-      "note": "missing"
-    }
-  ]
+  "gaps": []
 }
