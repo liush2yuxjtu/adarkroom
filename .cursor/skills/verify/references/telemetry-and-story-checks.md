@@ -5,7 +5,7 @@ Node `vm` sandbox (`tools/verify/lib/engine-sandbox.mjs`) with a fake wall clock
 `localStorage`, a mocked sink, and optional seeded `Math.random`. Production Supabase is never written.
 
 ```bash
-node tools/verify/telemetry.mjs          # 9 checks, JSON, exit 1 on FAIL
+node tools/verify/telemetry.mjs          # 11 checks, JSON, exit 1 on FAIL
 node tools/verify/story.mjs --runs 5     # phase ladder to slice_complete, per-node table
 node tools/verify/run.mjs --only telemetry,story
 ```
@@ -25,6 +25,8 @@ node tools/verify/run.mjs --only telemetry,story
 | `session-start-first` | 32 sessions without `session_start` | first engine event of any session is `session_start` (synthetic `{synthetic:true,reason:"missing_session_start"}` if needed) |
 | `automation-flagged` | 236/251 sessions were headless test traffic, indistinguishable from players | `payload.is_automation` true for `navigator.webdriver` / headless UA, false for a normal UA |
 | `cap-keeps-milestones` | a real session lost ~3,650 game-sec (village, compass, path) once the 2,500-row cap tripped on hover/mouse noise | after the cap, milestone events (`phase_time`, `player_action`, `build`, `unlock`, `death`, ...) are kept, UI noise dropped |
+| `worker-assign-logged` | village job assignment had no event, so cured-meat / income bugs could not be attributed | `assign_worker` writes `worker_assign {job, delta, workers, population, buildings}` |
+| `cured-meat-first-logged` | `cured meat` was consumed but never produced (`no_producer`) | first charcutier yield writes `cured_meat_first {source, workers, cured_meat, stores}` |
 
 Analysis queries should filter `coalesce((payload->>'is_automation')::boolean,false) = false` and
 collapse on `payload->>'event_id'`.

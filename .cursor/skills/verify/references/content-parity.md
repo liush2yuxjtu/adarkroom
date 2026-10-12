@@ -16,7 +16,7 @@ titles (room, outside, global, marketing, encounters, setpieces, executioner); l
 fabricator/ending.
 
 Statuses: `present` (defined and produced/reachable), `no_producer` (defined and maybe consumed, nothing
-yields it, e.g. `cured_meat`), `missing`.
+yields it, e.g. trade goods whose buy menu is not in this batch), `missing`.
 
 `parity` is opt-in in `run.mjs` (not in the default list) while gaps remain, so the UI/telemetry gate stays
 usable; promote it to default once it passes. Any change that adds original content must flip rows to
