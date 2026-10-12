@@ -1,6 +1,6 @@
 ---
 name: verify
-description: "Verify a change at the real caller surface. Judgment surfaces (aesthetic consensus, PR telemetry, timeline vs mechanics, scope mismatch, pacing intent, wrong-repo PR) plus an on-demand execution checklist. Use on every PR merge or task completion in this adarkroom remake."
+description: "Verify a change at the real caller surface. Judgment surfaces (aesthetic consensus, PR telemetry, timeline vs mechanics, scope mismatch, pacing intent, wrong-repo PR, original intent) plus an on-demand execution checklist. Use on every PR merge or task completion in this adarkroom remake."
 ---
 
 # Verify by runtime observation
@@ -37,6 +37,7 @@ Follow changed code outward to the actual boundary:
 | UI / render / interaction diagnosis | `verification-scope-mismatch`: every code path, render layer, and deploy target before a verdict |
 | This repo when `tools/pacing_analyzer.py` exists | `game-pacing-intent`: verify itself must call the analyzer; intent question, never a bug |
 | Game-code or game-verification PR | `wrong-repo-pr`: target repo must be `liush2yuxjtu/adarkroom`, not the dot-pi agent framework |
+| UI / art / interaction proposal (remake or original exists) | `original-intent-check`: read the original implementation and design intent before proposing; conflicts are art-direction choices, not fixes |
 
 An internal helper is not the final surface when a real caller exists. For a docs-only or tests-only change with no runtime behavior, return **SKIP**.
 
@@ -52,6 +53,7 @@ Named surfaces live in [`references/verification-surfaces.md`](references/verifi
 | A UI/render/interaction conclusion is valid | `verification-scope-mismatch` | every path enumerated, live target with evidence, per-path findings |
 | An early-game phase is slower than the `@pacing` curve | `game-pacing-intent` | analyzer JSON (`early_phase_slow` / `ratio`) + Chinese intent question; not a bug |
 | Game work landed in the right GitHub repo | `wrong-repo-pr` | target repo + description + file paths match adarkroom ownership |
+| A UI/art/interaction proposal is a fix, not a new direction | `original-intent-check` | original `file:line` + intent sources; conflict flagged to the user as art direction, not a fix |
 
 ## Two layers: surfaces judge, steps execute
 
@@ -59,12 +61,12 @@ Keep these layers separate. Do not merge a step into a surface or a surface into
 
 | Layer | What it is | Where |
 |---|---|---|
-| **Judgment** | Named **surfaces**. Each decides what evidence means (community consensus, merge telemetry, bug yes/no, live path, pacing intent, repo ownership). | [`references/verification-surfaces.md`](references/verification-surfaces.md) and each recipe |
+| **Judgment** | Named **surfaces**. Each decides what evidence means (community consensus, merge telemetry, bug yes/no, live path, pacing intent, repo ownership, original intent). | [`references/verification-surfaces.md`](references/verification-surfaces.md) and each recipe |
 | **Execution** | Concrete **steps**. A standard checklist run **on demand before each PR merge**, selected by the diff. Playwright / SQL, pass criteria, failure handling. | [`references/concrete-verification-steps.md`](references/concrete-verification-steps.md) |
 
-The six judgment-layer surfaces are `aesthetic-community-consensus`, `pr-telemetry-required`, `behavior-timeline-vs-mechanics`, `verification-scope-mismatch`, `game-pacing-intent`, and `wrong-repo-pr`.
+The seven judgment-layer surfaces are `aesthetic-community-consensus`, `pr-telemetry-required`, `behavior-timeline-vs-mechanics`, `verification-scope-mismatch`, `game-pacing-intent`, `wrong-repo-pr`, and `original-intent-check`.
 
-Before merge, map changed file types to steps, run those steps, then feed the artifacts into the matching surfaces. Examples: a font change runs step 1 (computed family/weight, `document.fonts`, tofu, screenshot) **plus** `aesthetic-community-consensus`. A telemetry change runs step 4 (unique session + service/read-key SELECT) **plus** `pr-telemetry-required`. A UI layout change runs step 6 (Playwright multi-viewport audit) **plus** `verification-scope-mismatch`. For `verification-scope-mismatch`, run the step on the code that **actually runs live**.
+Before merge, map changed file types to steps, run those steps, then feed the artifacts into the matching surfaces. Examples: a font change runs step 1 (computed family/weight, `document.fonts`, tofu, screenshot) **plus** `aesthetic-community-consensus`. A telemetry change runs step 4 (unique session + service/read-key SELECT) **plus** `pr-telemetry-required`. A UI layout change runs step 6 (Playwright multi-viewport audit) **plus** `verification-scope-mismatch`. A UI/art/interaction **proposal** runs `original-intent-check` first. For `verification-scope-mismatch`, run the step on the code that **actually runs live**.
 
 ## Get a handle
 
@@ -72,7 +74,7 @@ Prefer the project verifier `.cursor/skills/verify-adarkroom/`. Use its Doctor/D
 
 ## Vercel deployment playability check (web games / web apps)
 
-In a project verifier, give each boundary its own surface entry (e.g. `vercel-live-deploy`, `browser-<app>`, `<sink>-telemetry`, `aesthetic-community-consensus`, `pr-telemetry-required`, `behavior-timeline-vs-mechanics`, `verification-scope-mismatch`, `game-pacing-intent`, `wrong-repo-pr`, one per sub-path app) in a `references/verification-surfaces.md` index (`| Surface | Public caller boundary | Operational recipe |`) with one recipe file per surface, and a `| Claim | Real surface | Required evidence |` table in SKILL.md. Keep the execution checklist in `references/concrete-verification-steps.md`; do not list steps as surfaces.
+In a project verifier, give each boundary its own surface entry (e.g. `vercel-live-deploy`, `browser-<app>`, `<sink>-telemetry`, `aesthetic-community-consensus`, `pr-telemetry-required`, `behavior-timeline-vs-mechanics`, `verification-scope-mismatch`, `game-pacing-intent`, `wrong-repo-pr`, `original-intent-check`, one per sub-path app) in a `references/verification-surfaces.md` index (`| Surface | Public caller boundary | Operational recipe |`) with one recipe file per surface, and a `| Claim | Real surface | Required evidence |` table in SKILL.md. Keep the execution checklist in `references/concrete-verification-steps.md`; do not list steps as surfaces.
 
 For a Vercel-hosted web game or web app, "it works" means the LIVE deployment is playable. Run every step against the deployed URL:
 
@@ -221,6 +223,24 @@ Game-code and game-verification changes belong in `liush2yuxjtu/adarkroom`, not 
 
 See `references/wrong-repo-pr.md`. Worked example: [dot-pi PR #169](https://github.com/liush2yuxjtu/dot-pi/pull/169) authored the verify surfaces in the agent-framework repo; they belong here.
 
+## Surface `original-intent-check`
+
+Before proposing **any** UI, art, or interaction change, check the original's actual implementation and design intent. Confirm the proposal does not conflict with that direction. If it does, flag it to the user as a **deliberate art-direction change**, not a fix.
+
+This surface is not `aesthetic-community-consensus` (community taste), not `verification-scope-mismatch` (which remake path is live), and not a substitute for playability.
+
+**Triggers.** A proposed or in-progress UI / art / sprite / canvas / interaction / cooldown / button change on a remake (or any project that has an original). Skip only when there is no original, or the change is not UI / art / interaction.
+
+1. **Name the proposal.** What would change, on which control, and why it is called a fix.
+2. **Read the original implementation.** Open the source that draws the control. Cite `file:line`. Grep the original UI for `<canvas`, `drawImage`, `sprite`, and `.png` when the proposal adds raster/canvas art.
+3. **Read design intent.** Developer interviews, issues, community discussion. Open the pages. Do not invent quotes.
+4. **Compare.** Same materials (text, border, CSS overlay) vs a new art language (sprites, pixel-art sets, canvas).
+5. **Resolve.** Compatible → keep the original's materials. Conflict → stop and present the choice. Do not ship the conflicting version as a fix.
+
+**Rule.** Missing original cites, a missing conflict verdict, or labeling a conflicting change a "fix" is **FAIL**. **SKIP** when there is no original or the change is not UI / art / interaction.
+
+Worked example (2026-10-12 stoke cooldown): original buttons are plain text in a bordered `div` (`css/main.css:243-249`, Times New Roman at `css/main.css:3`) with a shrinking grey overlay (`script/Button.js:26` / `108`). Grep of the original UI for `<canvas`, `drawImage`, `sprite`, `.png`: no hits. *In Media Res*: "a single button-like bounded text box" that "becomes a shrinking gray box". Proposal: 16×16 pixel-art flame/woodpile sprites. Conflict: new pixel-art direction vs minimal-text style. Resolution: ask the user; compatible alternative is CSS-only (shrinking overlay, optional text/glyph tint, no number). See `references/original-intent-check.md`.
+
 ## Execution layer (before merge)
 
 Surfaces above are judgment. The pre-merge checklist is execution: [`references/concrete-verification-steps.md`](references/concrete-verification-steps.md).
@@ -231,7 +251,7 @@ Run only the steps the mapping table selects for the diff. Each step has a trigg
 2. **Save and refresh** — click to save, read the `localStorage` key, reload, diff phase / resources / NPC JSON.
 3. **Cooldown bar** — full button-height overlay, width shrinking, button opacity 1, countdown number, screenshot.
 4. **Telemetry write** — unique session, then SELECT `playtest_events` with the service/read key (anon is insert-only).
-5. **Mapping** — file types → steps → surfaces. Font → step 1 + `aesthetic-community-consensus`. Telemetry → step 4 + `pr-telemetry-required`. `verification-scope-mismatch` → measure the live path. Game docs/skills in the wrong GitHub repo → `wrong-repo-pr`.
+5. **Mapping** — file types → steps → surfaces. Font → step 1 + `aesthetic-community-consensus`. Telemetry → step 4 + `pr-telemetry-required`. `verification-scope-mismatch` → measure the live path. Game docs/skills in the wrong GitHub repo → `wrong-repo-pr`. UI/art/interaction proposal → `original-intent-check` **before** proposing the change.
 6. **Playwright multi-viewport UI audit** — 1280×800, 390×844, 1920×1080; layout, spacing, contrast (WCAG 4.5:1), tap targets ≥44px, alignment, overlap/clipping (`x<0`), horizontal scroll, console/`requestfailed`; numbered issues + screenshots, then P0–P5 triage.
 
 Worked example (this repo, commit `5e3b891`, live export `godot/build/web`): font 500 loaded; overlay 39px tall at about 93% width; opacity 1; save restored after reload.

@@ -8,7 +8,7 @@ Verification has **two layers**. Surfaces **judge**. Concrete steps **execute**.
 
 | Layer | Role | Index |
 |---|---|---|
-| Judgment | Six surfaces decide what evidence means | [`references/verification-surfaces.md`](references/verification-surfaces.md) |
+| Judgment | Seven surfaces decide what evidence means | [`references/verification-surfaces.md`](references/verification-surfaces.md) |
 | Execution | Pre-merge checklist, selected by the diff | [`references/concrete-verification-steps.md`](references/concrete-verification-steps.md) |
 
 ## Surfaces
@@ -25,6 +25,7 @@ Index: [`references/verification-surfaces.md`](references/verification-surfaces.
 | `verification-scope-mismatch` | Verifying any UI, rendering, or interaction issue | Enumerate every code path, render layer, and export/deploy target; identify which one is live. A conclusion from a single path when several exist **fails**. |
 | `game-pacing-intent` | Every `/verify` in this repo when `tools/pacing_analyzer.py` exists — verify itself must call it (no GitHub Action, cron, or manual run) | Read `early_phase_slow` / `ratio` from the analyzer JSON. Intent question, never a bug. Tool or data absent → **skip with a note**. |
 | `wrong-repo-pr` | Game-code / game-verification work (or a PR whose paths and examples are about this remake) | Target repo, description, and file paths must match content ownership. Game work belongs in `liush2yuxjtu/adarkroom`, not `dot-pi`. If wrong: migrate, comment, close. |
+| `original-intent-check` | Before proposing any UI / art / interaction change, when an original exists | Read the original implementation (`file:line`) and design intent. A conflict is a deliberate art-direction choice, not a fix. |
 
 ### `aesthetic-community-consensus`
 
@@ -94,6 +95,14 @@ Game-code and game-verification changes belong in `liush2yuxjtu/adarkroom`, not 
 
 Recipe: [`references/wrong-repo-pr.md`](references/wrong-repo-pr.md).
 
+### `original-intent-check`
+
+Before proposing any UI, art, or interaction change, check the original's actual implementation and design intent (source, developer interviews, issues, community discussion). If the proposal conflicts with that direction, flag it to the user as a deliberate art-direction change instead of a fix.
+
+**Worked example (2026-10-12 stoke cooldown).** Original: plain-text bordered `div` (`css/main.css:243-249`, Times New Roman at `:3`) plus shrinking grey overlay (`script/Button.js:26` / `108`); no canvas/sprites. *In Media Res*: "a single button-like bounded text box" that "becomes a shrinking gray box". Proposal: 16×16 pixel-art flame/woodpile sprites. Conflict: new pixel-art direction vs minimal-text style. Compatible alternative: CSS-only shrinking overlay, optional text/glyph tint.
+
+Recipe: [`references/original-intent-check.md`](references/original-intent-check.md).
+
 ## Execution layer
 
 Standard checklist, run **on demand before each PR merge**. Not a surface. Pick steps from the mapping table; feed their artifacts into the matching surfaces.
@@ -107,7 +116,7 @@ Standard checklist, run **on demand before each PR merge**. Not a surface. Pick 
 | 5 Mapping | every pre-merge diff | File types → steps → surfaces (below) |
 | 6 Playwright multi-viewport UI audit | UI / layout / CSS / responsive / visual-style diff | 1280×800, 390×844, 1920×1080: layout, spacing, WCAG 4.5:1 contrast, tap targets ≥44px, alignment, no `x<0` clip, no horizontal scroll, no console/`requestfailed`; numbered issues + screenshots, then P0–P5 |
 
-**Mapping (how steps feed surfaces).** A font change → step 1 **plus** `aesthetic-community-consensus`. A telemetry change → step 4 **plus** `pr-telemetry-required`. A UI/layout change → step 6 **plus** `verification-scope-mismatch`. For `verification-scope-mismatch`, run the matching step on the code that **actually runs live**. Pacing analyzer files have no checklist step; `game-pacing-intent` auto-calls the tool. Game work opened against `dot-pi` → `wrong-repo-pr`.
+**Mapping (how steps feed surfaces).** A font change → step 1 **plus** `aesthetic-community-consensus`. A telemetry change → step 4 **plus** `pr-telemetry-required`. A UI/layout change → step 6 **plus** `verification-scope-mismatch`. For `verification-scope-mismatch`, run the matching step on the code that **actually runs live**. Pacing analyzer files have no checklist step; `game-pacing-intent` auto-calls the tool. Game work opened against `dot-pi` → `wrong-repo-pr`. Any UI/art/interaction proposal → `original-intent-check` first.
 
 **Worked example (commit `5e3b891`).** Live export `godot/build/web`: font weight 500 loaded; cooldown overlay 39px tall at about 93% width; button opacity 1; save restored after reload.
 
@@ -118,3 +127,4 @@ Recipe: [`references/concrete-verification-steps.md`](references/concrete-verifi
 - [`SKILL.md`](./SKILL.md) — agent-facing procedure, two-layer split, claim table, and existing live-deploy / sink checks
 - [`.cursor/skills/verify-adarkroom/`](../verify-adarkroom/SKILL.md) — operational live Vercel / Playwright / CDP / classic recipes
 - [`references/wrong-repo-pr.md`](references/wrong-repo-pr.md) — game work must land in this repo
+- [`references/original-intent-check.md`](references/original-intent-check.md) — remake UI/art/interaction vs the original's direction
