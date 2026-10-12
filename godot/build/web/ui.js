@@ -55,6 +55,35 @@
     return s;
   }
 
+  var CUE_CN = {
+    fire: "火", wood: "木", person: "人", wind: "风", trap: "阱",
+    meat: "食", compass: "针", beast: "兽", sound: "声", trade: "贸", spark: "讯"
+  };
+  var MENU_CN = {
+    "btn-hyper": "加速", "btn-settings": "设置", "btn-export": "导出",
+    "btn-restart": "重开", "btn-classic": "原版"
+  };
+  var loggedCd = {};
+
+  function compactCn(label) {
+    var s = String(label || "").replace(/[.。\s]+$/g, "");
+    s = s.replace(/[（(].*$/, "").replace(/[:：].*$/, "");
+    if (s.length > 4) s = s.slice(0, 4);
+    return s;
+  }
+
+  function ensureCaption(parent, text) {
+    var cap = parent.querySelector(":scope > .px-caption");
+    if (!cap) {
+      cap = document.createElement("span");
+      cap.className = "px-caption";
+      cap.setAttribute("aria-hidden", "true");
+      parent.appendChild(cap);
+    }
+    if (cap.textContent !== text) cap.textContent = text;
+    return cap;
+  }
+
   function stackCount(n) {
     if (n <= 0) return 0;
     if (n <= 4) return n;
@@ -152,16 +181,28 @@
   }
 
   function fitPixelScene() {
-    if (!isPixel()) return;
+    if (!isPixel()) {
+      document.body.classList.remove("px-wide");
+      return;
+    }
+    var vw = window.innerWidth || 0;
+    var wide = vw >= 1024;
+    document.body.classList.toggle("px-wide", wide);
+    var storesBox = $("stores");
+    var hasStores = !!(storesBox && storesBox.style.display !== "none");
+    document.body.classList.toggle("px-has-stores", hasStores);
     var availParent = $("wrapper") || document.body;
     var pad = 32;
-    var avail = Math.max(160, (availParent.clientWidth || window.innerWidth) - pad);
+    var side = wide && hasStores ? 300 : 0;
+    var gap = wide && hasStores ? 24 : 0;
+    var avail = Math.max(160, (availParent.clientWidth || vw) - pad - side - gap);
     var native = 640;
-    var scale = Math.floor(avail / native);
-    if (scale < 1) {
-      scale = avail >= 320 ? 0.5 : Math.max(0.25, Math.floor((avail / native) * 4) / 4);
+    var scale = Math.floor((avail / native) * 4) / 4;
+    if (scale < 0.5) {
+      scale = avail >= 320 ? 0.5 : Math.max(0.25, scale);
     }
     if (scale > 2) scale = 2;
+    if (scale < 0.25) scale = 0.25;
     document.querySelectorAll(".px-scene").forEach(function (sc) {
       var host = sc.parentElement;
       sc.style.setProperty("--px-scale", String(scale));
@@ -249,13 +290,28 @@
     return left > 0 ? left / max : 0;
   }
 
+  function logPixelCd(cdId, left, text) {
+    if (!isPixel() || !cdId || !window.ADRTelemetry || !ADRTelemetry.log) return;
+    if (left > 0 && !loggedCd[cdId]) {
+      loggedCd[cdId] = true;
+      ADRTelemetry.log("pixel_cd_sec", {
+        cd_id: cdId,
+        remaining: Math.round(left * 10) / 10,
+        text: text,
+        shown: !!text
+      });
+    }
+    if (left <= 0) loggedCd[cdId] = false;
+  }
+
   function paintCdBar(b, cdId) {
     var barEl = b.querySelector(".cd");
     var secEl = b.querySelector(".cd-sec");
     var left = cdId ? cdLeft(cdId) : 0;
     var ratio = cdId ? cdRatio(cdId) : 0;
+    var secText = left > 0 ? String(Math.ceil(left)) : "";
+    if (secEl) secEl.textContent = secText;
     if (isPixel()) {
-      if (secEl) secEl.textContent = "";
       if (cdId === "stoke") {
         var flame = b.querySelector(".px-flame");
         if (flame && game) {
@@ -265,9 +321,11 @@
           flame.classList.toggle("ready", left <= 0);
         }
         if (barEl) barEl.style.width = "0%";
+        logPixelCd(cdId, left, secText);
         return;
       }
       if (barEl) barEl.style.width = (ratio * 100) + "%";
+      logPixelCd(cdId, left, secText);
       return;
     }
     if (barEl) {
@@ -275,7 +333,6 @@
       var max = { stoke: 10, gather: 60, traps: 90 }[cdId] || 1;
       barEl.style.animationDelay = left > 0 ? (-(max - left)) + "s" : "0s";
     }
-    if (secEl) secEl.textContent = left > 0 ? String(Math.ceil(left)) : "";
   }
 
   function upsertButton(parent, key, spec) {
@@ -316,6 +373,7 @@
         else icon = "ok";
       }
       b.setAttribute("aria-label", spec.label || key);
+      b.setAttribute("title", spec.label || key);
       b.classList.add("px-btn");
       if (key === "fire") {
         b.classList.add("px-stoke");
@@ -331,6 +389,7 @@
       } else {
         labEl.querySelector(".px-icon").className = "px-icon px-" + icon;
       }
+      ensureCaption(b, compactCn(spec.label || key));
     } else if (labEl.textContent !== spec.label) {
       labEl.textContent = spec.label;
     }
@@ -383,10 +442,12 @@
       if (isPixel()) {
         var iconName = tab.id === "outside" ? "forest" : tab.id === "path" ? "path" : "room";
         b.setAttribute("aria-label", tab.label);
+        b.setAttribute("title", tab.label);
         if (!b.querySelector(".px-icon")) {
-          b.textContent = "";
+          while (b.firstChild) b.removeChild(b.firstChild);
           b.appendChild(pxIconEl(iconName));
         }
+        ensureCaption(b, compactCn(tab.label));
       } else if (b.textContent !== tab.label) {
         b.textContent = tab.label;
       }
@@ -407,15 +468,25 @@
     var box = $("notifications");
     var notes = game.state.notifications.slice(0, 30);
     var want = notes.map(function (n) {
-      if (isPixel()) return cueForNote(n.text) + (n.count > 1 ? ":" + n.count : "");
+      if (isPixel()) return cueForNote(n.text) + (n.count > 1 ? ":" + n.count : "") + "|" + noteLabel(n);
       return noteLabel(n);
     });
-    var have = [].slice.call(box.querySelectorAll(".note")).map(function (n) {
-      if (isPixel()) return (n.dataset.cue || "") + (n.dataset.count || "");
+    if (isPixel()) want.unshift("legend");
+    var have = [].slice.call(box.querySelectorAll(".note, .px-notes-legend")).map(function (n) {
+      if (n.classList.contains("px-notes-legend")) return "legend";
+      if (isPixel()) return (n.dataset.cue || "") + (n.dataset.count || "") + "|" + (n.getAttribute("title") || "");
       return n.textContent;
     });
     if (want.join("\n") === have.join("\n")) return;
     box.innerHTML = "";
+    if (isPixel()) {
+      var legend = document.createElement("div");
+      legend.className = "px-notes-legend";
+      legend.textContent = "消息";
+      legend.setAttribute("title", "游戏消息：图标旁的字是类别，悬停可看全文");
+      legend.setAttribute("role", "note");
+      box.appendChild(legend);
+    }
     notes.forEach(function (n, i) {
       var d = document.createElement("div");
       d.className = i >= 8 ? "note fade" : "note";
@@ -424,7 +495,13 @@
         d.dataset.cue = cue;
         if (n.count > 1) d.dataset.count = ":" + n.count;
         d.setAttribute("aria-label", noteLabel(n));
+        d.setAttribute("title", noteLabel(n));
+        d.setAttribute("role", "img");
         d.appendChild(pxIconEl(cue));
+        var cap = document.createElement("span");
+        cap.className = "px-caption";
+        cap.textContent = CUE_CN[cue] || "讯";
+        d.appendChild(cap);
       } else {
         var label = document.createElement("span");
         label.className = "note-text";
@@ -453,7 +530,7 @@
     box.style.display = "block";
     var html;
     if (isPixel()) {
-      html = '<div class="legend px-icon px-stores" aria-label="' + ADR.t("stores") + '"></div>';
+      html = '<div class="legend px-icon px-stores" aria-label="' + ADR.t("stores") + '" title="' + ADR.t("stores") + '"></div><span class="px-caption px-stores-caption">' + ADR.t("stores") + "</span>";
       ADR.ITEMS.forEach(function (k) {
         var n = game.state.stores[k] || 0;
         if (n <= 0 && k !== "wood") return;
@@ -724,12 +801,22 @@
       var minus = document.createElement("button");
       minus.type = "button";
       minus.textContent = isPixel() ? "" : "−";
-      if (isPixel()) { minus.appendChild(pxIconEl("minus")); minus.setAttribute("aria-label", "minus"); }
+      if (isPixel()) {
+        minus.appendChild(pxIconEl("minus"));
+        minus.setAttribute("aria-label", "减少");
+        minus.setAttribute("title", "减少");
+        ensureCaption(minus, "减");
+      }
       minus.addEventListener("click", function () { game.act("pack", { item: item, amount: -1 }); });
       var plus = document.createElement("button");
       plus.type = "button";
       plus.textContent = isPixel() ? "" : "+";
-      if (isPixel()) { plus.appendChild(pxIconEl("plus")); plus.setAttribute("aria-label", "plus"); }
+      if (isPixel()) {
+        plus.appendChild(pxIconEl("plus"));
+        plus.setAttribute("aria-label", "增加");
+        plus.setAttribute("title", "增加");
+        ensureCaption(plus, "加");
+      }
       plus.addEventListener("click", function () { game.act("pack", { item: item, amount: 1 }); });
       row.appendChild(minus);
       row.appendChild(plus);
@@ -840,8 +927,14 @@
     renderEvent();
     playPhaseWipe(loc);
     if (isPixel()) {
+      var dirText = game.directorName === "llm" ? "模型" : "规则";
       $("director-label").textContent = "";
-      $("director-label").setAttribute("aria-label", game.directorName === "llm" ? "llm" : "rule");
+      $("director-label").setAttribute("aria-label", "导演：" + dirText);
+      $("director-label").setAttribute("title", "导演：" + dirText);
+      if (!$("director-label").querySelector(".px-icon")) {
+        $("director-label").appendChild(pxIconEl("director"));
+      }
+      ensureCaption($("director-label"), dirText);
     } else {
       $("director-label").textContent = game.directorName === "llm" ? "导演：语言模型" : "导演：规则";
     }
@@ -854,6 +947,7 @@
     if (isPixel()) {
       el.textContent = "";
       el.setAttribute("aria-label", msg);
+      el.setAttribute("title", msg);
     } else {
       el.textContent = msg;
     }
@@ -950,11 +1044,16 @@
     if (!isPixel()) return;
     ["btn-hyper", "btn-settings", "btn-export", "btn-restart", "btn-classic"].forEach(function (id) {
       var el = $(id);
-      if (!el || el.querySelector(".px-icon")) return;
+      if (!el) return;
       var icon = el.getAttribute("data-icon") || "spark";
-      el.setAttribute("aria-label", el.textContent || icon);
-      el.textContent = "";
-      el.appendChild(pxIconEl(icon));
+      var raw = MENU_CN[id] || compactCn(el.textContent || el.getAttribute("aria-label") || icon);
+      el.setAttribute("aria-label", raw);
+      el.setAttribute("title", raw);
+      if (!el.querySelector(".px-icon")) {
+        while (el.firstChild) el.removeChild(el.firstChild);
+        el.appendChild(pxIconEl(icon));
+      }
+      ensureCaption(el, raw);
     });
   }
 
@@ -1001,7 +1100,70 @@
         notes_x: r ? Math.round(r.x) : null,
         notes_visible: visible && !!(r && r.x >= -1)
       });
+      emitPixelAudit(w, h, hostR, scale);
+    } else {
+      emitTextTabAudit(w, h);
     }
+  }
+
+  function emitPixelAudit(w, h, hostR, scale) {
+    if (!window.ADRTelemetry || !ADRTelemetry.log) return;
+    var caps = [].slice.call(document.querySelectorAll(".px-caption")).map(function (el) {
+      var cs = getComputedStyle(el);
+      var r = el.getBoundingClientRect();
+      return {
+        text: el.textContent,
+        visible: r.width > 0 && r.height > 0 && cs.fontSize !== "0px" && cs.color !== "transparent" && cs.display !== "none"
+      };
+    });
+    ADRTelemetry.log("pixel_btn_label", {
+      count: caps.length,
+      visible: caps.filter(function (c) { return c.visible && c.text; }).length,
+      samples: caps.slice(0, 8).map(function (c) { return c.text; })
+    });
+    var noteLegend = document.querySelector(".px-notes-legend");
+    var notes = [].slice.call(document.querySelectorAll("#notifications .note"));
+    ADRTelemetry.log("pixel_note_meaning", {
+      has_legend: !!(noteLegend && noteLegend.textContent),
+      note_count: notes.length,
+      titled: notes.filter(function (n) { return !!n.getAttribute("title"); }).length,
+      captioned: notes.filter(function (n) { return !!(n.querySelector(".px-caption") || {}).textContent; }).length
+    });
+    var unusedRight = hostR ? Math.max(0, w - hostR.right) : 0;
+    ADRTelemetry.log("pixel_wide_layout", {
+      width: w,
+      height: h,
+      scale: scale,
+      two_col: document.body.classList.contains("px-wide"),
+      host_x: hostR ? Math.round(hostR.x) : null,
+      host_w: hostR ? Math.round(hostR.width) : null,
+      unused_right: Math.round(unusedRight),
+      unused_right_pct: w ? Math.round((unusedRight / w) * 1000) / 1000 : null
+    });
+    var hearth = document.querySelector(".px-fire");
+    var scene = document.querySelector(".px-scene");
+    var icon = document.querySelector(".px-icon");
+    var readIR = function (el) { return el ? getComputedStyle(el).imageRendering : null; };
+    ADRTelemetry.log("image_rendering", {
+      hearth: readIR(hearth),
+      scene: readIR(scene),
+      icon: readIR(icon),
+      body: readIR(document.body)
+    });
+  }
+
+  function emitTextTabAudit(w, h) {
+    if (!window.ADRTelemetry || !ADRTelemetry.log) return;
+    var tabs = [].slice.call(document.querySelectorAll("#header button")).map(function (b) {
+      var r = b.getBoundingClientRect();
+      return { text: (b.textContent || "").slice(0, 12), w: Math.round(r.width), h: Math.round(r.height) };
+    });
+    ADRTelemetry.log("text_tab_target", {
+      width: w,
+      height: h,
+      tabs: tabs,
+      min_h: tabs.reduce(function (m, t) { return Math.min(m, t.h || 99); }, 99)
+    });
   }
 
   function bindMenu() {
@@ -1010,7 +1172,10 @@
       var next = game.timeScale >= 2 ? 1 : 2;
       game.act("set_timescale", { scale: next });
       if (isPixel()) {
-        $("btn-hyper").setAttribute("aria-label", next >= 2 ? "原速" : "加速");
+        var hyperLbl = next >= 2 ? "原速" : "加速";
+        $("btn-hyper").setAttribute("aria-label", hyperLbl);
+        $("btn-hyper").setAttribute("title", hyperLbl);
+        ensureCaption($("btn-hyper"), hyperLbl);
       } else {
         $("btn-hyper").textContent = next >= 2 ? "原速." : "加速.";
       }
