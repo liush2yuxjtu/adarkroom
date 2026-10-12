@@ -66,13 +66,19 @@
       body: body
     };
     /* keepalive:true is recorded as net::ERR_ABORTED in Chromium/Playwright even when the POST returns 201. */
+    /* Prefer:return=minimal yields an empty 201 body. Leaving it unread also makes Chromium/Playwright
+     * fire requestfailed net::ERR_ABORTED on the SAME request that already got status 201. Drain it. */
     return fetch(url, fetchOpts).then(function (r) {
-      if (!r.ok) {
-        var err = new Error(String(r.status));
-        err.status = r.status;
-        throw err;
-      }
-      return { ok: true, status: r.status, via: "fetch" };
+      var status = r.status;
+      var ok = r.ok;
+      return r.text().then(function () {
+        if (!ok) {
+          var err = new Error(String(status));
+          err.status = status;
+          throw err;
+        }
+        return { ok: true, status: status, via: "fetch" };
+      });
     });
   }
   function postOnce(url, anonKey, rows, opts) {
