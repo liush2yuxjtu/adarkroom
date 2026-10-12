@@ -19,6 +19,7 @@ Choose the recipe from [the surface index](references/verification-surfaces.md).
 | Remake is playable | `browser-remake` | Real-mouse `生火` → `#panel-room h1 == 生火间`, other buttons react, no console/4xx errors, CDP hit-test + listeners + node stability, `player_action` in localStorage, screenshot |
 | Telemetry reaches the backend | `supabase-telemetry` | Rows in `playtest_events` for this run's `session_id` (via `execute_sql`), anon SELECT denied |
 | Original game works | `classic-subpath` | Real-mouse `生火` → title `生火间`, screenshot |
+| Early-game pacing is on-curve | `pacing-intent-check` | `python -m tools.pacing_analyzer --json` → `early_phase_slow` is false |
 
 ## Launch
 
@@ -43,8 +44,9 @@ Every line must be `200`. `302` means Vercel Authentication protection is on: ei
 ```bash
 /workspace/.pwvenv/bin/python .cursor/skills/verify-adarkroom/scripts/verify_live.py <base_url> /workspace/adr-verify   # browser-remake + classic-subpath
 .cursor/skills/verify-adarkroom/scripts/cdp_inspect.sh <base_url>                                                      # browser-remake (CDP)
+python3 -m tools.pacing_analyzer --json --input tools/testdata/playtest_events_sample.json                             # pacing-intent-check (every verify run)
 ```
-Exit 0 means PASS, 1 means FAIL. Per-surface steps, pass criteria and the 2026-10-12 regression (buttons rebuilt every frame) are in `references/`.
+Exit 0 means PASS, 1 means FAIL. Per-surface steps, pass criteria and the 2026-10-12 regression (buttons rebuilt every frame) are in `references/`. `pacing-intent-check` is on-demand only — no GitHub Action or cron.
 
 ## Evidence
 

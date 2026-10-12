@@ -4,11 +4,17 @@
 from __future__ import annotations
 
 import json
+import sys
 import tempfile
 import unittest
+from io import StringIO
 from pathlib import Path
 
-import pacing_analyzer as pa
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from tools import pacing_analyzer as pa
 
 
 class ParseTagTests(unittest.TestCase):
@@ -195,12 +201,57 @@ class CompareTests(unittest.TestCase):
         self.assertEqual(rows["room_fire"]["verdict"], "on_track")
 
 
-class SampleFileSmokeTests(unittest.TestCase):
+class AnalyzeApiTests(unittest.TestCase):
+    SAMPLE = Path(__file__).resolve().parent / "testdata" / "playtest_events_sample.json"
+
     def test_sample_loads(self):
-        path = Path(__file__).resolve().parent / "testdata" / "playtest_events_sample.json"
-        events = pa.load_events_file(path)
+        events = pa.load_events_file(self.SAMPLE)
         self.assertEqual(len(events), 577)
         self.assertTrue(all(e.get("event_name") != "director_think" for e in events))
+
+    def test_analyze_schema(self):
+        result = pa.analyze(ROOT, input_path=self.SAMPLE)
+        self.assertIn("phases", result)
+        self.assertIn("cooldown_utilization", result)
+        self.assertIn("resource_balance", result)
+        self.assertIn("early_phase_slow", result)
+        self.assertEqual(result["early_phase_slow_threshold"], 1.5)
+        self.assertFalse(result["early_phase_slow"])
+        by_phase = {p["phase"]: p for p in result["phases"]}
+        fire = by_phase["room_fire"]
+        self.assertEqual(fire["expected_min"], 28.0)
+        self.assertEqual(fire["expected_max"], 35.0)
+        self.assertIsNotNone(fire["actual_median"])
+        self.assertGreater(fire["sample_count"], 0)
+        self.assertAlmostEqual(fire["ratio"], fire["actual_median"] / fire["expected_max"], places=4)
+        self.assertIn("gather", result["cooldown_utilization"])
+        self.assertIn("stoke", result["cooldown_utilization"])
+        self.assertIn("wood_in", result["resource_balance"])
+        self.assertIn("wood_out", result["resource_balance"])
+        self.assertIn("net", result["resource_balance"])
+
+    def test_early_phase_slow_threshold(self):
+        result = pa.analyze(ROOT, input_path=self.SAMPLE, slow_ratio=0.01)
+        self.assertTrue(result["early_phase_slow"])
+        self.assertEqual(result["early_phase_slow_threshold"], 0.01)
+
+    def test_json_cli(self):
+        buf = StringIO()
+        old = sys.stdout
+        sys.stdout = buf
+        try:
+            rc = pa.main(["--json", "--input", str(self.SAMPLE), "--repo-root", str(ROOT)])
+        finally:
+            sys.stdout = old
+        self.assertEqual(rc, 0)
+        payload = json.loads(buf.getvalue())
+        self.assertEqual(set(payload), {
+            "phases",
+            "cooldown_utilization",
+            "resource_balance",
+            "early_phase_slow",
+            "early_phase_slow_threshold",
+        })
 
 
 if __name__ == "__main__":

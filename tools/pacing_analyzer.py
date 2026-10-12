@@ -1,14 +1,20 @@
 #!/usr/bin/env python3
-"""Standalone pacing analyzer for the Chinese A Dark Room remake.
+"""Importable pacing analyzer for the Chinese A Dark Room remake.
 
-No agent required. Scans @pacing tags, builds an expected curve, compares
-playtest_events (Supabase or --input JSON), and writes Markdown/JSON reports.
+Stable API used by the dot-pi verify skill (surface pacing-intent-check):
+
+    from tools.pacing_analyzer import analyze
+    analyze(repo_root, input_path=None, supabase_url=None, key=None, slow_ratio=1.5) -> dict
+
+CLI (verify call interface only):
+
+    python -m tools.pacing_analyzer --json
+    python -m tools.pacing_analyzer --json --input tools/testdata/playtest_events_sample.json
 """
 
 from __future__ import annotations
 
 import argparse
-import datetime as dt
 import json
 import os
 import re
@@ -117,12 +123,10 @@ ACTION_COOLDOWN = {
 }
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_SCAN_ROOTS = [
-    REPO_ROOT / "godot" / "build" / "web",
-    REPO_ROOT / "godot" / "scripts",
-]
+EARLY_PHASES = ("room_dark", "room_fire", "stranger")
+DEFAULT_SLOW_RATIO = 1.5
 SCAN_SUFFIXES = {".js", ".gd"}
-SKIP_BASENAMES = {"telemetry-config.js", "supabase.js"}
+SKIP_BASENAMES = {"telemetry-config.js", "supabase.js", "telemetry.js"}
 
 
 # ---------------------------------------------------------------------------
@@ -301,6 +305,11 @@ def _numbers_match(tag: dict[str, Any], line: str) -> bool:
     return False
 
 
+def scan_roots_for(repo_root: Path) -> list[Path]:
+    root = Path(repo_root)
+    return [root / "godot" / "build" / "web", root / "godot" / "scripts"]
+
+
 def iter_source_files(roots: Iterable[Path]) -> list[Path]:
     files: list[Path] = []
     for root in roots:
@@ -315,13 +324,14 @@ def iter_source_files(roots: Iterable[Path]) -> list[Path]:
     return files
 
 
-def scan_tags(roots: Iterable[Path] | None = None) -> dict[str, Any]:
-    roots = list(roots) if roots is not None else DEFAULT_SCAN_ROOTS
+def scan_tags(roots: Iterable[Path] | None = None, repo_root: Path | None = None) -> dict[str, Any]:
+    repo_root = Path(repo_root) if repo_root is not None else REPO_ROOT
+    roots = list(roots) if roots is not None else scan_roots_for(repo_root)
     tags: list[dict[str, Any]] = []
     mismatches: list[dict[str, Any]] = []
     untagged: list[dict[str, Any]] = []
     for path in iter_source_files(roots):
-        rel = str(path.relative_to(REPO_ROOT)) if path.is_relative_to(REPO_ROOT) else str(path)
+        rel = str(path.relative_to(repo_root)) if path.is_relative_to(repo_root) else str(path)
         text = path.read_text(encoding="utf-8")
         lines = text.splitlines()
         pending: list[dict[str, Any]] = []
@@ -861,291 +871,103 @@ def resource_flow(events: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def phase_ratio(actual_median: float | None, expected_max: float | None) -> float | None:
+    if actual_median is None or expected_max is None or expected_max <= 0:
+        return None
+    return round(float(actual_median) / float(expected_max), 4)
+
+
 def analyze(
-    events: list[dict[str, Any]],
-    tags: list[dict[str, Any]],
+    repo_root,
+    input_path=None,
+    supabase_url=None,
+    key=None,
+    slow_ratio: float = DEFAULT_SLOW_RATIO,
 ) -> dict[str, Any]:
+    """Compare tagged design pacing against playtest_events.
+
+    Parameters
+    ----------
+    repo_root : path to the remake repo (scans godot/build/web and godot/scripts)
+    input_path : optional offline JSON (list of playtest_events rows)
+    supabase_url, key : REST read credentials; fall back to env if omitted
+    slow_ratio : early_phase_slow when actual_median / expected_max >= this (default 1.5)
+    """
+    repo_root = Path(repo_root)
+    scan = scan_tags(repo_root=repo_root)
+    if input_path is not None:
+        events = load_events_file(Path(input_path))
+    else:
+        events = fetch_supabase_events(supabase_url, key)
     events = filter_events(events)
-    expected = derive_expected_curve(tags)
+    expected = derive_expected_curve(scan["tags"])
     actual = collect_phase_times(events)
-    phases = compare_phases(actual, expected)
-    actions = action_intervals(events)
-    resources = resource_flow(events)
-    sessions = sorted({str(e.get("session_id")) for e in events if e.get("session_id")})
-    slower = [p for p in phases if p["verdict"] == "slower"]
-    faster = [p for p in phases if p["verdict"] == "faster"]
+    phases: list[dict[str, Any]] = []
+    early_slow = False
+    for name in PHASE_ORDER:
+        exp = expected[name]
+        act = actual.get(name, {})
+        median = act.get("median_sec")
+        count = int(act.get("n_completed") or 0)
+        ratio = phase_ratio(median, exp["max_sec"])
+        if name in EARLY_PHASES and ratio is not None and ratio >= slow_ratio:
+            early_slow = True
+        phases.append(
+            {
+                "phase": name,
+                "expected_min": exp["min_sec"],
+                "expected_max": exp["max_sec"],
+                "actual_median": median,
+                "ratio": ratio,
+                "sample_count": count,
+            }
+        )
+    utilization: dict[str, float | None] = {}
+    for row in action_intervals(events):
+        utilization[row["cooldown_id"]] = row["utilization_pct"]
+    flow = resource_flow(events)
     return {
-        "n_events": len(events),
-        "n_sessions": len(sessions),
-        "sessions": sessions,
-        "expected": expected,
-        "actual": {
-            phase: {k: v for k, v in row.items() if k not in {"completed", "incomplete"}}
-            for phase, row in actual.items()
-        },
         "phases": phases,
-        "slower_than_expected": slower,
-        "faster_than_expected": faster,
-        "actions": actions,
-        "resources": resources,
+        "cooldown_utilization": utilization,
+        "resource_balance": {
+            "wood_in": flow["wood_in_from_actions"],
+            "wood_out": flow["wood_out_from_actions"],
+            "net": flow["net_from_actions"],
+        },
+        "early_phase_slow": early_slow,
+        "early_phase_slow_threshold": slow_ratio,
     }
 
 
-# ---------------------------------------------------------------------------
-# Reports
-# ---------------------------------------------------------------------------
-
-
-def _fmt_sec(v: Any) -> str:
-    if v is None:
-        return "—"
-    try:
-        x = float(v)
-    except (TypeError, ValueError):
-        return "—"
-    if abs(x) >= 90:
-        return f"{x:.1f}s ({x / 60:.1f}min)"
-    return f"{x:.1f}s"
-
-
-VERDICT_ZH = {
-    "slower": "偏慢（可能盯着按钮）",
-    "faster": "偏快（可能跳过内容）",
-    "on_track": "符合预期",
-    "in_progress": "未完成（仍在该阶段）",
-    "no_data": "无数据",
-}
-
-
-def render_markdown(
-    scan: dict[str, Any],
-    result: dict[str, Any],
-    *,
-    source: str,
-    date: str,
-) -> str:
-    design = unique_design_tags(scan["tags"])
-    lines = [
-        f"# 节奏分析 {date}",
-        "",
-        "独立脚本 `tools/pacing_analyzer.py` 生成，不依赖 agent。",
-        "",
-        "## 数据来源",
-        "",
-        f"- 事件：{source}",
-        f"- 事件数：{result['n_events']}（已排除 `director_think`）",
-        f"- 会话数：{result['n_sessions']}",
-        f"- 计时：一律用 `game_time_sec`（游戏时间会暂停，不用墙钟）",
-        "",
-        "## 标签检查",
-        "",
-        f"- 扫描到 `@pacing` 标签 {len(scan['tags'])} 条（去重后 {len(design)} 条设计常量）",
-        f"- 标签值与下一行字面量不一致：{len(scan['mismatches'])}",
-        f"- 疑似未标注的计时字面量：{len(scan['untagged'])}",
-        "",
-    ]
-    if scan["mismatches"]:
-        lines += ["### 不一致", ""]
-        for m in scan["mismatches"][:20]:
-            lines.append(f"- `{m['file']}:{m['line']}` {m.get('reason')} value={m.get('value', '')} → `{m.get('next', m.get('text', ''))}`")
-        lines.append("")
-    if scan["untagged"]:
-        lines += ["### 未标注", ""]
-        for u in scan["untagged"][:20]:
-            lines.append(f"- `{u['file']}:{u['line']}` `{u['text']}`")
-        lines.append("")
-
-    lines += [
-        "## 阶段曲线（预期 vs 实际）",
-        "",
-        "| 阶段 | 预期 min | 预期 max | 实际中位 | 实际均值 | 完成样本 | 未完成 | 判定 |",
-        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
-    ]
-    for p in result["phases"]:
-        lines.append(
-            "| {phase} | {emin} | {emax} | {amed} | {amean} | {nc} | {ni} | {ver} |".format(
-                phase=p["phase"],
-                emin=_fmt_sec(p["expected_min_sec"]),
-                emax=_fmt_sec(p["expected_max_sec"]),
-                amed=_fmt_sec(p["actual_median_sec"]),
-                amean=_fmt_sec(p["actual_mean_sec"]),
-                nc=p["n_completed"],
-                ni=p["n_incomplete"],
-                ver=VERDICT_ZH.get(p["verdict"], p["verdict"]),
-            )
-        )
-    lines += ["", "### 预期怎么来的", ""]
-    for p in result["phases"]:
-        lines.append(f"- **{p['phase']}**：{p['expected_basis']}")
-    lines += ["", "### 读法", ""]
-    lines += [
-        "- **偏慢**：玩家停留超过设计窗口，可能盯着冷却条或没发现下一个按钮。",
-        "- **偏快**：短于触发器/成本下界，可能用了加速或跳过了建造者剧情。",
-        "- **未完成**：会话停在该阶段；森林中位若远低于小屋成本时间，多半是试玩中断而不是破关过快。",
-        "",
-        "## 操作间隔 vs 冷却",
-        "",
-        "| 操作 | 设计冷却 | 点击次数 | 间隔中位 | 利用率 |",
-        "| --- | ---: | ---: | ---: | ---: |",
-    ]
-    for a in result["actions"]:
-        util = f"{a['utilization_pct']}%" if a["utilization_pct"] is not None else "—"
-        lines.append(
-            f"| {a['action']} (`{a['cooldown_id']}`) | {_fmt_sec(a['cooldown_sec'])} | {a['n_clicks']} | {_fmt_sec(a['median_interval_sec'])} | {util} |"
-        )
-    lines += [
-        "",
-        "利用率 = 冷却 / 实际间隔中位。接近 100% 表示一好就点；远低于 50% 表示按钮闲置。",
-        "",
-        "## 资源进出 vs 设计",
-        "",
-    ]
-    r = result["resources"]
-    lines += [
-        f"- 伐木点击 {r['gather_clicks']} 次，设计入账 {r['design_gather_wood_in']} 木头（每次 +10）",
-        f"- 添柴点击 {r['stoke_clicks']} 次，设计消耗 {r['design_stoke_wood_out']} 木头（每次 −1）",
-        f"- 生火点击 {r['light_clicks']} 次，建造 {r['build_clicks']} 次",
-        f"- 动作合计：入 {r['wood_in_from_actions']:g} / 出 {r['wood_out_from_actions']:g} / 净 {r['net_from_actions']:g}",
-        f"- 快照净变化（{r['snapshot_sessions']} 个会话首末差之和）：{r['snapshot_net_delta']:g}",
-        f"- {r['note']}",
-        "",
-        "## 设计常量（去重）",
-        "",
-        "| kind | id | value | phase | note |",
-        "| --- | --- | --- | --- | --- |",
-    ]
-    for t in design:
-        lines.append(
-            f"| {t['kind']} | {t['id']} | {t['value']} | {t.get('phase') or ''} | {t.get('note') or ''} |"
-        )
-    lines.append("")
-    return "\n".join(lines)
-
-
-def write_reports(
-    md: str,
-    payload: dict[str, Any],
-    out_dir: Path,
-    date: str,
-) -> tuple[Path, Path]:
-    out_dir.mkdir(parents=True, exist_ok=True)
-    md_path = out_dir / f"pacing-{date}.md"
-    json_path = out_dir / f"pacing-{date}.json"
-    md_path.write_text(md, encoding="utf-8")
-    json_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    return md_path, json_path
-
-
-def notify_webhook(payload: dict[str, Any], markdown: str, url: str | None = None) -> bool:
-    url = url or os.environ.get("PACING_WEBHOOK_URL", "")
-    if not url:
-        return False
-    body = json.dumps(
-        {
-            "title": f"pacing {payload.get('date')}",
-            "n_events": payload.get("n_events"),
-            "n_sessions": payload.get("n_sessions"),
-            "slower": [p["phase"] for p in payload.get("slower_than_expected", [])],
-            "faster": [p["phase"] for p in payload.get("faster_than_expected", [])],
-            "markdown": markdown,
-        },
-        ensure_ascii=False,
-    ).encode("utf-8")
-    req = urllib.request.Request(
-        url,
-        data=body,
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-    try:
-        urllib.request.urlopen(req, timeout=20).read()
-    except urllib.error.URLError as exc:
-        print(f"webhook failed: {exc}", file=sys.stderr)
-        return False
-    return True
-
-
-# ---------------------------------------------------------------------------
-# CLI
-# ---------------------------------------------------------------------------
-
-
-def today() -> str:
-    return dt.date.today().isoformat()
-
-
 def build_arg_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(description="A Dark Room remake pacing analyzer (no agent)")
-    p.add_argument("--input", type=Path, help="Offline playtest_events JSON (list of rows)")
-    p.add_argument("--out-dir", type=Path, default=REPO_ROOT / "reports")
-    p.add_argument("--date", default=None, help="Report date stamp (default: today)")
-    p.add_argument("--scan-root", action="append", type=Path, dest="scan_roots")
-    p.add_argument("--check-only", action="store_true", help="Only scan @pacing tags")
-    p.add_argument("--no-webhook", action="store_true")
+    p = argparse.ArgumentParser(
+        description="Pacing analyzer. Verify interface: python -m tools.pacing_analyzer --json"
+    )
+    p.add_argument(
+        "--json",
+        action="store_true",
+        help="Print the stable JSON payload (required; this is the verify call interface)",
+    )
+    p.add_argument("--input", type=Path, help="Offline playtest_events JSON for tests")
+    p.add_argument("--slow-ratio", type=float, default=DEFAULT_SLOW_RATIO)
+    p.add_argument("--repo-root", type=Path, default=REPO_ROOT)
     return p
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = build_arg_parser().parse_args(argv)
-    date = args.date or today()
-    roots = args.scan_roots or DEFAULT_SCAN_ROOTS
-    scan = scan_tags(roots)
-    if args.check_only:
-        print(
-            json.dumps(
-                {
-                    "n_tags": len(scan["tags"]),
-                    "mismatches": scan["mismatches"],
-                    "untagged": scan["untagged"],
-                },
-                ensure_ascii=False,
-                indent=2,
-            )
-        )
-        return 1 if scan["mismatches"] or scan["untagged"] else 0
-
-    source = "supabase"
-    if args.input:
-        events = load_events_file(args.input)
-        source = str(args.input)
-    else:
-        events = fetch_supabase_events()
-
-    result = analyze(events, scan["tags"])
-    md = render_markdown(scan, result, source=source, date=date)
-    payload = {
-        "date": date,
-        "source": source,
-        "tag_grammar": {
-            "required": ["kind", "id", "value"],
-            "optional": ["phase", "min", "max", "note"],
-            "kinds": sorted(VALID_KINDS),
-            "value": "60s | 300ms | 3min | 0.2/s | 2/10s | 10",
-        },
-        "scan": {
-            "n_tags": len(scan["tags"]),
-            "n_design": len(unique_design_tags(scan["tags"])),
-            "mismatches": scan["mismatches"],
-            "untagged": scan["untagged"],
-            "tags": [
-                {k: t[k] for k in ("kind", "id", "value", "phase", "min", "max", "note", "file", "line") if k in t}
-                for t in scan["tags"]
-            ],
-        },
-        **result,
-    }
-    md_path, json_path = write_reports(md, payload, args.out_dir, date)
-    print(md_path)
-    print(json_path)
-    if not args.no_webhook:
-        notify_webhook(payload, md)
-    if scan["mismatches"] or scan["untagged"]:
-        print(
-            f"tag check: {len(scan['mismatches'])} mismatches, {len(scan['untagged'])} untagged",
-            file=sys.stderr,
-        )
+    parser = build_arg_parser()
+    args = parser.parse_args(argv)
+    if not args.json:
+        parser.error("verify interface is: python -m tools.pacing_analyzer --json [--input FILE]")
+    payload = analyze(
+        args.repo_root,
+        input_path=args.input,
+        slow_ratio=args.slow_ratio,
+    )
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
     return 0
 
 
 if __name__ == "__main__":
     sys.exit(main())
+
