@@ -264,9 +264,10 @@ Content parity with the original (`script/*.js`) is opt-in while gaps remain:
 ```bash
 node tools/verify/parity.mjs
 node tools/verify/run.mjs --only parity
+node tools/verify/run.mjs --only migration   # review gate: exit 0 = fully migrated
 ```
 
-Policy and statuses: [`references/content-parity.md`](references/content-parity.md). Do not add `parity` to the default `run.mjs` list until it is green. Any change that adds original content must flip those rows to `present`.
+Policy and statuses: [`references/content-parity.md`](references/content-parity.md). The review skill is [`.cursor/skills/migration/`](../migration/SKILL.md). Do not add `parity` or `migration` to the default `run.mjs` list until they are green. Any change that adds original content must flip those rows to `present`.
 
 Surfaces above are judgment. The pre-merge checklist is execution: [`references/concrete-verification-steps.md`](references/concrete-verification-steps.md).
 
@@ -283,7 +284,7 @@ Run only the steps the mapping table selects for the diff. Each step has a trigg
 9. **Accessibility** — inject axe-core; WCAG 4.5:1 / 3:1; tap ≥44px mobile / ≥24px desktop (incl. `#btn-style`); names; Tab focus visible.
 10. **Extremes** — long text, stores 0, 1e9, corrupt saves (invalid JSON, missing fields, wrong types). No uncaught errors, no overflow, no clipped text, `save_corrupt` + `save_recover`.
 
-The suite `node tools/verify/run.mjs --url <live>` prints JSON `{ pass, exitCode, failures }` and exits non-zero on failure. Default suites: cdp, screenshots, a11y, extremes, telemetry, story, income. `parity` is opt-in (`--only parity`).
+The suite `node tools/verify/run.mjs --url <live>` prints JSON `{ pass, exitCode, failures }` and exits non-zero on failure. Default suites: cdp, screenshots, a11y, extremes, telemetry, story, income. `parity` and `migration` are opt-in. `migration` exit 0 is the only REVIEW PASS for “original fully migrated”.
 
 Worked example (this repo, commit `5e3b891`, live export `godot/build/web`): font 500 loaded; overlay 39px tall at about 93% width; opacity 1; save restored after reload.
 

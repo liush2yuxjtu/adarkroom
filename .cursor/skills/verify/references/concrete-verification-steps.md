@@ -456,6 +456,14 @@ node tools/verify/run.mjs --only parity
 
 See [`content-parity.md`](content-parity.md). Do not add it to the default `run.mjs` list until green.
 
+The full original→remake **review** gate (skill `.cursor/skills/migration/`):
+
+```bash
+node tools/verify/run.mjs --only migration
+```
+
+Exit 0 only when missing=0, no_producer=0, numeric mismatch=0, and every batch reachability run passes. Expected FAIL until batches 2–9 land. Baseline: `tools/verify/reports/migration-baseline.md`.
+
 ## Worked example: 2026-10-12 12-issue audit
 
 UI-fix [PR #7](https://github.com/liush2yuxjtu/adarkroom/pull/7), merged into live `cursor/godot-chinese-remake-5c3a` at `2361374` (`23613748bb349ec44147cb458eaf600f80bd03f6`). Live export `godot/build/web`. In-repo auditor `godot/tools/verify_uifix.mjs`. Screenshots `/opt/cursor/artifacts/uifix/`.

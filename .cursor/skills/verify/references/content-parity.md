@@ -21,3 +21,12 @@ yields it, e.g. trade goods whose buy menu is not in this batch), `missing`.
 `parity` is opt-in in `run.mjs` (not in the default list) while gaps remain, so the UI/telemetry gate stays
 usable; promote it to default once it passes. Any change that adds original content must flip rows to
 `present` here.
+
+The full review gate (present + numeric + Chinese + persist + per-batch reachability) is:
+
+```bash
+node tools/verify/run.mjs --only migration
+```
+
+Exit 0 only when missing, no_producer, and numeric mismatch are all 0. See `.cursor/skills/migration/SKILL.md`.
+Baseline report: `tools/verify/reports/migration-baseline.md`.
