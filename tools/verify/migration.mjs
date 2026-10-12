@@ -24,8 +24,10 @@ import {
   batchOf,
   BATCH_META,
   hasCjk,
-  EVENT_ALIASES
+  EVENT_ALIASES,
+  LANDMARK_IDS
 } from "./lib/original-extract.mjs";
+import { loadEvents } from "./lib/engine-sandbox.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ALLOW_PATH = path.join(HERE, "migration-allowlist.json");
@@ -131,12 +133,18 @@ function numericForRow(row, spec, ADR) {
   return { status: "match", detail: "n/a" };
 }
 
-function chineseForRow(row, spec, zhMap, ADR) {
+function chineseForRow(row, spec, zhMap, ADR, remakeEvents) {
   if (row.status === "missing") return { status: "skip", detail: "not present" };
   const name = row.name;
   const id = snake(name.replace(/ \(punch\)$/, ""));
   const remakeLabel = zhMap[id] || (ADR.STRINGS && ADR.STRINGS[name]);
   const origZh = spec.zh[name] || spec.zh[name.replace(/ \(punch\)$/, "")];
+  if (row.category === "setpiece event" || row.category === "landmark/setpiece") {
+    const alias = EVENT_ALIASES[name] || LANDMARK_IDS[name] || snake(name.replace(/^(the|an?) /i, ""));
+    const ev = remakeEvents && remakeEvents[alias];
+    if (ev && hasCjk(ev.title)) return { status: "ok", detail: ev.title };
+    return { status: "skip", detail: `landmark ${alias}` };
+  }
   if (row.category === "notification") {
     const prefix = name.replace(/^(craft|perk|fabricator):[^:]+:\s*/, "");
     const hit = spec.notify.find((n) => n.text.startsWith(prefix) || prefix.startsWith(n.text.slice(0, 40)));
@@ -317,11 +325,12 @@ export function runMigration({ writeReport = true } = {}) {
   const ADR = sb.ADR;
   const zhMap = remakeChineseMap(ADR);
   const persist = persistKeys(ADR);
+  const remakeEvents = loadEvents();
 
   const rows = parity.rows.map((r) => {
     const id = `${r.category}:${r.name}`;
     const num = numericForRow(r, spec, ADR);
-    const zh = chineseForRow(r, spec, zhMap, ADR);
+    const zh = chineseForRow(r, spec, zhMap, ADR, remakeEvents);
     const save = persistForRow(r, persist);
     const batch = batchOf(r.category, r.name);
     return { ...r, id, batch, numeric: num, chinese: zh, persist: save, allowlisted: allowed.has(id) };
