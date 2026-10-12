@@ -7,7 +7,11 @@ set -u
 LIVE_BRANCH="cursor/godot-chinese-remake-5c3a"
 REF="${VERCEL_GIT_COMMIT_REF:-}"
 
-if [[ "$REF" != "main" && "$REF" != "$LIVE_BRANCH" ]]; then
+# Preview-only: this feature branch is allowlisted so one manual git preview can build.
+# Strip before merging into main / the live remake branch.
+PREVIEW_BRANCH="cursor/art-style-tweak-94b6"
+
+if [[ "$REF" != "main" && "$REF" != "$LIVE_BRANCH" && "$REF" != "$PREVIEW_BRANCH" ]]; then
   echo "vercel-ignore: skip (branch '${REF:-<empty>}' is not an auto-deploy ref)"
   exit 0
 fi

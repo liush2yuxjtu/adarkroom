@@ -6,7 +6,8 @@
     "deploymentEnabled": {
       "*": false,
       "main": true,
-      "cursor/godot-chinese-remake-5c3a": true
+      "cursor/godot-chinese-remake-5c3a": true,
+      "cursor/art-style-tweak-94b6": true
     }
   },
   "ignoreCommand": "bash scripts/vercel-ignore.sh",
@@ -33,7 +34,8 @@
     "deploymentEnabled": {
       "*": false,
       "main": true,
-      "cursor/godot-chinese-remake-5c3a": true
+      "cursor/godot-chinese-remake-5c3a": true,
+      "cursor/art-style-tweak-94b6": true
     }
   },
   "ignoreCommand": "bash scripts/vercel-ignore.sh"
