@@ -33,7 +33,10 @@ export function playthrough({ maxGameSec = 9000, seed = 1 } = {}) {
     rec(n);
     return r;
   };
-  const afford = (c) => !c || Object.entries(c).every(([k, v]) => (S().stores[k] || 0) >= v);
+  const afford = (c) => !c || Object.entries(c).every(([k, v]) => {
+    const have = (S().stores[k] || 0) + (S().world && S().world.on_expedition ? (S().outfit[k] || 0) : 0);
+    return have >= v;
+  });
   function drainEvents(max = 16) {
     let n = 0;
     while ((S().active_event || S().combat) && n++ < max) resolve();
@@ -42,8 +45,13 @@ export function playthrough({ maxGameSec = 9000, seed = 1 } = {}) {
     const e = S().active_event;
     if (S().combat) {
       const food = (S().outfit.cured_meat || 0) + (S().outfit.meat || 0);
-      if (S().world.hp <= 6 && food > 0) {
+      const dmg = S().combat.dmg || 1;
+      if (S().world.hp <= dmg + 2 && food > 0) {
         A("combat", { move: "eat" });
+        return;
+      }
+      if (S().world.hp <= dmg && food <= 0) {
+        A("combat", { move: "flee" });
         return;
       }
       const armed = ["bayonet", "steel_sword", "iron_sword", "bone_spear"].find(
@@ -56,7 +64,7 @@ export function playthrough({ maxGameSec = 9000, seed = 1 } = {}) {
     const sp = events[e.id];
     const sc = e.scene && sp.scenes && sp.scenes[e.scene] ? sp.scenes[e.scene] : sp;
     const okb = (sc.buttons || []).filter((x) => afford(x.cost)).map((x) => x.id);
-    const pick = ["take", "enter", "buy_compass", "goodbye", "leave", "back", "home", "ignore", "wait", "mourn", "deny", "end", "bye", "heal", "spare", "nothing"].find((x) => okb.includes(x)) || okb[0];
+    const pick = ["take", "enter", "continue", "explore", "attack", "talk", "squeeze", "salvage", "leavel", "buy_compass", "goodbye", "leave", "back", "home", "ignore", "wait", "mourn", "deny", "end", "bye", "heal", "spare", "nothing"].find((x) => okb.includes(x)) || okb[0];
     if (pick) A("event_choice", { button: pick });
   }
   function tick(sec) {
@@ -405,6 +413,151 @@ export function worldCombatPlaythrough() {
     meatHeal: sb.ADR.MEAT_HEAL === 8,
     ate,
     villageNoFight
+  };
+}
+
+/** Headless batch-6 landmarks / setpieces: placement, scenes, flags, mines, persist. */
+export function landmarksPlaythrough() {
+  const sb = makeSandbox({ seed: 6 });
+  const events = loadEvents();
+  const g = new sb.ADR.Game({ director: "rule", time_scale: 1, stuck_minutes: 99 }, events);
+  const s = g.state;
+  const ids = [
+    "old_house", "cave", "town", "city", "outpost", "ship", "borehole",
+    "battlefield", "swamp", "cache", "executioner", "ironmine", "coalmine", "sulphurmine"
+  ];
+  const placed = Object.values(s.world.landmarks || {});
+  const allPlaced = ids.every((id) => placed.includes(id));
+  const allEvents = ids.every((id) => !!events[id] && events[id].scenes && events[id].scenes.start);
+  const storyTiles = ["31,30", "32,30", "33,30", "33,29"];
+  const extraOnStory = storyTiles.filter((k) => s.world.landmarks[k] && s.world.landmarks[k] !== "old_house");
+  s.unlocked.path = true;
+  s.unlocked.world = true;
+  Object.assign(s.stores, { cured_meat: 40, torch: 12, charm: 2, bone_spear: 1 });
+  g.act("pack", { item: "cured_meat", amount: 20 });
+  g.act("pack", { item: "torch", amount: 8 });
+  g.act("pack", { item: "charm", amount: 1 });
+  g.act("pack", { item: "bone_spear", amount: 1 });
+  g.act("embark");
+  const spawned = {};
+  const spawn = (id) => {
+    s.active_event = null;
+    s.combat = null;
+    g.applyCalls([{ tool: "spawn_event", args: { event_id: id } }], "test");
+    spawned[id] = !!(s.active_event && s.active_event.id === id);
+    return spawned[id];
+  };
+  const fight = () => {
+    let n = 0;
+    while (s.combat && n++ < 80) {
+      if (s.world.hp <= (s.combat.dmg || 1) + 2 && ((s.outfit.cured_meat || 0) + (s.outfit.meat || 0)) > 0) {
+        g.act("combat", { move: "eat" });
+      } else {
+        g.act("combat", { move: (s.outfit.bone_spear || 0) > 0 ? "bone_spear" : "punch" });
+      }
+    }
+  };
+  const pick = (btn) => g.act("event_choice", { button: btn });
+
+  s.world.water = 1;
+  spawn("outpost");
+  const outpostWater = s.world.water >= sb.ADR.getMaxWater(s);
+
+  spawn("swamp");
+  pick("enter");
+  pick("talk");
+  const swampPerk = !!s.perks.gastronome;
+  if (s.active_event) pick("leave");
+
+  spawn("ironmine");
+  pick("enter");
+  if (s.combat) fight();
+  if (s.active_event) pick("leave");
+  if (s.active_event) pick("leave");
+  const ironFlag = !!(s.flags.world_ironmine);
+
+  spawn("coalmine");
+  const coalStart = !!(s.active_event && s.active_event.id === "coalmine");
+  if (events.coalmine.scenes.cleared) {
+    sb.ADR.applySceneEffects(s, events.coalmine.scenes.cleared);
+  }
+  const coalFlag = !!(s.flags.world_coalmine);
+
+  spawn("sulphurmine");
+  if (events.sulphurmine.scenes.cleared) {
+    sb.ADR.applySceneEffects(s, events.sulphurmine.scenes.cleared);
+  }
+  const sulphurFlag = !!(s.flags.world_sulphurmine);
+
+  spawn("city");
+  const cityStart = !!(s.active_event && s.active_event.id === "city");
+  const cityEnd = events.city.scenes.end1 || Object.values(events.city.scenes).find((sc) => sc.onload && sc.onload.city_cleared);
+  if (cityEnd) sb.ADR.applySceneEffects(s, cityEnd);
+  const cityCleared = !!s.flags.city_cleared;
+
+  spawn("ship");
+  const shipFlag = !!(s.flags.world_ship);
+  if (s.active_event) pick("leavel");
+  if (s.active_event) pick("leave");
+
+  spawn("cave");
+  const caveStart = !!(s.active_event && events.cave.scenes.start);
+  if (s.active_event) pick("leave");
+
+  spawn("town");
+  if (s.active_event) pick("leave");
+  spawn("battlefield");
+  if (s.active_event) pick("leave");
+  spawn("borehole");
+  if (s.active_event) pick("leave");
+  spawn("cache");
+  if (s.active_event) pick("enter");
+  if (s.active_event) pick("take");
+  if (s.active_event) pick("leave");
+  spawn("executioner");
+  const executionerStart = !!(s.active_event && s.active_event.id === "executioner");
+  if (s.active_event) pick("leave");
+
+  spawn("old_house");
+  pick("enter");
+  if (s.combat) fight();
+  if (s.active_event) pick("leave");
+  const houseVisited = !!s.flags.visited_old_house;
+
+  s.world.x = 30;
+  s.world.y = 29;
+  s.active_event = null;
+  s.combat = null;
+  g.act("world_move", { dx: 0, dy: 1 });
+  const minesBuilt = s.buildings.iron_mine === 1 && s.buildings.coal_mine === 1 && s.buildings.sulphur_mine === 1;
+  const noShipArea = !sb.ADR.AREAS || sb.ADR.AREAS.indexOf("ship") < 0;
+
+  const hydrated = sb.ADR.hydrateState(JSON.parse(JSON.stringify(s)));
+  return {
+    allPlaced,
+    allEvents,
+    storyPathClean: extraOnStory.length === 0,
+    extraOnStory,
+    spawned,
+    allSpawned: ids.every((id) => spawned[id]),
+    outpostWater,
+    swampPerk,
+    ironFlag,
+    coalStart,
+    coalFlag,
+    sulphurFlag,
+    cityStart,
+    cityCleared,
+    shipFlag,
+    caveStart,
+    executionerStart,
+    houseVisited,
+    minesBuilt,
+    noShipArea,
+    persistLandmarks: Object.values(hydrated.world.landmarks || {}).includes("ironmine"),
+    persistCity: !!hydrated.flags.city_cleared,
+    persistIronMine: hydrated.buildings.iron_mine === 1,
+    persistShip: !!hydrated.flags.world_ship
   };
 }
 

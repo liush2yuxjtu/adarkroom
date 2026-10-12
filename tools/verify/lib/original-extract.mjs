@@ -337,7 +337,19 @@ export const EVENT_ALIASES = {
   "A Huge Lizard": "huge_lizard",
   "A Feral Terror": "feral_terror",
   "A Soldier": "soldier",
-  "A Sniper": "sniper"
+  "A Sniper": "sniper",
+  "An Outpost": "outpost",
+  "A Murky Swamp": "swamp",
+  "A Damp Cave": "cave",
+  "A Deserted Town": "town",
+  "A Ruined City": "city",
+  "A Forgotten Battlefield": "battlefield",
+  "A Huge Borehole": "borehole",
+  "A Crashed Ship": "ship",
+  "The Sulphur Mine": "sulphurmine",
+  "The Coal Mine": "coalmine",
+  "The Iron Mine": "ironmine",
+  "A Destroyed Village": "cache"
 };
 export const LANDMARK_IDS = {
   HOUSE: "old_house", CAVE: "cave", TOWN: "town", CITY: "city", OUTPOST: "outpost", SHIP: "ship",

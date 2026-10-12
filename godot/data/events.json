@@ -5,45 +5,134 @@
     "text": [
       "一个衣衫褴褛的陌生人步履蹒跚地步入门来，瘫倒在角落里。"
     ],
-    "buttons": [{ "id": "wait", "text": "等待", "next": "end" }]
+    "buttons": [
+      {
+        "id": "wait",
+        "text": "等待",
+        "next": "end"
+      }
+    ]
   },
   "nomad": {
     "title": "游牧部落",
     "notification": "游牧部落抵达，想要进行贸易",
-    "when": { "location": "room", "store": "fur" },
+    "when": {
+      "location": "room",
+      "store": "fur"
+    },
     "text": [
       "游牧部落慢吞吞地出现在视野中，带着许多用粗麻线扎起来的临时口袋。",
       "他们没有提及来处，但显然不会逗留很久。"
     ],
     "buttons": [
-      { "id": "buy_scales", "text": "购买鳞片", "cost": { "fur": 100 }, "reward": { "scales": 1 } },
-      { "id": "buy_teeth", "text": "购买牙齿", "cost": { "fur": 200 }, "reward": { "teeth": 1 } },
-      { "id": "buy_bait", "text": "购买诱饵", "cost": { "fur": 5 }, "reward": { "bait": 1 }, "note": "上饵陷阱更有效率" },
-      { "id": "buy_compass", "text": "购买罗盘", "cost": { "fur": 300, "scales": 15, "teeth": 5 }, "reward": { "compass": 1 }, "note": "这块旧罗盘破损蒙尘，但看起来还能用", "require_no": "compass" },
-      { "id": "goodbye", "text": "道别", "next": "end" }
+      {
+        "id": "buy_scales",
+        "text": "购买鳞片",
+        "cost": {
+          "fur": 100
+        },
+        "reward": {
+          "scales": 1
+        }
+      },
+      {
+        "id": "buy_teeth",
+        "text": "购买牙齿",
+        "cost": {
+          "fur": 200
+        },
+        "reward": {
+          "teeth": 1
+        }
+      },
+      {
+        "id": "buy_bait",
+        "text": "购买诱饵",
+        "cost": {
+          "fur": 5
+        },
+        "reward": {
+          "bait": 1
+        },
+        "note": "上饵陷阱更有效率"
+      },
+      {
+        "id": "buy_compass",
+        "text": "购买罗盘",
+        "cost": {
+          "fur": 300,
+          "scales": 15,
+          "teeth": 5
+        },
+        "reward": {
+          "compass": 1
+        },
+        "note": "这块旧罗盘破损蒙尘，但看起来还能用",
+        "require_no": "compass"
+      },
+      {
+        "id": "goodbye",
+        "text": "道别",
+        "next": "end"
+      }
     ]
   },
   "noises_outside": {
     "title": "噪声",
     "notification": "古怪的声响透过墙壁传来",
-    "when": { "location": "room", "wood_inited": true },
+    "when": {
+      "location": "room",
+      "wood_inited": true
+    },
     "text": [
       "嘈杂声透墙传来。",
       "难以分辨来源。"
     ],
     "buttons": [
-      { "id": "investigate", "text": "调查", "random_next": { "stuff": 0.3, "nothing": 0.7 } },
-      { "id": "ignore", "text": "忽略", "next": "end" }
+      {
+        "id": "investigate",
+        "text": "调查",
+        "random_next": {
+          "stuff": 0.3,
+          "nothing": 0.7
+        }
+      },
+      {
+        "id": "ignore",
+        "text": "忽略",
+        "next": "end"
+      }
     ],
     "scenes": {
       "stuff": {
-        "text": ["一捆用粗糙的皮毛扎起来的柴火斜倚在门槛上。", "黑夜重归静寂。"],
-        "reward": { "wood": 100, "fur": 10 },
-        "buttons": [{ "id": "back", "text": "回屋", "next": "end" }]
+        "text": [
+          "一捆用粗糙的皮毛扎起来的柴火斜倚在门槛上。",
+          "黑夜重归静寂。"
+        ],
+        "reward": {
+          "wood": 100,
+          "fur": 10
+        },
+        "buttons": [
+          {
+            "id": "back",
+            "text": "回屋",
+            "next": "end"
+          }
+        ]
       },
       "nothing": {
-        "text": ["模糊的身影掠过，消失在视野外。", "声响停止了。"],
-        "buttons": [{ "id": "back", "text": "回屋", "next": "end" }]
+        "text": [
+          "模糊的身影掠过，消失在视野外。",
+          "声响停止了。"
+        ],
+        "buttons": [
+          {
+            "id": "back",
+            "text": "回屋",
+            "next": "end"
+          }
+        ]
       }
     }
   },
@@ -55,318 +144,1068 @@
       "这块旧罗盘破损蒙尘，但看起来还能用。"
     ],
     "buttons": [
-      { "id": "take", "text": "收下", "reward": { "compass": 1 }, "next": "end" }
+      {
+        "id": "take",
+        "text": "收下",
+        "reward": {
+          "compass": 1
+        },
+        "next": "end"
+      }
     ]
   },
   "ruined_trap": {
     "title": "损毁的陷阱",
     "notification": "一些陷阱损毁了",
-    "when": { "location": "outside", "min_traps": 1 },
+    "when": {
+      "location": "outside",
+      "min_traps": 1
+    },
     "text": [
       "一些陷阱损毁了。",
       "巨大的足迹延伸至森林。"
     ],
     "buttons": [
-      { "id": "track", "text": "追踪", "random_next": { "beast": 0.5, "gone": 0.5 } },
-      { "id": "ignore", "text": "忽略", "next": "end" }
+      {
+        "id": "track",
+        "text": "追踪",
+        "random_next": {
+          "beast": 0.5,
+          "gone": 0.5
+        }
+      },
+      {
+        "id": "ignore",
+        "text": "忽略",
+        "next": "end"
+      }
     ],
     "scenes": {
       "beast": {
-        "text": ["村外不远处躺着一只巨兽，它的皮毛上染满了鲜血。", "它无力挣扎，任人宰割。"],
-        "reward": { "fur": 100, "meat": 100 },
-        "buttons": [{ "id": "home", "text": "返回", "next": "end" }]
+        "text": [
+          "村外不远处躺着一只巨兽，它的皮毛上染满了鲜血。",
+          "它无力挣扎，任人宰割。"
+        ],
+        "reward": {
+          "fur": 100,
+          "meat": 100
+        },
+        "buttons": [
+          {
+            "id": "home",
+            "text": "返回",
+            "next": "end"
+          }
+        ]
       },
       "gone": {
-        "text": ["数分钟后足迹消失了。", "森林归于静寂。"],
-        "buttons": [{ "id": "home", "text": "返回", "next": "end" }]
+        "text": [
+          "数分钟后足迹消失了。",
+          "森林归于静寂。"
+        ],
+        "buttons": [
+          {
+            "id": "home",
+            "text": "返回",
+            "next": "end"
+          }
+        ]
       }
     }
   },
   "beast_attack": {
     "title": "野兽来袭",
     "notification": "野兽袭击村民",
-    "when": { "location": "outside", "pop_gt": 0 },
+    "when": {
+      "location": "outside",
+      "pop_gt": 0
+    },
     "text": [
       "一群咆哮的野兽冲出丛林。",
       "战斗争短暂而血腥，但兽群溃退了。",
       "村民撤了回来，悼念那些死去的人。"
     ],
-    "buttons": [{ "id": "mourn", "text": "哀悼", "next": "end", "lose_pop": 1 }]
+    "buttons": [
+      {
+        "id": "mourn",
+        "text": "哀悼",
+        "next": "end",
+        "lose_pop": 1
+      }
+    ]
   },
   "old_house": {
     "title": "旧房子",
-    "notification": "旧房子的遗迹矗立在那里，像一座简朴年代的纪念碑",
+    "notification": "旧房子的遗址矗立在那里，像一座简朴年代的纪念碑",
     "text": [
-      "一座老房子仍在这里，曾经的白色壁板发黄脱皮。",
-      "门敞开着。"
+      "一座老房子仍在这里，曾经的白色壁板发黄脱皮",
+      "门敞开着"
     ],
     "buttons": [
-      { "id": "enter", "text": "进入", "next": "inside" },
-      { "id": "leave", "text": "离开", "next": "end" }
+      {
+        "id": "enter",
+        "text": "进入",
+        "random_next": {
+          "medicine": 0.25,
+          "supplies": 0.25,
+          "occupied": 0.5
+        }
+      },
+      {
+        "id": "leave",
+        "text": "离开",
+        "next": "end"
+      }
     ],
     "scenes": {
-      "inside": {
-        "text": ["房子被遗弃，但还没被洗劫过。", "古井中还有一点水。"],
-        "reward": { "fur": 10, "meat": 5, "cloth": 5 },
-        "water": 10,
-        "buttons": [{ "id": "leave", "text": "离开", "next": "end" }],
-        "set_flag": "visited_old_house"
+      "start": {
+        "text": [
+          "一座老房子仍在这里，曾经的白色壁板发黄脱皮",
+          "门敞开着"
+        ],
+        "notification": "旧房子的遗址矗立在那里，像一座简朴年代的纪念碑",
+        "buttons": [
+          {
+            "id": "enter",
+            "text": "进入",
+            "random_next": {
+              "medicine": 0.25,
+              "supplies": 0.25,
+              "occupied": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开",
+            "next": "end"
+          }
+        ]
+      },
+      "supplies": {
+        "text": [
+          "房子被遗弃，但还没被洗劫过",
+          "古井中还有一点水"
+        ],
+        "onload": {
+          "mark_visited": true,
+          "set_water": true,
+          "visited_old_house": true
+        },
+        "loot": {
+          "cured_meat": {
+            "min": 1,
+            "max": 10,
+            "chance": 0.8
+          },
+          "leather": {
+            "min": 1,
+            "max": 10,
+            "chance": 0.2
+          },
+          "cloth": {
+            "min": 1,
+            "max": 10,
+            "chance": 0.5
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开",
+            "next": "end"
+          }
+        ]
+      },
+      "medicine": {
+        "text": [
+          "房子已被洗劫",
+          "木地板下面藏着一些补给品"
+        ],
+        "onload": {
+          "mark_visited": true,
+          "visited_old_house": true
+        },
+        "loot": {
+          "medicine": {
+            "min": 2,
+            "max": 5,
+            "chance": 1
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开",
+            "next": "end"
+          }
+        ]
+      },
+      "occupied": {
+        "notification": "一个男人冲进大厅，手里拿着一块生锈的刀片",
+        "onload": {
+          "mark_visited": true,
+          "visited_old_house": true
+        },
+        "combat": {
+          "hp": 10,
+          "dmg": 3,
+          "hit": 0.8,
+          "name": "squatter",
+          "death": "squatter倒下了",
+          "loot": {
+            "cured_meat": {
+              "min": 1,
+              "max": 10,
+              "chance": 0.8
+            },
+            "leather": {
+              "min": 1,
+              "max": 10,
+              "chance": 0.2
+            },
+            "cloth": {
+              "min": 1,
+              "max": 10,
+              "chance": 0.5
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开",
+            "next": "end"
+          }
+        ]
       }
     }
   },
   "snarling_beast": {
     "title": "咆哮的野兽",
     "notification": "一只野兽从灌木丛里蹿了出来",
-    "when": { "max_dist": 10, "terrain": "forest" },
-    "text": ["一只野兽从灌木丛里蹿了出来。"],
+    "when": {
+      "max_dist": 10,
+      "terrain": "forest"
+    },
+    "text": [
+      "一只野兽从灌木丛里蹿了出来。"
+    ],
     "combat": {
-      "hp": 5, "dmg": 1, "hit": 0.8, "name": "咆哮的野兽", "death": "野兽倒下了",
-      "loot": { "fur": { "min": 1, "max": 3, "chance": 1 }, "meat": { "min": 1, "max": 3, "chance": 1 }, "teeth": { "min": 1, "max": 3, "chance": 0.8 } }
+      "hp": 5,
+      "dmg": 1,
+      "hit": 0.8,
+      "name": "咆哮的野兽",
+      "death": "野兽倒下了",
+      "loot": {
+        "fur": {
+          "min": 1,
+          "max": 3,
+          "chance": 1
+        },
+        "meat": {
+          "min": 1,
+          "max": 3,
+          "chance": 1
+        },
+        "teeth": {
+          "min": 1,
+          "max": 3,
+          "chance": 0.8
+        }
+      }
     }
   },
   "gaunt_man": {
     "title": "憔悴的男子",
     "notification": "一名憔悴的男子靠了过来，眼底流露出疯狂",
-    "when": { "max_dist": 10, "terrain": "barrens" },
-    "text": ["一名憔悴的男子靠了过来，眼底流露出疯狂。"],
+    "when": {
+      "max_dist": 10,
+      "terrain": "barrens"
+    },
+    "text": [
+      "一名憔悴的男子靠了过来，眼底流露出疯狂。"
+    ],
     "combat": {
-      "hp": 6, "dmg": 2, "hit": 0.8, "name": "憔悴的男子", "death": "憔悴的男子倒下了",
-      "loot": { "cloth": { "min": 1, "max": 3, "chance": 0.8 }, "teeth": { "min": 1, "max": 2, "chance": 0.8 }, "leather": { "min": 1, "max": 2, "chance": 0.5 } }
+      "hp": 6,
+      "dmg": 2,
+      "hit": 0.8,
+      "name": "憔悴的男子",
+      "death": "憔悴的男子倒下了",
+      "loot": {
+        "cloth": {
+          "min": 1,
+          "max": 3,
+          "chance": 0.8
+        },
+        "teeth": {
+          "min": 1,
+          "max": 2,
+          "chance": 0.8
+        },
+        "leather": {
+          "min": 1,
+          "max": 2,
+          "chance": 0.5
+        }
+      }
     }
   },
   "strange_bird": {
     "title": "怪鸟",
     "notification": "一只模样古怪的鸟快速掠过平原",
-    "when": { "max_dist": 10, "terrain": "field" },
-    "text": ["一只模样古怪的鸟快速掠过平原。"],
+    "when": {
+      "max_dist": 10,
+      "terrain": "field"
+    },
+    "text": [
+      "一只模样古怪的鸟快速掠过平原。"
+    ],
     "combat": {
-      "hp": 4, "dmg": 3, "hit": 0.8, "name": "怪鸟", "death": "怪鸟倒下了",
-      "loot": { "scales": { "min": 1, "max": 3, "chance": 0.8 }, "teeth": { "min": 1, "max": 2, "chance": 0.5 }, "meat": { "min": 1, "max": 3, "chance": 0.8 } }
+      "hp": 4,
+      "dmg": 3,
+      "hit": 0.8,
+      "name": "怪鸟",
+      "death": "怪鸟倒下了",
+      "loot": {
+        "scales": {
+          "min": 1,
+          "max": 3,
+          "chance": 0.8
+        },
+        "teeth": {
+          "min": 1,
+          "max": 2,
+          "chance": 0.5
+        },
+        "meat": {
+          "min": 1,
+          "max": 3,
+          "chance": 0.8
+        }
+      }
     }
   },
   "two_headed_creature": {
     "title": "双头怪物",
     "notification": "一只双头怪物出现了，较小的那颗头在发抖",
-    "when": { "max_dist": 10, "terrain": "field" },
-    "text": ["一只双头怪物出现了，较小的那颗头在发抖。"],
+    "when": {
+      "max_dist": 10,
+      "terrain": "field"
+    },
+    "text": [
+      "一只双头怪物出现了，较小的那颗头在发抖。"
+    ],
     "combat": {
-      "hp": 10, "dmg": 2, "hit": 0.5, "name": "双头怪物", "death": "那两个生物倒下了",
-      "loot": { "fur": { "min": 2, "max": 4, "chance": 1 }, "teeth": { "min": 2, "max": 3, "chance": 0.8 }, "meat": { "min": 2, "max": 3, "chance": 0.8 } }
+      "hp": 10,
+      "dmg": 2,
+      "hit": 0.5,
+      "name": "双头怪物",
+      "death": "那两个生物倒下了",
+      "loot": {
+        "fur": {
+          "min": 2,
+          "max": 4,
+          "chance": 1
+        },
+        "teeth": {
+          "min": 2,
+          "max": 3,
+          "chance": 0.8
+        },
+        "meat": {
+          "min": 2,
+          "max": 3,
+          "chance": 0.8
+        }
+      }
     }
   },
   "shivering_man": {
     "title": "颤抖的男子",
     "notification": "一名颤抖的男子靠了过来，以令人吃惊的力量发起袭击",
-    "when": { "min_dist": 10, "max_dist": 20, "terrain": "barrens" },
-    "text": ["一名颤抖的男子靠了过来，以令人吃惊的力量发起袭击。"],
+    "when": {
+      "min_dist": 10,
+      "max_dist": 20,
+      "terrain": "barrens"
+    },
+    "text": [
+      "一名颤抖的男子靠了过来，以令人吃惊的力量发起袭击。"
+    ],
     "combat": {
-      "hp": 20, "dmg": 5, "hit": 0.5, "name": "颤抖的男子", "death": "颤抖的男子倒下了",
-      "loot": { "cloth": { "min": 1, "max": 1, "chance": 0.2 }, "teeth": { "min": 1, "max": 2, "chance": 0.8 }, "leather": { "min": 1, "max": 1, "chance": 0.2 }, "medicine": { "min": 1, "max": 3, "chance": 0.7 } }
+      "hp": 20,
+      "dmg": 5,
+      "hit": 0.5,
+      "name": "颤抖的男子",
+      "death": "颤抖的男子倒下了",
+      "loot": {
+        "cloth": {
+          "min": 1,
+          "max": 1,
+          "chance": 0.2
+        },
+        "teeth": {
+          "min": 1,
+          "max": 2,
+          "chance": 0.8
+        },
+        "leather": {
+          "min": 1,
+          "max": 1,
+          "chance": 0.2
+        },
+        "medicine": {
+          "min": 1,
+          "max": 3,
+          "chance": 0.7
+        }
+      }
     }
   },
   "man_eater": {
     "title": "食人怪",
     "notification": "一只巨大的生物袭来，爪子上鲜血淋漓",
-    "when": { "min_dist": 10, "max_dist": 20, "terrain": "forest" },
-    "text": ["一只巨大的生物袭来，爪子上鲜血淋漓。"],
+    "when": {
+      "min_dist": 10,
+      "max_dist": 20,
+      "terrain": "forest"
+    },
+    "text": [
+      "一只巨大的生物袭来，爪子上鲜血淋漓。"
+    ],
     "combat": {
-      "hp": 25, "dmg": 3, "hit": 0.8, "name": "食人怪", "death": "食人怪倒下了",
-      "loot": { "fur": { "min": 5, "max": 10, "chance": 1 }, "meat": { "min": 5, "max": 10, "chance": 1 }, "teeth": { "min": 5, "max": 10, "chance": 0.8 } }
+      "hp": 25,
+      "dmg": 3,
+      "hit": 0.8,
+      "name": "食人怪",
+      "death": "食人怪倒下了",
+      "loot": {
+        "fur": {
+          "min": 5,
+          "max": 10,
+          "chance": 1
+        },
+        "meat": {
+          "min": 5,
+          "max": 10,
+          "chance": 1
+        },
+        "teeth": {
+          "min": 5,
+          "max": 10,
+          "chance": 0.8
+        }
+      }
     }
   },
   "scavenger": {
     "title": "拾荒者",
     "notification": "一名拾荒者贴了过来，想要发起偷袭",
-    "when": { "min_dist": 10, "max_dist": 20, "terrain": "barrens" },
-    "text": ["一名拾荒者贴了过来，想要发起偷袭。"],
+    "when": {
+      "min_dist": 10,
+      "max_dist": 20,
+      "terrain": "barrens"
+    },
+    "text": [
+      "一名拾荒者贴了过来，想要发起偷袭。"
+    ],
     "combat": {
-      "hp": 30, "dmg": 4, "hit": 0.8, "name": "拾荒者", "death": "拾荒者被消灭了",
-      "loot": { "cloth": { "min": 5, "max": 10, "chance": 0.8 }, "leather": { "min": 5, "max": 10, "chance": 0.8 }, "iron": { "min": 1, "max": 5, "chance": 0.5 }, "medicine": { "min": 1, "max": 2, "chance": 0.1 } }
+      "hp": 30,
+      "dmg": 4,
+      "hit": 0.8,
+      "name": "拾荒者",
+      "death": "拾荒者被消灭了",
+      "loot": {
+        "cloth": {
+          "min": 5,
+          "max": 10,
+          "chance": 0.8
+        },
+        "leather": {
+          "min": 5,
+          "max": 10,
+          "chance": 0.8
+        },
+        "iron": {
+          "min": 1,
+          "max": 5,
+          "chance": 0.5
+        },
+        "medicine": {
+          "min": 1,
+          "max": 2,
+          "chance": 0.1
+        }
+      }
     }
   },
   "huge_lizard": {
     "title": "巨蜥",
     "notification": "草丛疯摇，一只巨蜥扑了出来",
-    "when": { "min_dist": 10, "max_dist": 20, "terrain": "field" },
-    "text": ["草丛疯摇，一只巨蜥扑了出来。"],
+    "when": {
+      "min_dist": 10,
+      "max_dist": 20,
+      "terrain": "field"
+    },
+    "text": [
+      "草丛疯摇，一只巨蜥扑了出来。"
+    ],
     "combat": {
-      "hp": 20, "dmg": 5, "hit": 0.8, "name": "巨蜥", "death": "巨蜥倒下了",
-      "loot": { "scales": { "min": 5, "max": 10, "chance": 0.8 }, "teeth": { "min": 5, "max": 10, "chance": 0.5 }, "meat": { "min": 5, "max": 10, "chance": 0.8 } }
+      "hp": 20,
+      "dmg": 5,
+      "hit": 0.8,
+      "name": "巨蜥",
+      "death": "巨蜥倒下了",
+      "loot": {
+        "scales": {
+          "min": 5,
+          "max": 10,
+          "chance": 0.8
+        },
+        "teeth": {
+          "min": 5,
+          "max": 10,
+          "chance": 0.5
+        },
+        "meat": {
+          "min": 5,
+          "max": 10,
+          "chance": 0.8
+        }
+      }
     }
   },
   "feral_terror": {
     "title": "凶怪",
     "notification": "一只凶怪以超乎想象的狂野从林中扑出",
-    "when": { "min_dist": 20, "terrain": "forest" },
-    "text": ["一只凶怪以超乎想象的狂野从林中扑出。"],
+    "when": {
+      "min_dist": 20,
+      "terrain": "forest"
+    },
+    "text": [
+      "一只凶怪以超乎想象的狂野从林中扑出。"
+    ],
     "combat": {
-      "hp": 45, "dmg": 6, "hit": 0.8, "name": "凶怪", "death": "凶怪倒下了",
-      "loot": { "fur": { "min": 5, "max": 10, "chance": 1 }, "meat": { "min": 5, "max": 10, "chance": 1 }, "teeth": { "min": 5, "max": 10, "chance": 0.8 } }
+      "hp": 45,
+      "dmg": 6,
+      "hit": 0.8,
+      "name": "凶怪",
+      "death": "凶怪倒下了",
+      "loot": {
+        "fur": {
+          "min": 5,
+          "max": 10,
+          "chance": 1
+        },
+        "meat": {
+          "min": 5,
+          "max": 10,
+          "chance": 1
+        },
+        "teeth": {
+          "min": 5,
+          "max": 10,
+          "chance": 0.8
+        }
+      }
     }
   },
   "soldier": {
     "title": "士兵",
     "notification": "一名士兵从沙漠那边开火",
-    "when": { "min_dist": 20, "terrain": "barrens" },
-    "text": ["一名士兵从沙漠那边开火。"],
+    "when": {
+      "min_dist": 20,
+      "terrain": "barrens"
+    },
+    "text": [
+      "一名士兵从沙漠那边开火。"
+    ],
     "combat": {
-      "hp": 50, "dmg": 8, "hit": 0.8, "name": "士兵", "death": "士兵倒下了",
-      "loot": { "cloth": { "min": 5, "max": 10, "chance": 0.8 }, "bullets": { "min": 1, "max": 5, "chance": 0.5 }, "rifle": { "min": 1, "max": 1, "chance": 0.2 }, "medicine": { "min": 1, "max": 2, "chance": 0.1 } }
+      "hp": 50,
+      "dmg": 8,
+      "hit": 0.8,
+      "name": "士兵",
+      "death": "士兵倒下了",
+      "loot": {
+        "cloth": {
+          "min": 5,
+          "max": 10,
+          "chance": 0.8
+        },
+        "bullets": {
+          "min": 1,
+          "max": 5,
+          "chance": 0.5
+        },
+        "rifle": {
+          "min": 1,
+          "max": 1,
+          "chance": 0.2
+        },
+        "medicine": {
+          "min": 1,
+          "max": 2,
+          "chance": 0.1
+        }
+      }
     }
   },
   "sniper": {
     "title": "狙击手",
     "notification": "深草丛的某处射出了一发子弹",
-    "when": { "min_dist": 20, "terrain": "field" },
-    "text": ["深草丛的某处射出了一发子弹。"],
+    "when": {
+      "min_dist": 20,
+      "terrain": "field"
+    },
+    "text": [
+      "深草丛的某处射出了一发子弹。"
+    ],
     "combat": {
-      "hp": 30, "dmg": 15, "hit": 0.8, "name": "狙击手", "death": "狙击手被灭",
-      "loot": { "cloth": { "min": 5, "max": 10, "chance": 0.8 }, "bullets": { "min": 1, "max": 5, "chance": 0.5 }, "rifle": { "min": 1, "max": 1, "chance": 0.2 }, "medicine": { "min": 1, "max": 2, "chance": 0.1 } }
+      "hp": 30,
+      "dmg": 15,
+      "hit": 0.8,
+      "name": "狙击手",
+      "death": "狙击手被灭",
+      "loot": {
+        "cloth": {
+          "min": 5,
+          "max": 10,
+          "chance": 0.8
+        },
+        "bullets": {
+          "min": 1,
+          "max": 5,
+          "chance": 0.5
+        },
+        "rifle": {
+          "min": 1,
+          "max": 1,
+          "chance": 0.2
+        },
+        "medicine": {
+          "min": 1,
+          "max": 2,
+          "chance": 0.1
+        }
+      }
     }
   },
   "beggar": {
     "title": "乞丐",
     "notification": "乞丐来了",
-    "when": { "location": "room", "store": "fur" },
+    "when": {
+      "location": "room",
+      "store": "fur"
+    },
     "text": [
       "乞丐徘徊在门前。",
       "祈求能施舍给他一些多余的毛皮，好让他不在夜里受冻。"
     ],
     "buttons": [
-      { "id": "give50", "text": "给50", "cost": { "fur": 50 }, "random_next": { "scales": 0.5, "teeth": 0.3, "cloth": 0.2 } },
-      { "id": "give100", "text": "给100", "cost": { "fur": 100 }, "random_next": { "teeth": 0.5, "scales": 0.3, "cloth": 0.2 } },
-      { "id": "deny", "text": "撵走他", "next": "end" }
+      {
+        "id": "give50",
+        "text": "给50",
+        "cost": {
+          "fur": 50
+        },
+        "random_next": {
+          "scales": 0.5,
+          "teeth": 0.3,
+          "cloth": 0.2
+        }
+      },
+      {
+        "id": "give100",
+        "text": "给100",
+        "cost": {
+          "fur": 100
+        },
+        "random_next": {
+          "teeth": 0.5,
+          "scales": 0.3,
+          "cloth": 0.2
+        }
+      },
+      {
+        "id": "deny",
+        "text": "撵走他",
+        "next": "end"
+      }
     ],
     "scenes": {
       "scales": {
-        "text": ["乞丐感激涕零。", "留给我们一堆小鳞片。"],
-        "reward": { "scales": 20 },
-        "buttons": [{ "id": "leave", "text": "道别", "next": "end" }]
+        "text": [
+          "乞丐感激涕零。",
+          "留给我们一堆小鳞片。"
+        ],
+        "reward": {
+          "scales": 20
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "道别",
+            "next": "end"
+          }
+        ]
       },
       "teeth": {
-        "text": ["乞丐感激涕零。", "留给我们一堆小牙齿。"],
-        "reward": { "teeth": 20 },
-        "buttons": [{ "id": "leave", "text": "道别", "next": "end" }]
+        "text": [
+          "乞丐感激涕零。",
+          "留给我们一堆小牙齿。"
+        ],
+        "reward": {
+          "teeth": 20
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "道别",
+            "next": "end"
+          }
+        ]
       },
       "cloth": {
-        "text": ["乞丐感激涕零。", "留给我们一些布料。"],
-        "reward": { "cloth": 20 },
-        "buttons": [{ "id": "leave", "text": "道别", "next": "end" }]
+        "text": [
+          "乞丐感激涕零。",
+          "留给我们一些布料。"
+        ],
+        "reward": {
+          "cloth": 20
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "道别",
+            "next": "end"
+          }
+        ]
       }
     }
   },
   "shady_builder": {
     "title": "可疑的建造者",
     "notification": "可疑的建造者经过",
-    "when": { "location": "room", "min_huts": 5, "max_huts": 19 },
+    "when": {
+      "location": "room",
+      "min_huts": 5,
+      "max_huts": 19
+    },
     "text": [
       "可疑的建造者经过。",
       "他说他能用较少的木头建造小屋。"
     ],
     "buttons": [
-      { "id": "build", "text": "300木头", "cost": { "wood": 300 }, "random_next": { "steal": 0.6, "built": 0.4 } },
-      { "id": "deny", "text": "道别", "next": "end" }
+      {
+        "id": "build",
+        "text": "300木头",
+        "cost": {
+          "wood": 300
+        },
+        "random_next": {
+          "steal": 0.6,
+          "built": 0.4
+        }
+      },
+      {
+        "id": "deny",
+        "text": "道别",
+        "next": "end"
+      }
     ],
     "scenes": {
       "steal": {
-        "text": ["可疑的建造者偷走了你的木头。"],
+        "text": [
+          "可疑的建造者偷走了你的木头。"
+        ],
         "notification": "可疑的建造者偷走了你的木头",
-        "buttons": [{ "id": "end", "text": "返回", "next": "end" }]
+        "buttons": [
+          {
+            "id": "end",
+            "text": "返回",
+            "next": "end"
+          }
+        ]
       },
       "built": {
-        "text": ["可疑的建造者建造了小屋。"],
+        "text": [
+          "可疑的建造者建造了小屋。"
+        ],
         "notification": "可疑的建造者建造了小屋",
-        "onload": { "add_hut": true },
-        "buttons": [{ "id": "end", "text": "返回", "next": "end" }]
+        "onload": {
+          "add_hut": true
+        },
+        "buttons": [
+          {
+            "id": "end",
+            "text": "返回",
+            "next": "end"
+          }
+        ]
       }
     }
   },
   "mysterious_wanderer": {
     "title": "神秘流浪者",
     "notification": "神秘流浪者来了",
-    "when": { "location": "room", "store": "wood" },
+    "when": {
+      "location": "room",
+      "store": "wood"
+    },
     "text": [
       "一名流浪者推着货车来到村子，声称如果让他带着木头离开，他会带回更多木头。",
       "建造者不确定能否信任他。"
     ],
     "buttons": [
-      { "id": "wood100", "text": "给100", "cost": { "wood": 100 }, "next": "wood100" },
-      { "id": "wood500", "text": "给500", "cost": { "wood": 500 }, "next": "wood500" },
-      { "id": "deny", "text": "撵走他", "next": "end" }
+      {
+        "id": "wood100",
+        "text": "给100",
+        "cost": {
+          "wood": 100
+        },
+        "next": "wood100"
+      },
+      {
+        "id": "wood500",
+        "text": "给500",
+        "cost": {
+          "wood": 500
+        },
+        "next": "wood500"
+      },
+      {
+        "id": "deny",
+        "text": "撵走他",
+        "next": "end"
+      }
     ],
     "scenes": {
       "wood100": {
-        "text": ["流浪者带着满载木头的货车离开了。"],
-        "onload": { "delay_give": { "after": 60, "chance": 0.5, "stores": { "wood": 300 }, "note": "神秘的流浪者回来了，货车上木头堆得更高了" } },
-        "buttons": [{ "id": "leave", "text": "道别", "next": "end" }]
+        "text": [
+          "流浪者带着满载木头的货车离开了。"
+        ],
+        "onload": {
+          "delay_give": {
+            "after": 60,
+            "chance": 0.5,
+            "stores": {
+              "wood": 300
+            },
+            "note": "神秘的流浪者回来了，货车上木头堆得更高了"
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "道别",
+            "next": "end"
+          }
+        ]
       },
       "wood500": {
-        "text": ["流浪者带着满载木头的货车离开了。"],
-        "onload": { "delay_give": { "after": 60, "chance": 0.3, "stores": { "wood": 1500 }, "note": "神秘的流浪者回来了，货车上木头堆得更高了" } },
-        "buttons": [{ "id": "leave", "text": "道别", "next": "end" }]
+        "text": [
+          "流浪者带着满载木头的货车离开了。"
+        ],
+        "onload": {
+          "delay_give": {
+            "after": 60,
+            "chance": 0.3,
+            "stores": {
+              "wood": 1500
+            },
+            "note": "神秘的流浪者回来了，货车上木头堆得更高了"
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "道别",
+            "next": "end"
+          }
+        ]
       }
     }
   },
   "mysterious_wanderer_fur": {
     "title": "神秘流浪者",
     "notification": "神秘流浪者来了",
-    "when": { "location": "room", "store": "fur" },
+    "when": {
+      "location": "room",
+      "store": "fur"
+    },
     "text": [
       "一名流浪者推着货车来到村子，声称如果让她带着毛皮离开，她会带回更多毛皮。",
       "建造者不确定能否信任她。"
     ],
     "buttons": [
-      { "id": "fur100", "text": "给100", "cost": { "fur": 100 }, "next": "fur100" },
-      { "id": "fur500", "text": "给500", "cost": { "fur": 500 }, "next": "fur500" },
-      { "id": "deny", "text": "撵走她", "next": "end" }
+      {
+        "id": "fur100",
+        "text": "给100",
+        "cost": {
+          "fur": 100
+        },
+        "next": "fur100"
+      },
+      {
+        "id": "fur500",
+        "text": "给500",
+        "cost": {
+          "fur": 500
+        },
+        "next": "fur500"
+      },
+      {
+        "id": "deny",
+        "text": "撵走她",
+        "next": "end"
+      }
     ],
     "scenes": {
       "fur100": {
-        "text": ["流浪者带着满载毛皮的货车离开了。"],
-        "onload": { "delay_give": { "after": 60, "chance": 0.5, "stores": { "fur": 300 }, "note": "神秘的流浪者回来了，货车上毛皮堆得更高了" } },
-        "buttons": [{ "id": "leave", "text": "道别", "next": "end" }]
+        "text": [
+          "流浪者带着满载毛皮的货车离开了。"
+        ],
+        "onload": {
+          "delay_give": {
+            "after": 60,
+            "chance": 0.5,
+            "stores": {
+              "fur": 300
+            },
+            "note": "神秘的流浪者回来了，货车上毛皮堆得更高了"
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "道别",
+            "next": "end"
+          }
+        ]
       },
       "fur500": {
-        "text": ["流浪者带着满载毛皮的货车离开了。"],
-        "onload": { "delay_give": { "after": 60, "chance": 0.3, "stores": { "fur": 1500 }, "note": "神秘的流浪者回来了，货车上毛皮堆得更高了" } },
-        "buttons": [{ "id": "leave", "text": "道别", "next": "end" }]
+        "text": [
+          "流浪者带着满载毛皮的货车离开了。"
+        ],
+        "onload": {
+          "delay_give": {
+            "after": 60,
+            "chance": 0.3,
+            "stores": {
+              "fur": 1500
+            },
+            "note": "神秘的流浪者回来了，货车上毛皮堆得更高了"
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "道别",
+            "next": "end"
+          }
+        ]
       }
     }
   },
   "scout": {
     "title": "侦察兵",
     "notification": "侦察兵夜宿于此",
-    "when": { "location": "room", "world": true },
+    "when": {
+      "location": "room",
+      "world": true
+    },
     "text": [
       "侦察兵说她曾环游世界。",
       "她愿意为我们分享她的经历，只需提供一些报酬。"
     ],
     "buttons": [
-      { "id": "buyMap", "text": "购买地图", "cost": { "fur": 200, "scales": 10 }, "note": "地图上已探知的地方扩大了一点", "map_piece": true },
-      { "id": "learn", "text": "学习侦察", "cost": { "fur": 1000, "scales": 50, "teeth": 20 }, "learn": "scout", "require_flag_off": "learned_scout" },
-      { "id": "leave", "text": "道别", "next": "end" }
+      {
+        "id": "buyMap",
+        "text": "购买地图",
+        "cost": {
+          "fur": 200,
+          "scales": 10
+        },
+        "note": "地图上已探知的地方扩大了一点",
+        "map_piece": true
+      },
+      {
+        "id": "learn",
+        "text": "学习侦察",
+        "cost": {
+          "fur": 1000,
+          "scales": 50,
+          "teeth": 20
+        },
+        "learn": "scout",
+        "require_flag_off": "learned_scout"
+      },
+      {
+        "id": "leave",
+        "text": "道别",
+        "next": "end"
+      }
     ]
   },
   "master": {
     "title": "宗师",
     "notification": "年迈的流浪者出现了",
-    "when": { "location": "room", "world": true },
+    "when": {
+      "location": "room",
+      "world": true
+    },
     "text": [
       "一名年迈的流浪者抵达了。",
       "他面带和煦的微笑，请求留宿一晚。"
     ],
     "buttons": [
-      { "id": "agree", "text": "同意老者的请求", "cost": { "cured_meat": 100, "fur": 100, "torch": 1 }, "next": "agree" },
-      { "id": "deny", "text": "撵走他", "next": "end" }
+      {
+        "id": "agree",
+        "text": "同意老者的请求",
+        "cost": {
+          "cured_meat": 100,
+          "fur": 100,
+          "torch": 1
+        },
+        "next": "agree"
+      },
+      {
+        "id": "deny",
+        "text": "撵走他",
+        "next": "end"
+      }
     ],
     "scenes": {
       "agree": {
-        "text": ["作为回报，流浪者为我们分享了他的智慧。"],
+        "text": [
+          "作为回报，流浪者为我们分享了他的智慧。"
+        ],
         "buttons": [
-          { "id": "evasion", "text": "避实就虚", "learn": "evasive", "require_flag_off": "learned_evasive", "next": "end" },
-          { "id": "precision", "text": "精密", "learn": "precise", "require_flag_off": "learned_precise", "next": "end" },
-          { "id": "force", "text": "野蛮人", "learn": "barbarian", "require_flag_off": "learned_barbarian", "next": "end" },
-          { "id": "nothing", "text": "无", "next": "end" }
+          {
+            "id": "evasion",
+            "text": "避实就虚",
+            "learn": "evasive",
+            "require_flag_off": "learned_evasive",
+            "next": "end"
+          },
+          {
+            "id": "precision",
+            "text": "精密",
+            "learn": "precise",
+            "require_flag_off": "learned_precise",
+            "next": "end"
+          },
+          {
+            "id": "force",
+            "text": "野蛮人",
+            "learn": "barbarian",
+            "require_flag_off": "learned_barbarian",
+            "next": "end"
+          },
+          {
+            "id": "nothing",
+            "text": "无",
+            "next": "end"
+          }
         ]
       }
     }
@@ -374,130 +1213,337 @@
   "sick_man": {
     "title": "患病男子",
     "notification": "患病男子一瘸一拐地走了过来",
-    "when": { "location": "room", "medicine": true },
+    "when": {
+      "location": "room",
+      "medicine": true
+    },
     "text": [
       "男子咳嗽着，一瘸一拐地走了过来。",
       "他祈求分给他一支药剂。"
     ],
     "buttons": [
-      { "id": "help", "text": "分给他一支药剂", "cost": { "medicine": 1 }, "note": "男子迫不及待咽下了药剂", "random_next": { "alloy": 0.1, "cells": 0.2, "scales": 0.2, "nothing": 0.5 } },
-      { "id": "ignore", "text": "请他离开", "next": "end" }
+      {
+        "id": "help",
+        "text": "分给他一支药剂",
+        "cost": {
+          "medicine": 1
+        },
+        "note": "男子迫不及待咽下了药剂",
+        "random_next": {
+          "alloy": 0.1,
+          "cells": 0.2,
+          "scales": 0.2,
+          "nothing": 0.5
+        }
+      },
+      {
+        "id": "ignore",
+        "text": "请他离开",
+        "next": "end"
+      }
     ],
     "scenes": {
       "alloy": {
-        "text": ["男子感激涕零。", "他留下报酬走了。", "那是他在旅途中捡到的一些古怪的金属。"],
-        "onload": { "give": { "alien_alloy": 1 } },
-        "buttons": [{ "id": "bye", "text": "道别", "next": "end" }]
+        "text": [
+          "男子感激涕零。",
+          "他留下报酬走了。",
+          "那是他在旅途中捡到的一些古怪的金属。"
+        ],
+        "onload": {
+          "give": {
+            "alien_alloy": 1
+          }
+        },
+        "buttons": [
+          {
+            "id": "bye",
+            "text": "道别",
+            "next": "end"
+          }
+        ]
       },
       "cells": {
-        "text": ["男子感激涕零。", "他留下报酬走了。", "那是他在旅途中捡到的一些古怪的发光盒子。"],
-        "onload": { "give": { "energy_cell": 3 } },
-        "buttons": [{ "id": "bye", "text": "道别", "next": "end" }]
+        "text": [
+          "男子感激涕零。",
+          "他留下报酬走了。",
+          "那是他在旅途中捡到的一些古怪的发光盒子。"
+        ],
+        "onload": {
+          "give": {
+            "energy_cell": 3
+          }
+        },
+        "buttons": [
+          {
+            "id": "bye",
+            "text": "道别",
+            "next": "end"
+          }
+        ]
       },
       "scales": {
-        "text": ["男子感激涕零。", "他留下报酬走了。", "全是些鳞片。"],
-        "onload": { "give": { "scales": 5 } },
-        "buttons": [{ "id": "bye", "text": "道别", "next": "end" }]
+        "text": [
+          "男子感激涕零。",
+          "他留下报酬走了。",
+          "全是些鳞片。"
+        ],
+        "onload": {
+          "give": {
+            "scales": 5
+          }
+        },
+        "buttons": [
+          {
+            "id": "bye",
+            "text": "道别",
+            "next": "end"
+          }
+        ]
       },
       "nothing": {
-        "text": ["男子表达了他的谢意，一瘸一拐地离开了。"],
-        "buttons": [{ "id": "bye", "text": "道别", "next": "end" }]
+        "text": [
+          "男子表达了他的谢意，一瘸一拐地离开了。"
+        ],
+        "buttons": [
+          {
+            "id": "bye",
+            "text": "道别",
+            "next": "end"
+          }
+        ]
       }
     }
   },
   "fire": {
     "title": "火灾",
     "notification": "火灾已经开始",
-    "when": { "location": "outside", "min_huts": 1, "pop_gt": 50 },
+    "when": {
+      "location": "outside",
+      "min_huts": 1,
+      "pop_gt": 50
+    },
     "text": [
       "火焰吞噬了一间屋子，将它摧毁殆尽。",
       "屋内的所有人都死于火灾中。"
     ],
-    "onload": { "destroy_huts": 1 },
+    "onload": {
+      "destroy_huts": 1
+    },
     "buttons": [
-      { "id": "mourn", "text": "哀悼", "note": "一些村民死掉了", "next": "end" }
+      {
+        "id": "mourn",
+        "text": "哀悼",
+        "note": "一些村民死掉了",
+        "next": "end"
+      }
     ]
   },
   "sickness": {
     "title": "疾病",
     "notification": "有一些村民生病了",
-    "when": { "location": "outside", "pop_gt": 10, "pop_lt": 50, "medicine": true },
+    "when": {
+      "location": "outside",
+      "pop_gt": 10,
+      "pop_lt": 50,
+      "medicine": true
+    },
     "text": [
       "疾病在村子中蔓延。",
       "亟需药剂。"
     ],
     "buttons": [
-      { "id": "heal", "text": "1支药剂", "cost": { "medicine": 1 }, "next": "healed" },
-      { "id": "ignore", "text": "放任不管", "next": "death" }
+      {
+        "id": "heal",
+        "text": "1支药剂",
+        "cost": {
+          "medicine": 1
+        },
+        "next": "healed"
+      },
+      {
+        "id": "ignore",
+        "text": "放任不管",
+        "next": "death"
+      }
     ],
     "scenes": {
       "healed": {
-        "text": ["疾病及时得到了控制。"],
+        "text": [
+          "疾病及时得到了控制。"
+        ],
         "notification": "受苦的人得到了救治",
-        "buttons": [{ "id": "end", "text": "返回", "next": "end" }]
+        "buttons": [
+          {
+            "id": "end",
+            "text": "返回",
+            "next": "end"
+          }
+        ]
       },
       "death": {
-        "text": ["疾病在村子中蔓延。", "一场又一场葬礼。", "尖叫响彻黑夜。"],
+        "text": [
+          "疾病在村子中蔓延。",
+          "一场又一场葬礼。",
+          "尖叫响彻黑夜。"
+        ],
         "notification": "受苦的人等待着死亡",
-        "onload": { "kill_pop": { "min": 1, "max_frac": 0.5 } },
-        "buttons": [{ "id": "end", "text": "返回", "next": "end" }]
+        "onload": {
+          "kill_pop": {
+            "min": 1,
+            "max_frac": 0.5
+          }
+        },
+        "buttons": [
+          {
+            "id": "end",
+            "text": "返回",
+            "next": "end"
+          }
+        ]
       }
     }
   },
   "plague": {
     "title": "瘟疫",
     "notification": "一场瘟疫席卷了村落",
-    "when": { "location": "outside", "pop_gt": 50, "medicine": true },
+    "when": {
+      "location": "outside",
+      "pop_gt": 50,
+      "medicine": true
+    },
     "text": [
       "可怕的瘟疫迅速地村子里传播开来。",
       "亟需药剂。"
     ],
     "buttons": [
-      { "id": "buyMedicine", "text": "购买药剂", "cost": { "scales": 70, "teeth": 50 }, "reward": { "medicine": 1 } },
-      { "id": "heal", "text": "5支药剂", "cost": { "medicine": 5 }, "next": "healed" },
-      { "id": "ignore", "text": "置之不理", "next": "death" }
+      {
+        "id": "buyMedicine",
+        "text": "购买药剂",
+        "cost": {
+          "scales": 70,
+          "teeth": 50
+        },
+        "reward": {
+          "medicine": 1
+        }
+      },
+      {
+        "id": "heal",
+        "text": "5支药剂",
+        "cost": {
+          "medicine": 5
+        },
+        "next": "healed"
+      },
+      {
+        "id": "ignore",
+        "text": "置之不理",
+        "next": "death"
+      }
     ],
     "scenes": {
       "healed": {
-        "text": ["瘟疫得到了控制。", "只有少数人死去。", "幸存者埋葬了他们。"],
+        "text": [
+          "瘟疫得到了控制。",
+          "只有少数人死去。",
+          "幸存者埋葬了他们。"
+        ],
         "notification": "疫情终于被根除",
-        "onload": { "kill_pop": { "min": 2, "max": 6 } },
-        "buttons": [{ "id": "end", "text": "返回", "next": "end" }]
+        "onload": {
+          "kill_pop": {
+            "min": 2,
+            "max": 6
+          }
+        },
+        "buttons": [
+          {
+            "id": "end",
+            "text": "返回",
+            "next": "end"
+          }
+        ]
       },
       "death": {
-        "text": ["瘟疫席卷村落。", "尖叫响彻黑夜。", "人们只求速死。"],
+        "text": [
+          "瘟疫席卷村落。",
+          "尖叫响彻黑夜。",
+          "人们只求速死。"
+        ],
         "notification": "人口几近绝灭",
-        "onload": { "kill_pop": { "min": 10, "max": 89 } },
-        "buttons": [{ "id": "end", "text": "返回", "next": "end" }]
+        "onload": {
+          "kill_pop": {
+            "min": 10,
+            "max": 89
+          }
+        },
+        "buttons": [
+          {
+            "id": "end",
+            "text": "返回",
+            "next": "end"
+          }
+        ]
       }
     }
   },
   "military_raid": {
     "title": "武装力量突袭",
     "notification": "军队席卷了村落",
-    "when": { "location": "outside", "pop_gt": 0, "city_cleared": true },
+    "when": {
+      "location": "outside",
+      "pop_gt": 0,
+      "city_cleared": true
+    },
     "text": [
       "枪声啸过树林。",
       "装备精良的人冲出树林，向人群射击。",
       "虽然他们撤走了，但我们好些人牺牲了。"
     ],
-    "onload": { "kill_pop": { "min": 1, "max": 40 }, "give": { "bullets": 10, "cured_meat": 50 } },
+    "onload": {
+      "kill_pop": {
+        "min": 1,
+        "max": 40
+      },
+      "give": {
+        "bullets": 10,
+        "cured_meat": 50
+      }
+    },
     "buttons": [
-      { "id": "end", "text": "返回", "note": "战争冷酷无情", "next": "end" }
+      {
+        "id": "end",
+        "text": "返回",
+        "note": "战争冷酷无情",
+        "next": "end"
+      }
     ]
   },
   "thief": {
     "title": "小偷",
     "notification": "抓到一名小偷",
-    "when": { "location": ["room", "outside"], "thieves": 1 },
+    "when": {
+      "location": [
+        "room",
+        "outside"
+      ],
+      "thieves": 1
+    },
     "text": [
       "村民们从仓库里拽出来一个脏兮兮的家伙。",
       "据说他的同伙们早已经顺走许多货物。",
       "他们说应该绞死他以儆效尤。"
     ],
     "buttons": [
-      { "id": "kill", "text": "绞死他", "next": "hang" },
-      { "id": "spare", "text": "释放他", "next": "spare" }
+      {
+        "id": "kill",
+        "text": "绞死他",
+        "next": "hang"
+      },
+      {
+        "id": "spare",
+        "text": "释放他",
+        "next": "spare"
+      }
     ],
     "scenes": {
       "hang": {
@@ -505,30 +1551,3868 @@
           "村民们将盗贼绞死，高挂在仓库门前。",
           "此举卓有成效。数日后，遗失的物资都被还了回来。"
         ],
-        "onload": { "set_thieves": 2, "return_stolen": true },
-        "buttons": [{ "id": "leave", "text": "离开", "next": "end" }]
+        "onload": {
+          "set_thieves": 2,
+          "return_stolen": true
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开",
+            "next": "end"
+          }
+        ]
       },
       "spare": {
         "text": [
           "这家伙感激涕零，说他再也不会来行窃了。",
           "在离开前他分享了有关潜行的心得。"
         ],
-        "onload": { "set_thieves": 2, "learn": "stealthy" },
-        "buttons": [{ "id": "leave", "text": "离开", "next": "end" }]
+        "onload": {
+          "set_thieves": 2,
+          "learn": "stealthy"
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开",
+            "next": "end"
+          }
+        ]
       }
     }
   },
   "penrose": {
     "title": "彭罗斯",
     "notification": "一阵奇异的嗡鸣、撞击与轰响。然后消失了。",
-    "when": { "location": ["room", "outside"], "penrose_off": true },
+    "when": {
+      "location": [
+        "room",
+        "outside"
+      ],
+      "penrose_off": true
+    },
     "text": [
       "一阵奇异的嗡鸣、撞击与轰响。人与地方的幻象，巨大的机器与扭曲的曲线。",
       "诱人。只需完全屈服，就会变得很容易。"
     ],
     "buttons": [
-      { "id": "give_in", "text": "屈服", "set_flag": "marketing_penrose", "link": "https://penrose.doublespeakgames.com/?utm_source=adarkroom&utm_medium=crosspromote&utm_campaign=event", "next": "end" },
-      { "id": "ignore", "text": "忽略", "next": "end" }
+      {
+        "id": "give_in",
+        "text": "屈服",
+        "set_flag": "marketing_penrose",
+        "link": "https://penrose.doublespeakgames.com/?utm_source=adarkroom&utm_medium=crosspromote&utm_campaign=event",
+        "next": "end"
+      },
+      {
+        "id": "ignore",
+        "text": "忽略",
+        "next": "end"
+      }
     ]
+  },
+  "outpost": {
+    "title": "前哨",
+    "notification": "荒野中安全的地方",
+    "text": [
+      "荒野中安全的地方"
+    ],
+    "buttons": [
+      {
+        "id": "leave",
+        "text": "离开",
+        "next": "end"
+      }
+    ],
+    "scenes": {
+      "start": {
+        "text": [
+          "荒野中安全的地方"
+        ],
+        "notification": "荒野中安全的地方",
+        "onload": {
+          "use_outpost": true
+        },
+        "loot": {
+          "cured_meat": {
+            "min": 5,
+            "max": 10,
+            "chance": 1
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  "swamp": {
+    "title": "迷雾沼泽",
+    "notification": "凝滞的空气中，沼泽正在溃烂",
+    "text": [
+      "腐烂的芦草冒出沼泽",
+      "一只孤独的蛙蹲坐在淤泥中，一言不发"
+    ],
+    "buttons": [
+      {
+        "id": "enter",
+        "text": "进入",
+        "next": "cabin"
+      },
+      {
+        "id": "leave",
+        "text": "离开",
+        "next": "end"
+      }
+    ],
+    "scenes": {
+      "start": {
+        "text": [
+          "腐烂的芦草冒出沼泽",
+          "一只孤独的蛙蹲坐在淤泥中，一言不发"
+        ],
+        "notification": "凝滞的空气中，沼泽正在溃烂",
+        "buttons": [
+          {
+            "id": "enter",
+            "text": "进入",
+            "next": "cabin"
+          },
+          {
+            "id": "leave",
+            "text": "离开",
+            "next": "end"
+          }
+        ]
+      },
+      "cabin": {
+        "text": [
+          "沼泽深处现出一栋覆满苔藓的小屋",
+          "一名年迈的流浪者坐在里头，看起来正在发呆"
+        ],
+        "buttons": [
+          {
+            "id": "talk",
+            "text": "对话",
+            "cost": {
+              "charm": 1
+            },
+            "next": "talk"
+          },
+          {
+            "id": "leave",
+            "text": "离开",
+            "next": "end"
+          }
+        ]
+      },
+      "talk": {
+        "text": [
+          "流浪者接过符咒，缓缓点了点头",
+          "他谈起曾率领一支伟大的舰队前往新世界",
+          "以莫测的毁灭之力填补流浪者心中的欲壑",
+          "而如今，他待在这里的时光都在为此赎罪"
+        ],
+        "onload": {
+          "mark_visited": true,
+          "learn": "gastronome"
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  "cave": {
+    "title": "潮湿洞穴",
+    "notification": "大地裂开，宛如古老的伤痕",
+    "text": [
+      "洞口宽敞而黑暗",
+      "看不清里面有什么"
+    ],
+    "buttons": [
+      {
+        "id": "enter",
+        "text": "进入",
+        "cost": {
+          "torch": 1
+        },
+        "random_next": {
+          "a1": 0.3,
+          "a2": 0.3,
+          "a3": 0.4
+        }
+      },
+      {
+        "id": "leave",
+        "text": "离开",
+        "next": "end"
+      }
+    ],
+    "scenes": {
+      "start": {
+        "text": [
+          "洞口宽敞而黑暗",
+          "看不清里面有什么"
+        ],
+        "notification": "大地裂开，宛如古老的伤痕",
+        "buttons": [
+          {
+            "id": "enter",
+            "text": "进入",
+            "cost": {
+              "torch": 1
+            },
+            "random_next": {
+              "a1": 0.3,
+              "a2": 0.3,
+              "a3": 0.4
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开",
+            "next": "end"
+          }
+        ]
+      },
+      "a1": {
+        "notification": "受到惊吓的野兽正要捍卫它的巢穴",
+        "combat": {
+          "hp": 5,
+          "dmg": 1,
+          "hit": 0.8,
+          "name": "beast",
+          "death": "beast倒下了",
+          "loot": {
+            "fur": {
+              "min": 1,
+              "max": 10,
+              "chance": 1
+            },
+            "teeth": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.8
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "random_next": {
+              "b1": 0.5,
+              "b2": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开洞穴",
+            "next": "end"
+          }
+        ]
+      },
+      "a2": {
+        "text": [
+          "洞穴狭窄，几无立足之地",
+          "岩壁潮湿，覆盖着苔藓"
+        ],
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "挤入深处",
+            "random_next": {
+              "b2": 0.5,
+              "b3": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开洞穴",
+            "next": "end"
+          }
+        ]
+      },
+      "a3": {
+        "text": [
+          "洞穴内出现一处老旧营地的遗迹",
+          "污损的睡袋平躺着，布满了薄薄的灰尘"
+        ],
+        "loot": {
+          "cured_meat": {
+            "min": 1,
+            "max": 5,
+            "chance": 1
+          },
+          "torch": {
+            "min": 1,
+            "max": 5,
+            "chance": 0.5
+          },
+          "leather": {
+            "min": 1,
+            "max": 5,
+            "chance": 0.3
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "random_next": {
+              "b3": 0.5,
+              "b4": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开洞穴",
+            "next": "end"
+          }
+        ]
+      },
+      "b1": {
+        "text": [
+          "流浪者的尸体躺在狭小的洞穴里",
+          "它已经开始腐烂，且遗失了一些肢体",
+          "难说这里还留下了什么"
+        ],
+        "loot": {
+          "iron_sword": {
+            "min": 1,
+            "max": 1,
+            "chance": 1
+          },
+          "cured_meat": {
+            "min": 1,
+            "max": 5,
+            "chance": 0.8
+          },
+          "torch": {
+            "min": 1,
+            "max": 3,
+            "chance": 0.5
+          },
+          "medicine": {
+            "min": 1,
+            "max": 2,
+            "chance": 0.1
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "next": "c1"
+          },
+          {
+            "id": "leave",
+            "text": "离开洞穴",
+            "next": "end"
+          }
+        ]
+      },
+      "b2": {
+        "text": [
+          "火把劈啪作响，熄灭在了潮湿的空气中",
+          "漆黑一片"
+        ],
+        "notification": "火把燃尽了",
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "cost": {
+              "torch": 1
+            },
+            "next": "c1"
+          },
+          {
+            "id": "leave",
+            "text": "离开洞穴",
+            "next": "end"
+          }
+        ]
+      },
+      "b3": {
+        "notification": "受到惊吓的野兽正要捍卫它的巢穴",
+        "combat": {
+          "hp": 5,
+          "dmg": 1,
+          "hit": 0.8,
+          "name": "beast",
+          "death": "beast倒下了",
+          "loot": {
+            "fur": {
+              "min": 1,
+              "max": 3,
+              "chance": 1
+            },
+            "teeth": {
+              "min": 1,
+              "max": 2,
+              "chance": 0.8
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "next": "c2"
+          },
+          {
+            "id": "leave",
+            "text": "离开洞穴",
+            "next": "end"
+          }
+        ]
+      },
+      "b4": {
+        "notification": "一头洞穴蜥蜴袭来",
+        "combat": {
+          "hp": 6,
+          "dmg": 3,
+          "hit": 0.8,
+          "name": "cave lizard",
+          "death": "cave lizard倒下了",
+          "loot": {
+            "scales": {
+              "min": 1,
+              "max": 3,
+              "chance": 1
+            },
+            "teeth": {
+              "min": 1,
+              "max": 2,
+              "chance": 0.8
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "next": "c2"
+          },
+          {
+            "id": "leave",
+            "text": "离开洞穴",
+            "next": "end"
+          }
+        ]
+      },
+      "c1": {
+        "notification": "一头巨兽冲出黑暗",
+        "combat": {
+          "hp": 10,
+          "dmg": 3,
+          "hit": 0.8,
+          "name": "beast",
+          "death": "beast倒下了",
+          "loot": {
+            "fur": {
+              "min": 1,
+              "max": 3,
+              "chance": 1
+            },
+            "teeth": {
+              "min": 1,
+              "max": 3,
+              "chance": 1
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "random_next": {
+              "end1": 0.5,
+              "end2": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开洞穴",
+            "next": "end"
+          }
+        ]
+      },
+      "c2": {
+        "notification": "一头洞穴蜥蜴跌跌撞撞地袭来",
+        "combat": {
+          "hp": 10,
+          "dmg": 4,
+          "hit": 0.8,
+          "name": "巨蜥",
+          "death": "巨蜥倒下了",
+          "loot": {
+            "scales": {
+              "min": 1,
+              "max": 3,
+              "chance": 1
+            },
+            "teeth": {
+              "min": 1,
+              "max": 3,
+              "chance": 1
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "random_next": {
+              "end2": 0.7,
+              "end3": 0.3
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开洞穴",
+            "next": "end"
+          }
+        ]
+      },
+      "end1": {
+        "text": [
+          "巨兽的巢穴就位于洞穴后方"
+        ],
+        "loot": {
+          "meat": {
+            "min": 5,
+            "max": 10,
+            "chance": 1
+          },
+          "fur": {
+            "min": 5,
+            "max": 10,
+            "chance": 1
+          },
+          "scales": {
+            "min": 5,
+            "max": 10,
+            "chance": 1
+          },
+          "teeth": {
+            "min": 5,
+            "max": 10,
+            "chance": 1
+          },
+          "cloth": {
+            "min": 5,
+            "max": 10,
+            "chance": 0.5
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开洞穴",
+            "next": "end"
+          }
+        ]
+      },
+      "end2": {
+        "text": [
+          "一个小型供给点藏在洞穴后方"
+        ],
+        "loot": {
+          "cloth": {
+            "min": 5,
+            "max": 10,
+            "chance": 1
+          },
+          "leather": {
+            "min": 5,
+            "max": 10,
+            "chance": 1
+          },
+          "iron": {
+            "min": 5,
+            "max": 10,
+            "chance": 1
+          },
+          "cured_meat": {
+            "min": 5,
+            "max": 10,
+            "chance": 1
+          },
+          "steel": {
+            "min": 5,
+            "max": 10,
+            "chance": 0.5
+          },
+          "bolas": {
+            "min": 1,
+            "max": 3,
+            "chance": 0.3
+          },
+          "medicine": {
+            "min": 1,
+            "max": 4,
+            "chance": 0.15
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开洞穴",
+            "next": "end"
+          }
+        ]
+      },
+      "end3": {
+        "text": [
+          "岩石下嵌着一个旧盒子，上面覆满一层薄灰"
+        ],
+        "loot": {
+          "steel_sword": {
+            "min": 1,
+            "max": 1,
+            "chance": 1
+          },
+          "bolas": {
+            "min": 1,
+            "max": 3,
+            "chance": 0.5
+          },
+          "medicine": {
+            "min": 1,
+            "max": 3,
+            "chance": 0.3
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开洞穴",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  "town": {
+    "title": "沙漠小镇",
+    "notification": "这座小镇早就被遗弃，镇上的居民已经死去多时",
+    "text": [
+      "前面是一小片住宅区，空无一人，徒留烧焦的残垣断壁",
+      "早就损坏的街灯屹立着，锈迹斑斑。光明已经很久没有眷顾这里"
+    ],
+    "buttons": [
+      {
+        "id": "enter",
+        "text": "探索",
+        "random_next": {
+          "a1": 0.3,
+          "a3": 0.4,
+          "a2": 0.3
+        }
+      },
+      {
+        "id": "leave",
+        "text": "离开",
+        "next": "end"
+      }
+    ],
+    "scenes": {
+      "start": {
+        "text": [
+          "前面是一小片住宅区，空无一人，徒留烧焦的残垣断壁",
+          "早就损坏的街灯屹立着，锈迹斑斑。光明已经很久没有眷顾这里"
+        ],
+        "notification": "这座小镇早就被遗弃，镇上的居民已经死去多时",
+        "buttons": [
+          {
+            "id": "enter",
+            "text": "探索",
+            "random_next": {
+              "a1": 0.3,
+              "a3": 0.4,
+              "a2": 0.3
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开",
+            "next": "end"
+          }
+        ]
+      },
+      "a1": {
+        "text": [
+          "校舍的窗玻璃并没有碎掉，却被烟熏黑了",
+          "双开门在风中不停地咯吱作响"
+        ],
+        "buttons": [
+          {
+            "id": "enter",
+            "text": "进入",
+            "cost": {
+              "torch": 1
+            },
+            "random_next": {
+              "b1": 0.5,
+              "b2": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开小镇",
+            "next": "end"
+          }
+        ]
+      },
+      "a2": {
+        "notification": "街头有埋伏",
+        "combat": {
+          "hp": 30,
+          "dmg": 4,
+          "hit": 0.8,
+          "name": "thug",
+          "death": "thug倒下了",
+          "loot": {
+            "cloth": {
+              "min": 5,
+              "max": 10,
+              "chance": 0.8
+            },
+            "leather": {
+              "min": 5,
+              "max": 10,
+              "chance": 0.8
+            },
+            "cured_meat": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.5
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "random_next": {
+              "b3": 0.5,
+              "b4": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开小镇",
+            "next": "end"
+          }
+        ]
+      },
+      "a3": {
+        "text": [
+          "前方有一栋低矮的建筑。",
+          "绿草在肮脏的窗户后几乎看不见"
+        ],
+        "buttons": [
+          {
+            "id": "enter",
+            "text": "进入",
+            "cost": {
+              "torch": 1
+            },
+            "random_next": {
+              "b5": 0.5,
+              "end5": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开小镇",
+            "next": "end"
+          }
+        ]
+      },
+      "b1": {
+        "text": [
+          "一份补给品被塞进一个生锈的柜子里"
+        ],
+        "loot": {
+          "cured_meat": {
+            "min": 1,
+            "max": 5,
+            "chance": 1
+          },
+          "torch": {
+            "min": 1,
+            "max": 3,
+            "chance": 0.8
+          },
+          "bullets": {
+            "min": 1,
+            "max": 5,
+            "chance": 0.3
+          },
+          "medicine": {
+            "min": 1,
+            "max": 3,
+            "chance": 0.05
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "random_next": {
+              "c1": 0.5,
+              "c2": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开小镇",
+            "next": "end"
+          }
+        ]
+      },
+      "b2": {
+        "notification": "门的后面有一位拾荒者",
+        "combat": {
+          "hp": 30,
+          "dmg": 4,
+          "hit": 0.8,
+          "name": "拾荒者",
+          "death": "拾荒者倒下了",
+          "loot": {
+            "cloth": {
+              "min": 5,
+              "max": 10,
+              "chance": 0.8
+            },
+            "leather": {
+              "min": 5,
+              "max": 10,
+              "chance": 0.8
+            },
+            "cured_meat": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.5
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "random_next": {
+              "c2": 0.5,
+              "c3": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开小镇",
+            "next": "end"
+          }
+        ]
+      },
+      "b3": {
+        "notification": "一只野兽站在一个杂草丛生的公园中央",
+        "combat": {
+          "hp": 25,
+          "dmg": 3,
+          "hit": 0.8,
+          "name": "beast",
+          "death": "beast倒下了",
+          "loot": {
+            "teeth": {
+              "min": 1,
+              "max": 5,
+              "chance": 1
+            },
+            "fur": {
+              "min": 5,
+              "max": 10,
+              "chance": 1
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "random_next": {
+              "c4": 0.5,
+              "c5": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开小镇",
+            "next": "end"
+          }
+        ]
+      },
+      "b4": {
+        "text": [
+          "蜿蜒曲折的街道上，一支忙碌的商队正在整理翻倒的篷车",
+          "这里已经被拾荒者光顾过了。但是细心点还是能找到些什么"
+        ],
+        "loot": {
+          "cured_meat": {
+            "min": 1,
+            "max": 5,
+            "chance": 0.8
+          },
+          "torch": {
+            "min": 1,
+            "max": 3,
+            "chance": 0.5
+          },
+          "bullets": {
+            "min": 1,
+            "max": 5,
+            "chance": 0.3
+          },
+          "medicine": {
+            "min": 1,
+            "max": 3,
+            "chance": 0.1
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "random_next": {
+              "c5": 0.5,
+              "c6": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开小镇",
+            "next": "end"
+          }
+        ]
+      },
+      "b5": {
+        "notification": "一个男人疯狂地尖叫着发起了攻击",
+        "combat": {
+          "hp": 10,
+          "dmg": 6,
+          "hit": 0.3,
+          "name": "madman",
+          "death": "madman倒下了",
+          "loot": {
+            "cloth": {
+              "min": 2,
+              "max": 4,
+              "chance": 0.3
+            },
+            "cured_meat": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.9
+            },
+            "medicine": {
+              "min": 1,
+              "max": 2,
+              "chance": 0.4
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "random_next": {
+              "end5": 0.3,
+              "end6": 0.7
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开小镇",
+            "next": "end"
+          }
+        ]
+      },
+      "c1": {
+        "notification": "一个暴徒走出了阴影",
+        "combat": {
+          "hp": 30,
+          "dmg": 4,
+          "hit": 0.8,
+          "name": "thug",
+          "death": "thug倒下了",
+          "loot": {
+            "cloth": {
+              "min": 5,
+              "max": 10,
+              "chance": 0.8
+            },
+            "leather": {
+              "min": 5,
+              "max": 10,
+              "chance": 0.8
+            },
+            "cured_meat": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.5
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "next": "d1"
+          },
+          {
+            "id": "leave",
+            "text": "离开小镇",
+            "next": "end"
+          }
+        ]
+      },
+      "c2": {
+        "notification": "一头巨兽冲出教室",
+        "combat": {
+          "hp": 25,
+          "dmg": 3,
+          "hit": 0.8,
+          "name": "beast",
+          "death": "beast倒下了",
+          "loot": {
+            "teeth": {
+              "min": 1,
+              "max": 5,
+              "chance": 1
+            },
+            "fur": {
+              "min": 5,
+              "max": 10,
+              "chance": 1
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "next": "d1"
+          },
+          {
+            "id": "leave",
+            "text": "离开小镇",
+            "next": "end"
+          }
+        ]
+      },
+      "c3": {
+        "text": [
+          "脚步声从巨大的体育馆门后传来",
+          "火炬在走廊上闪烁着光芒",
+          "脚步声停止了"
+        ],
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "进入",
+            "next": "d1"
+          },
+          {
+            "id": "leave",
+            "text": "离开小镇",
+            "next": "end"
+          }
+        ]
+      },
+      "c4": {
+        "notification": "另一只野兽被声音吸引，跳出了树丛",
+        "combat": {
+          "hp": 25,
+          "dmg": 4,
+          "hit": 0.8,
+          "name": "beast",
+          "death": "beast倒下了",
+          "loot": {
+            "teeth": {
+              "min": 1,
+              "max": 5,
+              "chance": 1
+            },
+            "fur": {
+              "min": 5,
+              "max": 10,
+              "chance": 1
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "next": "d2"
+          },
+          {
+            "id": "leave",
+            "text": "离开小镇",
+            "next": "end"
+          }
+        ]
+      },
+      "c5": {
+        "text": [
+          "前面的路上有什么引起了骚动",
+          "也许是在打架"
+        ],
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "next": "d2"
+          },
+          {
+            "id": "leave",
+            "text": "离开小镇",
+            "next": "end"
+          }
+        ]
+      },
+      "c6": {
+        "text": [
+          "公园长椅下掩藏着一个装着食物的小篮子，上面有张字条",
+          "无法辨识字迹"
+        ],
+        "loot": {
+          "cured_meat": {
+            "min": 1,
+            "max": 5,
+            "chance": 1
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "next": "d2"
+          },
+          {
+            "id": "leave",
+            "text": "离开小镇",
+            "next": "end"
+          }
+        ]
+      },
+      "d1": {
+        "notification": "惊慌的拾荒者尖叫着冲进了门",
+        "combat": {
+          "hp": 30,
+          "dmg": 5,
+          "hit": 0.8,
+          "name": "拾荒者",
+          "death": "拾荒者倒下了",
+          "loot": {
+            "cured_meat": {
+              "min": 1,
+              "max": 5,
+              "chance": 1
+            },
+            "leather": {
+              "min": 5,
+              "max": 10,
+              "chance": 0.8
+            },
+            "steel_sword": {
+              "min": 1,
+              "max": 1,
+              "chance": 0.5
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "random_next": {
+              "end1": 0.5,
+              "end2": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开小镇",
+            "next": "end"
+          }
+        ]
+      },
+      "d2": {
+        "notification": "一个人站在一个流浪者的尸体旁边。他不是一个人",
+        "combat": {
+          "hp": 30,
+          "dmg": 6,
+          "hit": 0.8,
+          "name": "vigilante",
+          "death": "vigilante倒下了",
+          "loot": {
+            "cured_meat": {
+              "min": 1,
+              "max": 5,
+              "chance": 1
+            },
+            "leather": {
+              "min": 5,
+              "max": 10,
+              "chance": 0.8
+            },
+            "steel_sword": {
+              "min": 1,
+              "max": 1,
+              "chance": 0.5
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "random_next": {
+              "end3": 0.5,
+              "end4": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开小镇",
+            "next": "end"
+          }
+        ]
+      },
+      "end1": {
+        "text": [
+          "学校里有个拾荒者的据点",
+          "收集着地上的残羹剩饭"
+        ],
+        "loot": {
+          "steel_sword": {
+            "min": 1,
+            "max": 1,
+            "chance": 1
+          },
+          "steel": {
+            "min": 5,
+            "max": 10,
+            "chance": 1
+          },
+          "cured_meat": {
+            "min": 5,
+            "max": 10,
+            "chance": 1
+          },
+          "bolas": {
+            "min": 1,
+            "max": 5,
+            "chance": 0.5
+          },
+          "medicine": {
+            "min": 1,
+            "max": 2,
+            "chance": 0.3
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开小镇",
+            "next": "end"
+          }
+        ]
+      },
+      "end2": {
+        "text": [
+          "看来拾荒者一直在这收集着物资",
+          "浪费掉他找到的东西太可耻了"
+        ],
+        "loot": {
+          "coal": {
+            "min": 5,
+            "max": 10,
+            "chance": 1
+          },
+          "cured_meat": {
+            "min": 5,
+            "max": 10,
+            "chance": 1
+          },
+          "leather": {
+            "min": 5,
+            "max": 10,
+            "chance": 1
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开小镇",
+            "next": "end"
+          }
+        ]
+      },
+      "end3": {
+        "text": [
+          "拾荒者手里紧紧地抓着什么东西。金属的反光",
+          "看来这次杀戮是值得的"
+        ],
+        "loot": {
+          "rifle": {
+            "min": 1,
+            "max": 1,
+            "chance": 1
+          },
+          "bullets": {
+            "min": 1,
+            "max": 5,
+            "chance": 1
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开小镇",
+            "next": "end"
+          }
+        ]
+      },
+      "end4": {
+        "text": [
+          "以眼还眼看起来挺公平的",
+          "至少目前来看非常有效",
+          "在骨头堆里找到一些有用的小玩艺儿"
+        ],
+        "loot": {
+          "cured_meat": {
+            "min": 5,
+            "max": 10,
+            "chance": 1
+          },
+          "iron": {
+            "min": 5,
+            "max": 10,
+            "chance": 1
+          },
+          "torch": {
+            "min": 1,
+            "max": 5,
+            "chance": 1
+          },
+          "bolas": {
+            "min": 1,
+            "max": 5,
+            "chance": 0.5
+          },
+          "medicine": {
+            "min": 1,
+            "max": 2,
+            "chance": 0.1
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开小镇",
+            "next": "end"
+          }
+        ]
+      },
+      "end5": {
+        "text": [
+          "一些药物被遗弃在抽屉里"
+        ],
+        "loot": {
+          "medicine": {
+            "min": 2,
+            "max": 5,
+            "chance": 1
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开小镇",
+            "next": "end"
+          }
+        ]
+      },
+      "end6": {
+        "text": [
+          "诊所已被洗劫过了",
+          "只留下尘土和污渍"
+        ],
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开小镇",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  "city": {
+    "title": "被毁的城市",
+    "notification": "残破城市里的高塔主宰着地平线",
+    "text": [
+      "破损的公路标识竖立在这个曾经伟大的城市入口",
+      "还未垮塌的塔楼像某种远古巨兽的肋骨一样伸出地面",
+      "也许里面还有些有价值的东西"
+    ],
+    "buttons": [
+      {
+        "id": "enter",
+        "text": "探索",
+        "random_next": {
+          "a1": 0.2,
+          "a2": 0.3,
+          "a3": 0.3,
+          "a4": 0.2
+        }
+      },
+      {
+        "id": "leave",
+        "text": "离开",
+        "next": "end"
+      }
+    ],
+    "scenes": {
+      "start": {
+        "text": [
+          "破损的公路标识竖立在这个曾经伟大的城市入口",
+          "还未垮塌的塔楼像某种远古巨兽的肋骨一样伸出地面",
+          "也许里面还有些有价值的东西"
+        ],
+        "notification": "残破城市里的高塔主宰着地平线",
+        "buttons": [
+          {
+            "id": "enter",
+            "text": "探索",
+            "random_next": {
+              "a1": 0.2,
+              "a2": 0.3,
+              "a3": 0.3,
+              "a4": 0.2
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开",
+            "next": "end"
+          }
+        ]
+      },
+      "a1": {
+        "text": [
+          "街道空空如也",
+          "漫天的灰尘在风中飘荡"
+        ],
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "random_next": {
+              "b1": 0.5,
+              "b2": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "a2": {
+        "text": [
+          "街道对面放置着橙色的路障，已残破不堪",
+          "巷子里闪烁着灯光"
+        ],
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "random_next": {
+              "b3": 0.5,
+              "b4": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "a3": {
+        "text": [
+          "街道上的帐篷一望无际",
+          "一张张被煤烟和血熏黑了的脸望出小屋"
+        ],
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "random_next": {
+              "b5": 0.5,
+              "b6": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "a4": {
+        "text": [
+          "一座被废弃的医院横在前方"
+        ],
+        "buttons": [
+          {
+            "id": "enter",
+            "text": "进入",
+            "cost": {
+              "torch": 1
+            },
+            "random_next": {
+              "b7": 0.5,
+              "b8": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "b1": {
+        "text": [
+          "古老的塔楼看起来大部分完好无损",
+          "被烧毁的汽车挡住了入口",
+          "很多落地窗被打碎了"
+        ],
+        "buttons": [
+          {
+            "id": "enter",
+            "text": "进入",
+            "random_next": {
+              "c1": 0.5,
+              "c2": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "b2": {
+        "notification": "一只巨蜥从废弃地铁站的黑暗中爬出",
+        "combat": {
+          "hp": 20,
+          "dmg": 5,
+          "hit": 0.8,
+          "name": "巨蜥",
+          "death": "巨蜥倒下了",
+          "loot": {
+            "scales": {
+              "min": 5,
+              "max": 10,
+              "chance": 0.8
+            },
+            "teeth": {
+              "min": 5,
+              "max": 10,
+              "chance": 0.5
+            },
+            "meat": {
+              "min": 5,
+              "max": 10,
+              "chance": 0.8
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "descend",
+            "text": "进入地铁站",
+            "random_next": {
+              "c2": 0.5,
+              "c3": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "b3": {
+        "notification": "街道上回响着枪声",
+        "combat": {
+          "hp": 30,
+          "dmg": 15,
+          "hit": 0.8,
+          "name": "狙击手",
+          "death": "狙击手倒下了",
+          "loot": {
+            "cured_meat": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.8
+            },
+            "bullets": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.5
+            },
+            "rifle": {
+              "min": 1,
+              "max": 1,
+              "chance": 0.2
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "random_next": {
+              "c4": 0.5,
+              "c5": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "b4": {
+        "notification": "士兵举着枪从建筑物之间走出",
+        "combat": {
+          "hp": 50,
+          "dmg": 8,
+          "hit": 0.8,
+          "name": "士兵",
+          "death": "士兵倒下了",
+          "loot": {
+            "cured_meat": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.8
+            },
+            "bullets": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.5
+            },
+            "rifle": {
+              "min": 1,
+              "max": 1,
+              "chance": 0.2
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "random_next": {
+              "c5": 0.5,
+              "c6": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "b5": {
+        "notification": "一个虚弱的男人拦在路的中央",
+        "combat": {
+          "hp": 10,
+          "dmg": 1,
+          "hit": 0.8,
+          "name": "frail man",
+          "death": "frail man倒下了",
+          "loot": {
+            "cured_meat": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.8
+            },
+            "cloth": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.5
+            },
+            "leather": {
+              "min": 1,
+              "max": 1,
+              "chance": 0.2
+            },
+            "medicine": {
+              "min": 1,
+              "max": 3,
+              "chance": 0.05
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "random_next": {
+              "c7": 0.5,
+              "c8": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "b6": {
+        "text": [
+          "一片颓靡的双眼",
+          "这里的人们很久以前就崩溃了"
+        ],
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "random_next": {
+              "c8": 0.5,
+              "c9": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "b7": {
+        "text": [
+          "空走廊",
+          "这里被拾荒者们清扫的很干净"
+        ],
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "random_next": {
+              "c12": 0.3,
+              "c10": 0.4,
+              "c11": 0.3
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "b8": {
+        "notification": "一个老人挥舞着手术刀，从一扇门里跳出",
+        "combat": {
+          "hp": 10,
+          "dmg": 3,
+          "hit": 0.5,
+          "name": "old man",
+          "death": "old man倒下了",
+          "loot": {
+            "cured_meat": {
+              "min": 1,
+              "max": 3,
+              "chance": 0.5
+            },
+            "cloth": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.8
+            },
+            "medicine": {
+              "min": 1,
+              "max": 2,
+              "chance": 0.5
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "random_next": {
+              "c13": 0.3,
+              "c11": 0.4,
+              "end15": 0.3
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "c1": {
+        "notification": "一个暴徒在墙壁另一边等着",
+        "combat": {
+          "hp": 30,
+          "dmg": 3,
+          "hit": 0.8,
+          "name": "thug",
+          "death": "thug倒下了",
+          "loot": {
+            "steel_sword": {
+              "min": 1,
+              "max": 1,
+              "chance": 0.5
+            },
+            "cured_meat": {
+              "min": 1,
+              "max": 3,
+              "chance": 0.5
+            },
+            "cloth": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.8
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "random_next": {
+              "d1": 0.5,
+              "d2": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "c2": {
+        "notification": "一只咆哮的野兽从一辆车后跳出。",
+        "combat": {
+          "hp": 30,
+          "dmg": 2,
+          "hit": 0.8,
+          "name": "beast",
+          "death": "beast倒下了",
+          "loot": {
+            "meat": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.8
+            },
+            "fur": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.8
+            },
+            "teeth": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.5
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "next": "d2"
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "c3": {
+        "text": [
+          "地铁站台上的街道被炸开了",
+          "一缕光线射入尘土飞扬的阴霾",
+          "隧道的前面传来一阵声响"
+        ],
+        "buttons": [
+          {
+            "id": "enter",
+            "text": "调查",
+            "cost": {
+              "torch": 1
+            },
+            "random_next": {
+              "d2": 0.5,
+              "d3": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "c4": {
+        "text": [
+          "看起来前面像是一片简陋的营地",
+          "锈迹斑斑的铁丝网横过小巷",
+          "远处的院子里燃烧着火焰"
+        ],
+        "buttons": [
+          {
+            "id": "enter",
+            "text": "继续深入",
+            "random_next": {
+              "d4": 0.5,
+              "d5": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "c5": {
+        "text": [
+          "前方可以听见更多的声音",
+          "听起来不是什么好事"
+        ],
+        "buttons": [
+          {
+            "id": "enter",
+            "text": "继续深入",
+            "next": "d5"
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "c6": {
+        "text": [
+          "开枪的声音回荡在空中",
+          "前面的街道闪着火光"
+        ],
+        "buttons": [
+          {
+            "id": "enter",
+            "text": "继续深入",
+            "random_next": {
+              "d5": 0.5,
+              "d6": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "c7": {
+        "text": [
+          "那些擅自占住别人房子的人簇拥在一起",
+          "有人扔出一块石头"
+        ],
+        "buttons": [
+          {
+            "id": "enter",
+            "text": "继续深入",
+            "random_next": {
+              "d7": 0.5,
+              "d8": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "c8": {
+        "text": [
+          "街道上有个临时商店",
+          "主人站在旁边，无动于衷"
+        ],
+        "loot": {
+          "steel_sword": {
+            "min": 1,
+            "max": 1,
+            "chance": 0.8
+          },
+          "rifle": {
+            "min": 1,
+            "max": 1,
+            "chance": 0.5
+          },
+          "bullets": {
+            "min": 1,
+            "max": 8,
+            "chance": 0.25
+          },
+          "alien_alloy": {
+            "min": 1,
+            "max": 1,
+            "chance": 0.01
+          },
+          "medicine": {
+            "min": 1,
+            "max": 4,
+            "chance": 0.5
+          }
+        },
+        "buttons": [
+          {
+            "id": "enter",
+            "text": "继续深入",
+            "next": "d8"
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "c9": {
+        "text": [
+          "街道旁挂着几条正在风干的肉",
+          "人们不断退后着，避免眼神接触"
+        ],
+        "loot": {
+          "cured_meat": {
+            "min": 5,
+            "max": 10,
+            "chance": 1
+          }
+        },
+        "buttons": [
+          {
+            "id": "enter",
+            "text": "继续深入",
+            "random_next": {
+              "d8": 0.5,
+              "d9": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "c10": {
+        "text": [
+          "有人把手术室的门锁上并堵上了"
+        ],
+        "buttons": [
+          {
+            "id": "enter",
+            "text": "继续深入",
+            "random_next": {
+              "end12": 0.2,
+              "d10": 0.4,
+              "d11": 0.4
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "c11": {
+        "notification": "一帮上了年纪的流浪者在这间病房里宿营",
+        "combat": {
+          "hp": 40,
+          "dmg": 2,
+          "hit": 0.7,
+          "name": "squatters",
+          "death": "squatters倒下了",
+          "loot": {
+            "cured_meat": {
+              "min": 1,
+              "max": 3,
+              "chance": 0.5
+            },
+            "cloth": {
+              "min": 3,
+              "max": 8,
+              "chance": 0.8
+            },
+            "medicine": {
+              "min": 1,
+              "max": 3,
+              "chance": 0.3
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "next": "end10"
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "c12": {
+        "notification": "一群蜥蜴绕过转角",
+        "combat": {
+          "hp": 30,
+          "dmg": 4,
+          "hit": 0.7,
+          "name": "lizards",
+          "death": "lizards倒下了",
+          "loot": {
+            "meat": {
+              "min": 3,
+              "max": 8,
+              "chance": 1
+            },
+            "teeth": {
+              "min": 2,
+              "max": 4,
+              "chance": 1
+            },
+            "scales": {
+              "min": 3,
+              "max": 5,
+              "chance": 1
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "next": "end10"
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "c13": {
+        "text": [
+          "病房里挂着几条正在风干的肉"
+        ],
+        "loot": {
+          "cured_meat": {
+            "min": 3,
+            "max": 10,
+            "chance": 1
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "random_next": {
+              "end10": 0.5,
+              "end11": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "d1": {
+        "notification": "一只大鸟栖息在楼梯的顶部",
+        "combat": {
+          "hp": 45,
+          "dmg": 5,
+          "hit": 0.7,
+          "name": "bird",
+          "death": "bird倒下了",
+          "loot": {
+            "meat": {
+              "min": 5,
+              "max": 10,
+              "chance": 0.8
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "random_next": {
+              "end1": 0.5,
+              "end2": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "d2": {
+        "text": [
+          "这里的残骸更多了",
+          "也许瓦砾中有些有用的东西"
+        ],
+        "loot": {
+          "bullets": {
+            "min": 1,
+            "max": 5,
+            "chance": 0.5
+          },
+          "steel": {
+            "min": 1,
+            "max": 10,
+            "chance": 0.8
+          },
+          "alien_alloy": {
+            "min": 1,
+            "max": 1,
+            "chance": 0.01
+          },
+          "cloth": {
+            "min": 1,
+            "max": 10,
+            "chance": 1
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "next": "end2"
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "d3": {
+        "notification": "隧道里冲出一群老鼠",
+        "combat": {
+          "hp": 60,
+          "dmg": 1,
+          "hit": 0.8,
+          "name": "rats",
+          "death": "rats倒下了",
+          "loot": {
+            "fur": {
+              "min": 5,
+              "max": 10,
+              "chance": 0.8
+            },
+            "teeth": {
+              "min": 5,
+              "max": 10,
+              "chance": 0.5
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "random_next": {
+              "end2": 0.5,
+              "end3": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "d4": {
+        "notification": "一个彪形大汉挥舞着刺刀袭来",
+        "combat": {
+          "hp": 45,
+          "dmg": 6,
+          "hit": 0.8,
+          "name": "veteran",
+          "death": "veteran倒下了",
+          "loot": {
+            "bayonet": {
+              "min": 1,
+              "max": 1,
+              "chance": 0.5
+            },
+            "cured_meat": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.8
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "random_next": {
+              "end4": 0.5,
+              "end5": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "d5": {
+        "notification": "又一个士兵开火了",
+        "combat": {
+          "hp": 50,
+          "dmg": 8,
+          "hit": 0.8,
+          "name": "士兵",
+          "death": "士兵倒下了",
+          "loot": {
+            "cured_meat": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.8
+            },
+            "bullets": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.5
+            },
+            "rifle": {
+              "min": 1,
+              "max": 1,
+              "chance": 0.2
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "next": "end5"
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "d6": {
+        "notification": "一个蒙面士兵跑过拐角，拔出了枪",
+        "combat": {
+          "hp": 55,
+          "dmg": 3,
+          "hit": 0.9,
+          "name": "commando",
+          "death": "commando倒下了",
+          "loot": {
+            "rifle": {
+              "min": 1,
+              "max": 1,
+              "chance": 0.5
+            },
+            "bullets": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.8
+            },
+            "cured_meat": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.8
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "random_next": {
+              "end5": 0.5,
+              "end6": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "d7": {
+        "notification": "人群涌上前来",
+        "combat": {
+          "hp": 40,
+          "dmg": 2,
+          "hit": 0.7,
+          "name": "squatters",
+          "death": "squatters倒下了",
+          "loot": {
+            "cloth": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.8
+            },
+            "teeth": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.5
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "random_next": {
+              "end7": 0.5,
+              "end8": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "d8": {
+        "notification": "一个小伙子挥打着一根树枝",
+        "combat": {
+          "hp": 45,
+          "dmg": 2,
+          "hit": 0.7,
+          "name": "youth",
+          "death": "youth倒下了",
+          "loot": {
+            "cloth": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.8
+            },
+            "teeth": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.5
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "next": "end8"
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "d9": {
+        "notification": "一个人坚定地站在一座小屋门前",
+        "combat": {
+          "hp": 20,
+          "dmg": 3,
+          "hit": 0.8,
+          "name": "squatter",
+          "death": "squatter倒下了",
+          "loot": {
+            "cloth": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.8
+            },
+            "teeth": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.5
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "random_next": {
+              "end8": 0.5,
+              "end9": 0.5
+            }
+          },
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "d10": {
+        "notification": "门后一个畸形的身躯惊醒了，发起了攻击",
+        "combat": {
+          "hp": 40,
+          "dmg": 8,
+          "hit": 0.6,
+          "name": "deformed",
+          "death": "deformed倒下了",
+          "loot": {
+            "cloth": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.8
+            },
+            "teeth": {
+              "min": 2,
+              "max": 2,
+              "chance": 1
+            },
+            "steel": {
+              "min": 1,
+              "max": 3,
+              "chance": 0.6
+            },
+            "scales": {
+              "min": 2,
+              "max": 3,
+              "chance": 0.1
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "next": "end14"
+          }
+        ]
+      },
+      "d11": {
+        "notification": "门刚打开一条缝，就有几百条触手伸了出来",
+        "combat": {
+          "hp": 60,
+          "dmg": 2,
+          "hit": 0.6,
+          "name": "tentacles",
+          "death": "tentacles倒下了",
+          "loot": {
+            "meat": {
+              "min": 10,
+              "max": 20,
+              "chance": 1
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "next": "end13"
+          }
+        ]
+      },
+      "end1": {
+        "text": [
+          "鸟喜欢闪亮的东西",
+          "将一些好东西织进了它的巢"
+        ],
+        "onload": {
+          "city_cleared": true
+        },
+        "loot": {
+          "bullets": {
+            "min": 5,
+            "max": 10,
+            "chance": 0.8
+          },
+          "bolas": {
+            "min": 1,
+            "max": 5,
+            "chance": 0.5
+          },
+          "alien_alloy": {
+            "min": 1,
+            "max": 1,
+            "chance": 0.5
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "end2": {
+        "text": [
+          "这里没多少东西",
+          "拾荒者已经来过了"
+        ],
+        "onload": {
+          "city_cleared": true
+        },
+        "loot": {
+          "torch": {
+            "min": 1,
+            "max": 5,
+            "chance": 0.8
+          },
+          "cured_meat": {
+            "min": 1,
+            "max": 5,
+            "chance": 0.5
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "end3": {
+        "text": [
+          "隧道出口在另一边的站台",
+          "这些墙壁在一场古老的战争中被烧焦了",
+          "两方的尸体和物资散落在地上"
+        ],
+        "onload": {
+          "city_cleared": true
+        },
+        "loot": {
+          "rifle": {
+            "min": 1,
+            "max": 1,
+            "chance": 0.8
+          },
+          "bullets": {
+            "min": 1,
+            "max": 5,
+            "chance": 0.8
+          },
+          "laser_rifle": {
+            "min": 1,
+            "max": 1,
+            "chance": 0.3
+          },
+          "energy_cell": {
+            "min": 1,
+            "max": 5,
+            "chance": 0.3
+          },
+          "alien_alloy": {
+            "min": 1,
+            "max": 1,
+            "chance": 0.3
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "end4": {
+        "text": [
+          "这个小小的军事哨所供应充足",
+          "武器和弹药整齐地放在储藏室的地板上",
+          "就如从前一般致命"
+        ],
+        "onload": {
+          "city_cleared": true
+        },
+        "loot": {
+          "rifle": {
+            "min": 1,
+            "max": 1,
+            "chance": 1
+          },
+          "bullets": {
+            "min": 1,
+            "max": 10,
+            "chance": 1
+          },
+          "grenade": {
+            "min": 1,
+            "max": 5,
+            "chance": 0.8
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "end5": {
+        "text": [
+          "搜索尸体找到了一些物资",
+          "更多的士兵正在路上",
+          "该走了"
+        ],
+        "onload": {
+          "city_cleared": true
+        },
+        "loot": {
+          "rifle": {
+            "min": 1,
+            "max": 1,
+            "chance": 1
+          },
+          "bullets": {
+            "min": 1,
+            "max": 10,
+            "chance": 1
+          },
+          "cured_meat": {
+            "min": 1,
+            "max": 5,
+            "chance": 0.8
+          },
+          "medicine": {
+            "min": 1,
+            "max": 4,
+            "chance": 0.1
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "end6": {
+        "text": [
+          "小定居点明显已经燃烧了一段时间了",
+          "居住在这里的流浪者的尸体在火焰中仍然清晰可见",
+          "仍然有时间抢救一些物资"
+        ],
+        "onload": {
+          "city_cleared": true
+        },
+        "loot": {
+          "laser_rifle": {
+            "min": 1,
+            "max": 1,
+            "chance": 0.5
+          },
+          "energy_cell": {
+            "min": 1,
+            "max": 5,
+            "chance": 0.5
+          },
+          "cured_meat": {
+            "min": 1,
+            "max": 10,
+            "chance": 1
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "end7": {
+        "text": [
+          "剩余的移民逃跑的时候丢下了很多东西",
+          "不是很多，但仍然能找到一些有用的"
+        ],
+        "onload": {
+          "city_cleared": true
+        },
+        "loot": {
+          "steel_sword": {
+            "min": 1,
+            "max": 1,
+            "chance": 0.8
+          },
+          "energy_cell": {
+            "min": 1,
+            "max": 5,
+            "chance": 0.5
+          },
+          "cured_meat": {
+            "min": 1,
+            "max": 10,
+            "chance": 1
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "end8": {
+        "text": [
+          "年轻的定居者携带着一个帆布袋",
+          "里面有一些小玩艺儿",
+          "这里没别的了"
+        ],
+        "onload": {
+          "city_cleared": true
+        },
+        "loot": {
+          "steel_sword": {
+            "min": 1,
+            "max": 1,
+            "chance": 0.8
+          },
+          "bolas": {
+            "min": 1,
+            "max": 5,
+            "chance": 0.5
+          },
+          "cured_meat": {
+            "min": 1,
+            "max": 10,
+            "chance": 1
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "end9": {
+        "text": [
+          "小屋中，有个小孩在哭",
+          "墙边有些东西",
+          "这里没别的了"
+        ],
+        "onload": {
+          "city_cleared": true
+        },
+        "loot": {
+          "rifle": {
+            "min": 1,
+            "max": 1,
+            "chance": 0.8
+          },
+          "bullets": {
+            "min": 1,
+            "max": 5,
+            "chance": 0.8
+          },
+          "bolas": {
+            "min": 1,
+            "max": 5,
+            "chance": 0.5
+          },
+          "alien_alloy": {
+            "min": 1,
+            "max": 1,
+            "chance": 0.2
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "end10": {
+        "text": [
+          "腐烂死尸散发的恶臭弥漫了整间手术室",
+          "地上散落着少许物品",
+          "这里没别的了"
+        ],
+        "onload": {
+          "city_cleared": true
+        },
+        "loot": {
+          "energy_cell": {
+            "min": 1,
+            "max": 1,
+            "chance": 0.3
+          },
+          "medicine": {
+            "min": 1,
+            "max": 5,
+            "chance": 0.3
+          },
+          "teeth": {
+            "min": 3,
+            "max": 8,
+            "chance": 1
+          },
+          "scales": {
+            "min": 4,
+            "max": 7,
+            "chance": 0.9
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "end11": {
+        "text": [
+          "在走廊的尽头有个药柜",
+          "医院的其他房间是空的"
+        ],
+        "onload": {
+          "city_cleared": true
+        },
+        "loot": {
+          "energy_cell": {
+            "min": 1,
+            "max": 1,
+            "chance": 0.2
+          },
+          "medicine": {
+            "min": 3,
+            "max": 10,
+            "chance": 1
+          },
+          "teeth": {
+            "min": 1,
+            "max": 2,
+            "chance": 0.2
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "end12": {
+        "text": [
+          "有人一直在这里囤积战利品"
+        ],
+        "onload": {
+          "city_cleared": true
+        },
+        "loot": {
+          "energy_cell": {
+            "min": 1,
+            "max": 3,
+            "chance": 0.2
+          },
+          "medicine": {
+            "min": 3,
+            "max": 10,
+            "chance": 0.5
+          },
+          "bullets": {
+            "min": 2,
+            "max": 8,
+            "chance": 1
+          },
+          "torch": {
+            "min": 1,
+            "max": 3,
+            "chance": 0.5
+          },
+          "grenade": {
+            "min": 1,
+            "max": 1,
+            "chance": 0.5
+          },
+          "alien_alloy": {
+            "min": 1,
+            "max": 2,
+            "chance": 0.8
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "end13": {
+        "text": [
+          "触手怪被打败了",
+          "房间里面到处都是其受害者的遗骸"
+        ],
+        "onload": {
+          "city_cleared": true
+        },
+        "loot": {
+          "steel_sword": {
+            "min": 1,
+            "max": 3,
+            "chance": 0.5
+          },
+          "rifle": {
+            "min": 1,
+            "max": 2,
+            "chance": 0.3
+          },
+          "teeth": {
+            "min": 2,
+            "max": 8,
+            "chance": 1
+          },
+          "cloth": {
+            "min": 3,
+            "max": 6,
+            "chance": 0.5
+          },
+          "alien_alloy": {
+            "min": 1,
+            "max": 1,
+            "chance": 0.1
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "end14": {
+        "text": [
+          "严重毁容的男子倒下了",
+          "手术室里有很多稀奇的设备"
+        ],
+        "onload": {
+          "city_cleared": true
+        },
+        "loot": {
+          "energy_cell": {
+            "min": 2,
+            "max": 5,
+            "chance": 0.8
+          },
+          "medicine": {
+            "min": 3,
+            "max": 12,
+            "chance": 1
+          },
+          "cloth": {
+            "min": 1,
+            "max": 3,
+            "chance": 0.5
+          },
+          "steel": {
+            "min": 2,
+            "max": 3,
+            "chance": 0.3
+          },
+          "alien_alloy": {
+            "min": 1,
+            "max": 1,
+            "chance": 0.3
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      },
+      "end15": {
+        "text": [
+          "老人有一个藏物处，里面有很多有意思的物品"
+        ],
+        "onload": {
+          "city_cleared": true
+        },
+        "loot": {
+          "alien_alloy": {
+            "min": 1,
+            "max": 1,
+            "chance": 0.8
+          },
+          "medicine": {
+            "min": 1,
+            "max": 4,
+            "chance": 1
+          },
+          "cured_meat": {
+            "min": 3,
+            "max": 7,
+            "chance": 1
+          },
+          "bolas": {
+            "min": 1,
+            "max": 3,
+            "chance": 0.5
+          },
+          "fur": {
+            "min": 1,
+            "max": 5,
+            "chance": 0.8
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开城市",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  "battlefield": {
+    "title": "被遗忘的战场",
+    "notification": "被遗忘的战场",
+    "text": [
+      "很久之前这里发生了战斗",
+      "双方的装备静静地躺在被炸毁的地面上"
+    ],
+    "buttons": [
+      {
+        "id": "leave",
+        "text": "离开",
+        "next": "end"
+      }
+    ],
+    "scenes": {
+      "start": {
+        "text": [
+          "很久之前这里发生了战斗",
+          "双方的装备静静地躺在被炸毁的地面上"
+        ],
+        "onload": {
+          "mark_visited": true
+        },
+        "loot": {
+          "rifle": {
+            "min": 1,
+            "max": 3,
+            "chance": 0.5
+          },
+          "bullets": {
+            "min": 5,
+            "max": 20,
+            "chance": 0.8
+          },
+          "laser_rifle": {
+            "min": 1,
+            "max": 3,
+            "chance": 0.3
+          },
+          "energy_cell": {
+            "min": 5,
+            "max": 10,
+            "chance": 0.5
+          },
+          "grenade": {
+            "min": 1,
+            "max": 5,
+            "chance": 0.5
+          },
+          "alien_alloy": {
+            "min": 1,
+            "max": 1,
+            "chance": 0.3
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  "borehole": {
+    "title": "巨坑",
+    "notification": "巨坑",
+    "text": [
+      "地球上裂开的一个大洞，远古时代的遗迹",
+      "他们拿到了他们来此要找的东西，然后离开了",
+      "继续探索悬崖"
+    ],
+    "buttons": [
+      {
+        "id": "leave",
+        "text": "离开",
+        "next": "end"
+      }
+    ],
+    "scenes": {
+      "start": {
+        "text": [
+          "地球上裂开的一个大洞，远古时代的遗迹",
+          "他们拿到了他们来此要找的东西，然后离开了",
+          "继续探索悬崖"
+        ],
+        "onload": {
+          "mark_visited": true
+        },
+        "loot": {
+          "alien_alloy": {
+            "min": 1,
+            "max": 3,
+            "chance": 1
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  "ship": {
+    "title": "坠毁星舰",
+    "notification": "坠毁星舰",
+    "text": [
+      "流浪者飞船的熟悉曲线露出了尘土与灰烬",
+      "幸运的是当地人不会操作里面的机器",
+      "修整修整后它应该还能飞"
+    ],
+    "buttons": [
+      {
+        "id": "leavel",
+        "text": "抢救",
+        "next": "end"
+      }
+    ],
+    "scenes": {
+      "start": {
+        "text": [
+          "流浪者飞船的熟悉曲线露出了尘土与灰烬",
+          "幸运的是当地人不会操作里面的机器",
+          "修整修整后它应该还能飞"
+        ],
+        "onload": {
+          "mark_visited": true,
+          "world_flag": "ship"
+        },
+        "buttons": [
+          {
+            "id": "leavel",
+            "text": "抢救",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  "sulphurmine": {
+    "title": "硫磺矿",
+    "notification": "矿井周围设立了军事边界",
+    "text": [
+      "武装力量已经在矿井入口驻扎了下来",
+      "士兵肩上扛着步枪在周围巡逻"
+    ],
+    "buttons": [
+      {
+        "id": "attack",
+        "text": "攻击",
+        "next": "a1"
+      },
+      {
+        "id": "leave",
+        "text": "离开",
+        "next": "end"
+      }
+    ],
+    "scenes": {
+      "start": {
+        "text": [
+          "武装力量已经在矿井入口驻扎了下来",
+          "士兵肩上扛着步枪在周围巡逻"
+        ],
+        "notification": "矿井周围设立了军事边界",
+        "buttons": [
+          {
+            "id": "attack",
+            "text": "攻击",
+            "next": "a1"
+          },
+          {
+            "id": "leave",
+            "text": "离开",
+            "next": "end"
+          }
+        ]
+      },
+      "a1": {
+        "notification": "一个士兵拉响了警报，然后开火了",
+        "combat": {
+          "hp": 50,
+          "dmg": 8,
+          "hit": 0.8,
+          "name": "士兵",
+          "death": "士兵倒下了",
+          "loot": {
+            "cured_meat": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.8
+            },
+            "bullets": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.5
+            },
+            "rifle": {
+              "min": 1,
+              "max": 1,
+              "chance": 0.2
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "next": "a2"
+          },
+          {
+            "id": "run",
+            "text": "跑",
+            "next": "end"
+          }
+        ]
+      },
+      "a2": {
+        "notification": "其他士兵加入了战斗",
+        "combat": {
+          "hp": 50,
+          "dmg": 8,
+          "hit": 0.8,
+          "name": "士兵",
+          "death": "士兵倒下了",
+          "loot": {
+            "cured_meat": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.8
+            },
+            "bullets": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.5
+            },
+            "rifle": {
+              "min": 1,
+              "max": 1,
+              "chance": 0.2
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "next": "a3"
+          },
+          {
+            "id": "run",
+            "text": "跑",
+            "next": "end"
+          }
+        ]
+      },
+      "a3": {
+        "notification": "一个头发斑白的士兵挥舞着刺刀发起了攻击",
+        "combat": {
+          "hp": 65,
+          "dmg": 10,
+          "hit": 0.8,
+          "name": "veteran",
+          "death": "veteran倒下了",
+          "loot": {
+            "bayonet": {
+              "min": 1,
+              "max": 1,
+              "chance": 0.5
+            },
+            "cured_meat": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.8
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "next": "cleared"
+          }
+        ]
+      },
+      "cleared": {
+        "text": [
+          "武装力量已经被清理干净了",
+          "矿井现在安全了"
+        ],
+        "notification": "硫磺矿现在没有危险了",
+        "onload": {
+          "mark_visited": true,
+          "world_flag": "sulphurmine"
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  "coalmine": {
+    "title": "煤矿",
+    "notification": "这个旧矿没有被废弃",
+    "text": [
+      "矿井入口处燃烧着营火",
+      "武器已准备就绪"
+    ],
+    "buttons": [
+      {
+        "id": "attack",
+        "text": "攻击",
+        "next": "a1"
+      },
+      {
+        "id": "leave",
+        "text": "离开",
+        "next": "end"
+      }
+    ],
+    "scenes": {
+      "start": {
+        "text": [
+          "矿井入口处燃烧着营火",
+          "武器已准备就绪"
+        ],
+        "notification": "这个旧矿没有被废弃",
+        "buttons": [
+          {
+            "id": "attack",
+            "text": "攻击",
+            "next": "a1"
+          },
+          {
+            "id": "leave",
+            "text": "离开",
+            "next": "end"
+          }
+        ]
+      },
+      "a1": {
+        "notification": "一个男人加入了战斗",
+        "combat": {
+          "hp": 10,
+          "dmg": 3,
+          "hit": 0.8,
+          "name": "man",
+          "death": "man倒下了",
+          "loot": {
+            "cured_meat": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.8
+            },
+            "cloth": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.8
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "next": "a2"
+          },
+          {
+            "id": "run",
+            "text": "跑",
+            "next": "end"
+          }
+        ]
+      },
+      "a2": {
+        "notification": "一个男人加入了战斗",
+        "combat": {
+          "hp": 10,
+          "dmg": 3,
+          "hit": 0.8,
+          "name": "man",
+          "death": "man倒下了",
+          "loot": {
+            "cured_meat": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.8
+            },
+            "cloth": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.8
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "next": "a3"
+          },
+          {
+            "id": "run",
+            "text": "跑",
+            "next": "end"
+          }
+        ]
+      },
+      "a3": {
+        "notification": "只剩下首领了",
+        "combat": {
+          "hp": 20,
+          "dmg": 5,
+          "hit": 0.8,
+          "name": "chief",
+          "death": "chief倒下了",
+          "loot": {
+            "cured_meat": {
+              "min": 5,
+              "max": 10,
+              "chance": 1
+            },
+            "cloth": {
+              "min": 5,
+              "max": 10,
+              "chance": 0.8
+            },
+            "iron": {
+              "min": 1,
+              "max": 5,
+              "chance": 0.8
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "continue",
+            "text": "继续深入",
+            "next": "cleared"
+          }
+        ]
+      },
+      "cleared": {
+        "text": [
+          "营地平静下来，除了劈啪作响的火苗",
+          "矿井现在安全了"
+        ],
+        "notification": "煤矿现在没有危险了",
+        "onload": {
+          "mark_visited": true,
+          "world_flag": "coalmine"
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  "ironmine": {
+    "title": "铁矿",
+    "notification": "通向一个废弃的矿井",
+    "text": [
+      "一座老旧的铁矿，四周都是废弃的工具，听任生锈",
+      "入口处散落着很多骨头，上面有很多深深的锯齿状凹槽",
+      "野兽的咆哮回荡在黑暗中"
+    ],
+    "buttons": [
+      {
+        "id": "enter",
+        "text": "进入",
+        "cost": {
+          "torch": 1
+        },
+        "next": "enter"
+      },
+      {
+        "id": "leave",
+        "text": "离开",
+        "next": "end"
+      }
+    ],
+    "scenes": {
+      "start": {
+        "text": [
+          "一座老旧的铁矿，四周都是废弃的工具，听任生锈",
+          "入口处散落着很多骨头，上面有很多深深的锯齿状凹槽",
+          "野兽的咆哮回荡在黑暗中"
+        ],
+        "notification": "通向一个废弃的矿井",
+        "buttons": [
+          {
+            "id": "enter",
+            "text": "进入",
+            "cost": {
+              "torch": 1
+            },
+            "next": "enter"
+          },
+          {
+            "id": "leave",
+            "text": "离开",
+            "next": "end"
+          }
+        ]
+      },
+      "enter": {
+        "notification": "一只巨大的生物吼叫了一声，肌肉在火光中起伏着",
+        "combat": {
+          "hp": 10,
+          "dmg": 4,
+          "hit": 0.8,
+          "name": "beastly matriarch",
+          "death": "beastly matriarch倒下了",
+          "loot": {
+            "teeth": {
+              "min": 5,
+              "max": 10,
+              "chance": 1
+            },
+            "scales": {
+              "min": 5,
+              "max": 10,
+              "chance": 0.8
+            },
+            "cloth": {
+              "min": 5,
+              "max": 10,
+              "chance": 0.5
+            }
+          }
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开",
+            "next": "cleared"
+          }
+        ]
+      },
+      "cleared": {
+        "text": [
+          "野兽倒下了",
+          "矿井现在安全了"
+        ],
+        "notification": "铁矿现在没有危险了",
+        "onload": {
+          "mark_visited": true,
+          "world_flag": "ironmine"
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  "cache": {
+    "title": "被摧毁的村落",
+    "notification": "流浪者引擎散发出的金属气味充斥在空气中",
+    "text": [
+      "村落的废墟掩盖着一层尘土",
+      "遍地焦尸"
+    ],
+    "buttons": [
+      {
+        "id": "enter",
+        "text": "进入",
+        "next": "underground"
+      },
+      {
+        "id": "leave",
+        "text": "离开",
+        "next": "end"
+      }
+    ],
+    "scenes": {
+      "start": {
+        "text": [
+          "村落的废墟掩盖着一层尘土",
+          "遍地焦尸"
+        ],
+        "notification": "流浪者引擎散发出的金属气味充斥在空气中",
+        "buttons": [
+          {
+            "id": "enter",
+            "text": "进入",
+            "next": "underground"
+          },
+          {
+            "id": "leave",
+            "text": "离开",
+            "next": "end"
+          }
+        ]
+      },
+      "underground": {
+        "text": [
+          "一栋小棚子矗立在村子中央",
+          "里头似乎还有些物资"
+        ],
+        "buttons": [
+          {
+            "id": "take",
+            "text": "带走",
+            "next": "exit"
+          }
+        ]
+      },
+      "exit": {
+        "text": [
+          "这里留存着前代人的所有劳动果实",
+          "是时候采摘它们了"
+        ],
+        "onload": {
+          "mark_visited": true,
+          "collect_stores": true
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  "executioner": {
+    "title": "残破战舰",
+    "notification": "一艘被摧毁的战舰横亘在尘土中。",
+    "text": [
+      "一艘被毁的战舰横在尘土上。",
+      "舱门紧闭，内部的通道尚不可及。"
+    ],
+    "buttons": [
+      {
+        "id": "leave",
+        "text": "离开",
+        "next": "end"
+      }
+    ],
+    "scenes": {
+      "start": {
+        "text": [
+          "一艘被毁的战舰横在尘土上。",
+          "舱门紧闭，内部的通道尚不可及。"
+        ],
+        "onload": {
+          "mark_visited": true
+        },
+        "buttons": [
+          {
+            "id": "leave",
+            "text": "离开",
+            "next": "end"
+          }
+        ]
+      }
+    }
   }
 }

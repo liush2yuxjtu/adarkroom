@@ -406,7 +406,9 @@
         water_moves: 0,
         fight_moves: 0,
         visited: {},
-        landmarks: { "33,28": "old_house" },
+        cleared: {},
+        landmarks: { "33,28": "old_house", "27,24": "cave", "42,28": "town", "30,52": "city", "36,33": "outpost", "58,30": "ship", "14,30": "borehole", "30,12": "battlefield", "40,40": "swamp", "20,24": "cache", "2,30": "executioner", "35,30": "ironmine", "30,40": "coalmine", "50,30": "sulphurmine" },
+        outposts_used: {},
         seen_danger: false
       },
       slice_complete: false
@@ -566,7 +568,9 @@
         base[k] = Object.assign({}, base[k], saved[k]);
         if (k === "world") {
           base.world.visited = (saved.world && saved.world.visited) || {};
+          base.world.cleared = (saved.world && saved.world.cleared) || {};
           base.world.landmarks = (saved.world && saved.world.landmarks) || base.world.landmarks;
+          base.world.outposts_used = (saved.world && saved.world.outposts_used) || {};
         }
       } else if (ARRAY_KEYS.indexOf(k) >= 0) {
         base[k] = Array.isArray(saved[k]) ? saved[k] : base[k];
@@ -634,8 +638,12 @@
       state.world.size = WORLD_SIZE;
     }
     if (!isPlainObject(state.world.landmarks)) state.world.landmarks = {};
-    var houseKey = (VILLAGE_X + 3) + "," + (VILLAGE_Y - 2);
-    if (!state.world.landmarks[houseKey]) state.world.landmarks[houseKey] = "old_house";
+    var defaultLandmarks = { "33,28": "old_house", "27,24": "cave", "42,28": "town", "30,52": "city", "36,33": "outpost", "58,30": "ship", "14,30": "borehole", "30,12": "battlefield", "40,40": "swamp", "20,24": "cache", "2,30": "executioner", "35,30": "ironmine", "30,40": "coalmine", "50,30": "sulphurmine" };
+    Object.keys(defaultLandmarks).forEach(function (k) {
+      if (!state.world.landmarks[k]) state.world.landmarks[k] = defaultLandmarks[k];
+    });
+    if (!isPlainObject(state.world.outposts_used)) state.world.outposts_used = {};
+    if (!isPlainObject(state.world.cleared)) state.world.cleared = {};
     if (typeof state.world.fight_moves !== "number") state.world.fight_moves = 0;
     if (typeof state.world.water_moves !== "number") state.world.water_moves = 0;
     unlockWorkersForBuildings(state);
@@ -922,8 +930,9 @@
           payload: a.payload || {}
         };
         if (spec.notification) pushNote(state, spec.notification, state.location);
-        applySceneEffects(state, spec);
-        if (spec.combat) beginCombat(state, spec);
+        var startScene = (spec.scenes && spec.scenes.start) ? spec.scenes.start : spec;
+        applySceneEffects(state, startScene);
+        if (startScene.combat || spec.combat) beginCombat(state, startScene.combat ? startScene : spec);
         break;
     }
     return { ok: true };
@@ -1211,20 +1220,44 @@
     return produced;
   }
 
+  function bagHave(state, item) {
+    var n = state.stores[item] || 0;
+    if (state.world && state.world.on_expedition) n += state.outfit[item] || 0;
+    return n;
+  }
+
   function canAfford(state, cost) {
     for (var k in cost) {
-      if ((state.stores[k] || 0) < cost[k]) return false;
+      if (bagHave(state, k) < cost[k]) return false;
     }
     return true;
   }
 
   function pay(state, cost) {
-    for (var k in cost) addItem(state, k, -cost[k]);
+    for (var k in cost) {
+      var need = cost[k];
+      if (state.world && state.world.on_expedition && (state.outfit[k] || 0) > 0) {
+        var fromBag = Math.min(need, state.outfit[k] || 0);
+        state.outfit[k] = (state.outfit[k] || 0) - fromBag;
+        need -= fromBag;
+      }
+      if (need) addItem(state, k, -need);
+    }
   }
 
   function grant(state, reward) {
     if (!reward) return;
-    for (var k in reward) addItem(state, k, reward[k]);
+    for (var k in reward) {
+      if (state.world && state.world.on_expedition && ITEMS.indexOf(k) >= 0) {
+        state.outfit[k] = (state.outfit[k] || 0) + reward[k];
+        if (reward[k] > 0) {
+          if (!state.seen) state.seen = {};
+          state.seen[k] = true;
+        }
+      } else {
+        addItem(state, k, reward[k]);
+      }
+    }
   }
 
   function eventAvailable(state, spec) {
@@ -1284,9 +1317,23 @@
     }
   }
 
+  function currentScene(active) {
+    if (!active || !active.spec) return null;
+    var spec = active.spec;
+    var name = active.scene || "start";
+    if (spec.scenes && spec.scenes[name]) return spec.scenes[name];
+    if (name === "start") return spec;
+    return spec;
+  }
+
+  function worldKey(state) {
+    return state.world.x + "," + state.world.y;
+  }
+
   function applySceneEffects(state, scene) {
     if (!scene) return;
     if (scene.reward) grant(state, scene.reward);
+    if (scene.loot && !scene.combat) grant(state, rollLoot(scene.loot));
     if (scene.notification) pushNote(state, scene.notification, state.location);
     if (scene.set_flag) state.flags[scene.set_flag] = true;
     if (scene.water && state.world && state.world.on_expedition) {
@@ -1310,6 +1357,30 @@
       state.flags.stolen = {};
     }
     if (fx.learn) addPerk(state, fx.learn);
+    if (fx.mark_visited && state.world) {
+      state.world.cleared[worldKey(state)] = true;
+      state.world.visited[worldKey(state)] = true;
+    }
+    if (fx.visited_old_house) state.flags.visited_old_house = true;
+    if (fx.set_water && state.world && state.world.on_expedition) {
+      state.world.water = getMaxWater(state);
+      pushNote(state, t("water replenished"), "world");
+    }
+    if (fx.use_outpost && state.world) {
+      state.world.water = getMaxWater(state);
+      if (!state.world.outposts_used) state.world.outposts_used = {};
+      state.world.outposts_used[worldKey(state)] = true;
+      state.world.visited[worldKey(state)] = true;
+      pushNote(state, t("water replenished"), "world");
+    }
+    if (fx.city_cleared) state.flags.city_cleared = true;
+    if (fx.world_flag) {
+      state.flags["world_" + fx.world_flag] = true;
+      if (state.world) state.world[fx.world_flag] = true;
+    }
+    if (fx.collect_stores && state.previous && state.previous.stores) {
+      grant(state, state.previous.stores);
+    }
     if (fx.delay_give && Math.random() < (fx.delay_give.chance == null ? 1 : fx.delay_give.chance)) {
       var after = fx.delay_give.after || 60;
       var stores = fx.delay_give.stores || {};
@@ -2439,7 +2510,10 @@
           pushNote(s, t("dangerous to be this far from the village without proper protection"), "world");
         }
         var lm = s.world.landmarks[nx + "," + ny];
-        if (lm && !s.active_event) {
+        var lmKey = nx + "," + ny;
+        var usedOutpost = lm === "outpost" && s.world.outposts_used && s.world.outposts_used[lmKey];
+        var alreadyCleared = lm && lm !== "outpost" && s.world.cleared && s.world.cleared[lmKey];
+        if (lm && !s.active_event && !usedOutpost && !alreadyCleared) {
           executeTool(s, { tool: "spawn_event", args: { event_id: lm } }, { events: this.events });
         } else if (d > 0 && !s.active_event && !s.combat) {
           s.world.fight_moves = (s.world.fight_moves || 0) + 1;
@@ -2541,6 +2615,9 @@
       if (s.outfit[k] > 0) addItem(s, k, s.outfit[k]);
       s.outfit[k] = 0;
     }
+    if (s.flags.world_ironmine && !s.buildings.iron_mine) s.buildings.iron_mine = 1;
+    if (s.flags.world_coalmine && !s.buildings.coal_mine) s.buildings.coal_mine = 1;
+    if (s.flags.world_sulphurmine && !s.buildings.sulphur_mine) s.buildings.sulphur_mine = 1;
     if (s.flags.visited_old_house && success && !s.slice_complete) {
       s.slice_complete = true;
       pushNote(s, "你带回了旧房子里的见闻。尘途的第一段走完了。", "path");
@@ -2553,11 +2630,21 @@
     s.combat = null;
   };
 
+  Game.prototype._enterEventScene = function (name) {
+    var s = this.state;
+    if (!s.active_event || !s.active_event.spec) return;
+    var spec = s.active_event.spec;
+    if (!spec.scenes || !spec.scenes[name]) return;
+    s.active_event.scene = name;
+    applySceneEffects(s, spec.scenes[name]);
+    if (spec.scenes[name].combat) beginCombat(s, spec.scenes[name]);
+  };
+
   Game.prototype._resolveEvent = function (buttonId) {
     var s = this.state;
     if (!s.active_event) return;
     var spec = s.active_event.spec;
-    var scene = s.active_event.scene === "start" ? spec : (spec.scenes && spec.scenes[s.active_event.scene]) || spec;
+    var scene = currentScene(s.active_event);
     var btn = (scene.buttons || spec.buttons || []).filter(function (b) { return b.id === buttonId; })[0];
     if (!btn) return;
     if (!buttonAvailable(s, btn)) return;
@@ -2581,14 +2668,12 @@
         if (pick == null && r <= acc) pick = k;
       });
       if (pick && spec.scenes && spec.scenes[pick]) {
-        s.active_event.scene = pick;
-        applySceneEffects(s, spec.scenes[pick]);
+        this._enterEventScene(pick);
         return;
       }
     }
     if (btn.next && btn.next !== "end" && spec.scenes && spec.scenes[btn.next]) {
-      s.active_event.scene = btn.next;
-      applySceneEffects(s, spec.scenes[btn.next]);
+      this._enterEventScene(btn.next);
       return;
     }
     s.active_event = null;
@@ -2667,7 +2752,8 @@
         grant(s, rollLoot(s.combat.loot));
         pushNote(s, s.combat.death || "倒下了。", "world");
         s.combat = null;
-        s.active_event = null;
+        var won = currentScene(s.active_event);
+        if (!(won && won.buttons && won.buttons.length)) s.active_event = null;
       }
     }
     if (s.world.hp <= 0) {
@@ -2841,6 +2927,7 @@
 
   return {
     ITEMS: ITEMS,
+    AREAS: AREAS,
     ITEM_CN: ITEM_CN,
     BUILDING_CN: BUILDING_CN,
     WORKER_CN: WORKER_CN,
@@ -2904,6 +2991,9 @@
     hasPerk: hasPerk,
     addPerk: addPerk,
     worldDistance: worldDistance,
+    applySceneEffects: applySceneEffects,
+    currentScene: currentScene,
+    rollLoot: rollLoot,
     applyWorkerIncome: applyWorkerIncome,
     visibleJobs: visibleJobs,
     workerUnlocked: workerUnlocked,

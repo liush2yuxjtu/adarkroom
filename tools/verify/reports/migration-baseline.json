@@ -1,14 +1,14 @@
 {
   "pass": false,
   "gate": {
-    "missing": 74,
+    "missing": 49,
     "no_producer": 4,
     "numeric_mismatch": 0,
     "allowlist": 0
   },
   "counts": {
-    "present": 221,
-    "missing": 74,
+    "present": 246,
+    "missing": 49,
     "no_producer": 4,
     "mismatch": 0,
     "no_zh": 0,
@@ -86,15 +86,15 @@
       "total": 11
     },
     "landmark/setpiece": {
-      "present": 1,
-      "missing": 13,
+      "present": 14,
+      "missing": 0,
       "no_producer": 0,
       "mismatch": 0,
       "total": 14
     },
     "setpiece event": {
-      "present": 0,
-      "missing": 12,
+      "present": 12,
+      "missing": 0,
       "no_producer": 0,
       "mismatch": 0,
       "total": 12
@@ -221,8 +221,8 @@
       "total": 84
     },
     "6": {
-      "present": 1,
-      "missing": 25,
+      "present": 26,
+      "missing": 0,
       "no_producer": 0,
       "mismatch": 0,
       "total": 26
@@ -295,9 +295,9 @@
     {
       "batch": 6,
       "title": "Landmarks and setpieces (including mines)",
-      "pass": false,
+      "pass": true,
       "kind": "story",
-      "detail": "batch incomplete: 25 of 26 not present"
+      "detail": "landmarks placed + setpiece scenes + mine/city/ship flags + persist"
     },
     {
       "batch": 7,
@@ -382,181 +382,6 @@
       "id": "item/resource:stim blueprint",
       "status": "missing",
       "batch": 8,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "landmark/setpiece:IRON_MINE",
-      "status": "missing",
-      "batch": 6,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "landmark/setpiece:COAL_MINE",
-      "status": "missing",
-      "batch": 6,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "landmark/setpiece:SULPHUR_MINE",
-      "status": "missing",
-      "batch": 6,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "landmark/setpiece:CAVE",
-      "status": "missing",
-      "batch": 6,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "landmark/setpiece:TOWN",
-      "status": "missing",
-      "batch": 6,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "landmark/setpiece:CITY",
-      "status": "missing",
-      "batch": 6,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "landmark/setpiece:OUTPOST",
-      "status": "missing",
-      "batch": 6,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "landmark/setpiece:SHIP",
-      "status": "missing",
-      "batch": 6,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "landmark/setpiece:BOREHOLE",
-      "status": "missing",
-      "batch": 6,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "landmark/setpiece:BATTLEFIELD",
-      "status": "missing",
-      "batch": 6,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "landmark/setpiece:SWAMP",
-      "status": "missing",
-      "batch": 6,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "landmark/setpiece:CACHE",
-      "status": "missing",
-      "batch": 6,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "landmark/setpiece:EXECUTIONER",
-      "status": "missing",
-      "batch": 6,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "setpiece event:An Outpost",
-      "status": "missing",
-      "batch": 6,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "setpiece event:A Murky Swamp",
-      "status": "missing",
-      "batch": 6,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "setpiece event:A Damp Cave",
-      "status": "missing",
-      "batch": 6,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "setpiece event:A Deserted Town",
-      "status": "missing",
-      "batch": 6,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "setpiece event:A Ruined City",
-      "status": "missing",
-      "batch": 6,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "setpiece event:A Forgotten Battlefield",
-      "status": "missing",
-      "batch": 6,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "setpiece event:A Huge Borehole",
-      "status": "missing",
-      "batch": 6,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "setpiece event:A Crashed Ship",
-      "status": "missing",
-      "batch": 6,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "setpiece event:The Sulphur Mine",
-      "status": "missing",
-      "batch": 6,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "setpiece event:The Coal Mine",
-      "status": "missing",
-      "batch": 6,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "setpiece event:The Iron Mine",
-      "status": "missing",
-      "batch": 6,
-      "numeric": "skip",
-      "note": "missing"
-    },
-    {
-      "id": "setpiece event:A Destroyed Village",
-      "status": "missing",
-      "batch": 6,
       "numeric": "skip",
       "note": "missing"
     },
