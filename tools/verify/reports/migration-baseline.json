@@ -1,0 +1,1901 @@
+{
+  "pass": false,
+  "gate": {
+    "missing": 220,
+    "no_producer": 4,
+    "numeric_mismatch": 1,
+    "allowlist": 0
+  },
+  "counts": {
+    "present": 75,
+    "missing": 220,
+    "no_producer": 4,
+    "mismatch": 1,
+    "no_zh": 0,
+    "no_save": 0
+  },
+  "byCategory": {
+    "building": {
+      "present": 10,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 10
+    },
+    "tool/weapon/upgrade": {
+      "present": 0,
+      "missing": 15,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 15
+    },
+    "worker/income": {
+      "present": 10,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 10
+    },
+    "trade good": {
+      "present": 3,
+      "missing": 6,
+      "no_producer": 4,
+      "mismatch": 0,
+      "total": 13
+    },
+    "item/resource": {
+      "present": 9,
+      "missing": 7,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 16
+    },
+    "event:room": {
+      "present": 2,
+      "missing": 6,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 8
+    },
+    "event:outside": {
+      "present": 2,
+      "missing": 4,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 6
+    },
+    "event:global": {
+      "present": 0,
+      "missing": 1,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 1
+    },
+    "event:marketing": {
+      "present": 0,
+      "missing": 1,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 1
+    },
+    "event:encounters": {
+      "present": 1,
+      "missing": 10,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 11
+    },
+    "landmark/setpiece": {
+      "present": 1,
+      "missing": 13,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 14
+    },
+    "setpiece event": {
+      "present": 0,
+      "missing": 12,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 12
+    },
+    "fabricator": {
+      "present": 0,
+      "missing": 9,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 9
+    },
+    "executioner": {
+      "present": 0,
+      "missing": 5,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 5
+    },
+    "later phase": {
+      "present": 1,
+      "missing": 4,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 5
+    },
+    "perk": {
+      "present": 0,
+      "missing": 11,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 11
+    },
+    "weapon": {
+      "present": 0,
+      "missing": 11,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 11
+    },
+    "world tile": {
+      "present": 5,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 5
+    },
+    "world mechanic": {
+      "present": 0,
+      "missing": 14,
+      "no_producer": 0,
+      "mismatch": 1,
+      "total": 14
+    },
+    "ship": {
+      "present": 0,
+      "missing": 5,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 5
+    },
+    "space": {
+      "present": 0,
+      "missing": 4,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 4
+    },
+    "prestige": {
+      "present": 0,
+      "missing": 1,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 1
+    },
+    "score": {
+      "present": 0,
+      "missing": 1,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 1
+    },
+    "notification": {
+      "present": 31,
+      "missing": 80,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 111
+    }
+  },
+  "byBatch": {
+    "1": {
+      "present": 41,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 41
+    },
+    "2": {
+      "present": 0,
+      "missing": 42,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 42
+    },
+    "3": {
+      "present": 2,
+      "missing": 6,
+      "no_producer": 4,
+      "mismatch": 0,
+      "total": 12
+    },
+    "4": {
+      "present": 0,
+      "missing": 12,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 12
+    },
+    "5": {
+      "present": 5,
+      "missing": 79,
+      "no_producer": 0,
+      "mismatch": 1,
+      "total": 84
+    },
+    "6": {
+      "present": 1,
+      "missing": 25,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 26
+    },
+    "7": {
+      "present": 0,
+      "missing": 11,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 11
+    },
+    "8": {
+      "present": 0,
+      "missing": 36,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 36
+    },
+    "9": {
+      "present": 0,
+      "missing": 8,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 8
+    },
+    "core": {
+      "present": 26,
+      "missing": 1,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 27
+    }
+  },
+  "reachability": [
+    {
+      "batch": 1,
+      "title": "Village economy (buildings, workers, leather, cured meat)",
+      "pass": true,
+      "kind": "story",
+      "detail": "lodge/smokehouse/charcutier/cured_meat packed (cured=1)"
+    },
+    {
+      "batch": 2,
+      "title": "Workshop crafts, water, bags, armour, crafted weapons",
+      "pass": false,
+      "kind": "story",
+      "detail": "batch incomplete: 42 of 42 not present"
+    },
+    {
+      "batch": 3,
+      "title": "Trading-post buy menu",
+      "pass": false,
+      "kind": "story",
+      "detail": "batch incomplete: 10 of 12 not present"
+    },
+    {
+      "batch": 4,
+      "title": "Room / outside / global / marketing events",
+      "pass": false,
+      "kind": "story",
+      "detail": "batch incomplete: 12 of 12 not present"
+    },
+    {
+      "batch": 5,
+      "title": "World combat: encounters, weapons, perks, map rules",
+      "pass": false,
+      "kind": "story",
+      "detail": "batch incomplete: 79 of 84 not present"
+    },
+    {
+      "batch": 6,
+      "title": "Landmarks and setpieces (including mines)",
+      "pass": false,
+      "kind": "story",
+      "detail": "batch incomplete: 25 of 26 not present"
+    },
+    {
+      "batch": 7,
+      "title": "Ship and space",
+      "pass": false,
+      "kind": "story",
+      "detail": "batch incomplete: 11 of 11 not present"
+    },
+    {
+      "batch": 8,
+      "title": "Fabricator and blueprints",
+      "pass": false,
+      "kind": "story",
+      "detail": "batch incomplete: 36 of 36 not present"
+    },
+    {
+      "batch": 9,
+      "title": "Executioner, ending, prestige, score",
+      "pass": false,
+      "kind": "story",
+      "detail": "batch incomplete: 8 of 8 not present"
+    },
+    {
+      "batch": "core",
+      "title": "Early room / forest slice already in the remake",
+      "pass": false,
+      "kind": "inventory",
+      "detail": "1 core gaps"
+    }
+  ],
+  "gaps": [
+    {
+      "id": "tool/weapon/upgrade:torch",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "not present"
+    },
+    {
+      "id": "tool/weapon/upgrade:waterskin",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "not present"
+    },
+    {
+      "id": "tool/weapon/upgrade:cask",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "not present"
+    },
+    {
+      "id": "tool/weapon/upgrade:water tank",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "not present"
+    },
+    {
+      "id": "tool/weapon/upgrade:bone spear",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "not present"
+    },
+    {
+      "id": "tool/weapon/upgrade:rucksack",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "not present"
+    },
+    {
+      "id": "tool/weapon/upgrade:wagon",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "not present"
+    },
+    {
+      "id": "tool/weapon/upgrade:convoy",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "not present"
+    },
+    {
+      "id": "tool/weapon/upgrade:l armour",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "not present"
+    },
+    {
+      "id": "tool/weapon/upgrade:i armour",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "not present"
+    },
+    {
+      "id": "tool/weapon/upgrade:s armour",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "not present"
+    },
+    {
+      "id": "tool/weapon/upgrade:iron sword",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "not present"
+    },
+    {
+      "id": "tool/weapon/upgrade:steel sword",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "not present"
+    },
+    {
+      "id": "tool/weapon/upgrade:rifle",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "not present"
+    },
+    {
+      "id": "tool/weapon/upgrade:laser rifle",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "trade good:iron",
+      "status": "no_producer",
+      "batch": 3,
+      "numeric": "skip",
+      "note": "item exists but not tradeable"
+    },
+    {
+      "id": "trade good:coal",
+      "status": "no_producer",
+      "batch": 3,
+      "numeric": "skip",
+      "note": "item exists but not tradeable"
+    },
+    {
+      "id": "trade good:steel",
+      "status": "no_producer",
+      "batch": 3,
+      "numeric": "skip",
+      "note": "item exists but not tradeable"
+    },
+    {
+      "id": "trade good:medicine",
+      "status": "missing",
+      "batch": 3,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "trade good:bullets",
+      "status": "no_producer",
+      "batch": 3,
+      "numeric": "skip",
+      "note": "item exists but not tradeable"
+    },
+    {
+      "id": "trade good:energy cell",
+      "status": "missing",
+      "batch": 3,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "trade good:bolas",
+      "status": "missing",
+      "batch": 3,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "trade good:grenade",
+      "status": "missing",
+      "batch": 3,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "trade good:bayonet",
+      "status": "missing",
+      "batch": 3,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "trade good:alien alloy",
+      "status": "missing",
+      "batch": 3,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "item/resource:disruptor blueprint",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "item/resource:fleet beacon",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "item/resource:glowstone blueprint",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "item/resource:hypo blueprint",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "item/resource:kinetic armour blueprint",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "item/resource:plasma rifle blueprint",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "item/resource:stim blueprint",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "event:room:The Beggar",
+      "status": "missing",
+      "batch": 4,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "event:room:The Shady Builder",
+      "status": "missing",
+      "batch": 4,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "event:room:The Mysterious Wanderer",
+      "status": "missing",
+      "batch": 4,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "event:room:The Scout",
+      "status": "missing",
+      "batch": 4,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "event:room:The Master",
+      "status": "missing",
+      "batch": 4,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "event:room:The Sick Man",
+      "status": "missing",
+      "batch": 4,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "event:outside:Fire",
+      "status": "missing",
+      "batch": 4,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "event:outside:Sickness",
+      "status": "missing",
+      "batch": 4,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "event:outside:Plague",
+      "status": "missing",
+      "batch": 4,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "event:outside:A Military Raid",
+      "status": "missing",
+      "batch": 4,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "event:global:The Thief",
+      "status": "missing",
+      "batch": 4,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "event:marketing:Penrose",
+      "status": "missing",
+      "batch": 4,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "event:encounters:A Gaunt Man",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "event:encounters:A Strange Bird",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "event:encounters:A Two-Headed Creature",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "event:encounters:A Shivering Man",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "event:encounters:A Man-Eater",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "event:encounters:A Scavenger",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "event:encounters:A Huge Lizard",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "event:encounters:A Feral Terror",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "event:encounters:A Soldier",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "event:encounters:A Sniper",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "landmark/setpiece:IRON_MINE",
+      "status": "missing",
+      "batch": 6,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "landmark/setpiece:COAL_MINE",
+      "status": "missing",
+      "batch": 6,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "landmark/setpiece:SULPHUR_MINE",
+      "status": "missing",
+      "batch": 6,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "landmark/setpiece:CAVE",
+      "status": "missing",
+      "batch": 6,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "landmark/setpiece:TOWN",
+      "status": "missing",
+      "batch": 6,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "landmark/setpiece:CITY",
+      "status": "missing",
+      "batch": 6,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "landmark/setpiece:OUTPOST",
+      "status": "missing",
+      "batch": 6,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "landmark/setpiece:SHIP",
+      "status": "missing",
+      "batch": 6,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "landmark/setpiece:BOREHOLE",
+      "status": "missing",
+      "batch": 6,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "landmark/setpiece:BATTLEFIELD",
+      "status": "missing",
+      "batch": 6,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "landmark/setpiece:SWAMP",
+      "status": "missing",
+      "batch": 6,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "landmark/setpiece:CACHE",
+      "status": "missing",
+      "batch": 6,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "landmark/setpiece:EXECUTIONER",
+      "status": "missing",
+      "batch": 6,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "setpiece event:An Outpost",
+      "status": "missing",
+      "batch": 6,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "setpiece event:A Murky Swamp",
+      "status": "missing",
+      "batch": 6,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "setpiece event:A Damp Cave",
+      "status": "missing",
+      "batch": 6,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "setpiece event:A Deserted Town",
+      "status": "missing",
+      "batch": 6,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "setpiece event:A Ruined City",
+      "status": "missing",
+      "batch": 6,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "setpiece event:A Forgotten Battlefield",
+      "status": "missing",
+      "batch": 6,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "setpiece event:A Huge Borehole",
+      "status": "missing",
+      "batch": 6,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "setpiece event:A Crashed Ship",
+      "status": "missing",
+      "batch": 6,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "setpiece event:The Sulphur Mine",
+      "status": "missing",
+      "batch": 6,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "setpiece event:The Coal Mine",
+      "status": "missing",
+      "batch": 6,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "setpiece event:The Iron Mine",
+      "status": "missing",
+      "batch": 6,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "setpiece event:A Destroyed Village",
+      "status": "missing",
+      "batch": 6,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "fabricator:energy blade",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "fabricator:fluid recycler",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "fabricator:cargo drone",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "fabricator:kinetic armour",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "fabricator:disruptor",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "fabricator:hypo",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "fabricator:stim",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "fabricator:plasma rifle",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "fabricator:glowstone",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "executioner:A Ravaged Battleship",
+      "status": "missing",
+      "batch": 9,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "executioner:Engineering Wing",
+      "status": "missing",
+      "batch": 9,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "executioner:Martial Wing",
+      "status": "missing",
+      "batch": 9,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "executioner:Medical Wing",
+      "status": "missing",
+      "batch": 9,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "executioner:Command Deck",
+      "status": "missing",
+      "batch": 9,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "later phase:ship",
+      "status": "missing",
+      "batch": 7,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "later phase:space",
+      "status": "missing",
+      "batch": 7,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "later phase:fabricator",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "later phase:ending/prestige/score",
+      "status": "missing",
+      "batch": 9,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "perk:boxer",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "perk:martial artist",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "perk:unarmed master",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "perk:barbarian",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "perk:slow metabolism",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "perk:desert rat",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "perk:evasive",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "perk:precise",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "perk:scout",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "perk:stealthy",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "perk:gastronome",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "weapon:bone spear",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "not present"
+    },
+    {
+      "id": "weapon:iron sword",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "not present"
+    },
+    {
+      "id": "weapon:steel sword",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "not present"
+    },
+    {
+      "id": "weapon:bayonet",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "not present"
+    },
+    {
+      "id": "weapon:rifle",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "not present"
+    },
+    {
+      "id": "weapon:laser rifle",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "not present"
+    },
+    {
+      "id": "weapon:grenade",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "not present"
+    },
+    {
+      "id": "weapon:bolas",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "not present"
+    },
+    {
+      "id": "weapon:plasma rifle",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "not present"
+    },
+    {
+      "id": "weapon:energy blade",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "not present"
+    },
+    {
+      "id": "weapon:disruptor",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "not present"
+    },
+    {
+      "id": "world mechanic:RADIUS",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "mismatch",
+      "note": "original RADIUS=30 remake world.size=11"
+    },
+    {
+      "id": "world mechanic:STICKINESS",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "0.5"
+    },
+    {
+      "id": "world mechanic:LIGHT_RADIUS",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "2"
+    },
+    {
+      "id": "world mechanic:BASE_WATER",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "match",
+      "note": "10"
+    },
+    {
+      "id": "world mechanic:MOVES_PER_FOOD",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "2"
+    },
+    {
+      "id": "world mechanic:MOVES_PER_WATER",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "1"
+    },
+    {
+      "id": "world mechanic:DEATH_COOLDOWN",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "120"
+    },
+    {
+      "id": "world mechanic:FIGHT_CHANCE",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "0.2"
+    },
+    {
+      "id": "world mechanic:BASE_HEALTH",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "match",
+      "note": "10"
+    },
+    {
+      "id": "world mechanic:BASE_HIT_CHANCE",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "0.8"
+    },
+    {
+      "id": "world mechanic:MEAT_HEAL",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "8"
+    },
+    {
+      "id": "world mechanic:MEDS_HEAL",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "20"
+    },
+    {
+      "id": "world mechanic:HYPO_HEAL",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "30"
+    },
+    {
+      "id": "world mechanic:FIGHT_DELAY",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "3"
+    },
+    {
+      "id": "ship:LIFTOFF_COOLDOWN",
+      "status": "missing",
+      "batch": 7,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "ship:ALLOY_PER_HULL",
+      "status": "missing",
+      "batch": 7,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "ship:ALLOY_PER_THRUSTER",
+      "status": "missing",
+      "batch": 7,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "ship:BASE_HULL",
+      "status": "missing",
+      "batch": 7,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "ship:BASE_THRUSTERS",
+      "status": "missing",
+      "batch": 7,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "space:SHIP_SPEED",
+      "status": "missing",
+      "batch": 7,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "space:BASE_ASTEROID_DELAY",
+      "status": "missing",
+      "batch": 7,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "space:BASE_ASTEROID_SPEED",
+      "status": "missing",
+      "batch": 7,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "space:FTB_SPEED",
+      "status": "missing",
+      "batch": 7,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "prestige:storesMap + previous.stores",
+      "status": "missing",
+      "batch": 9,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "score:calculateScore + factors",
+      "status": "missing",
+      "batch": 9,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:craft:hut: no more room for huts.",
+      "status": "missing",
+      "batch": "core",
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:craft:torch: torch",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:craft:torch: a torch to keep the dark away",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:craft:waterskin: waterskin",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:craft:waterskin: this waterskin'll hold a bit of water, at least",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:craft:cask: cask",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:craft:cask: the cask holds enough water for longer expeditio",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:craft:water tank: water tank",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:craft:water tank: never go thirsty again",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:craft:bone spear: bone spear",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:craft:bone spear: this spear's not elegant, but it's pretty good a",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:craft:rucksack: rucksack",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:craft:rucksack: carrying more means longer expeditions to the wi",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:craft:wagon: wagon",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:craft:wagon: the wagon can carry a lot of supplies",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:craft:convoy: convoy",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:craft:convoy: the convoy can haul mostly everything",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:craft:l armour: l armour",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:craft:l armour: leather's not strong. better than rags, though.",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:craft:i armour: i armour",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:craft:i armour: iron's stronger than leather",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:craft:s armour: s armour",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:craft:s armour: steel's stronger than iron",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:craft:iron sword: iron sword",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:craft:iron sword: sword is sharp. good protection out in the wilds",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:craft:steel sword: steel sword",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:craft:steel sword: the steel is strong, and the blade true.",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:craft:rifle: rifle",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:craft:rifle: black powder and bullets, like the old days.",
+      "status": "missing",
+      "batch": 2,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:boxer: boxer",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:boxer: punches do more damage",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:boxer: learned to throw punches with purpose",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:martial artist: martial artist",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:martial artist: punches do even more damage.",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:martial artist: learned to fight quite effectively without weapo",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:unarmed master: unarmed master",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:unarmed master: punch twice as fast, and with even more force",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:unarmed master: learned to strike faster without weapons",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:barbarian: barbarian",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:barbarian: melee weapons deal more damage",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:barbarian: learned to swing weapons with force",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:slow metabolism: slow metabolism",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:slow metabolism: go twice as far without eating",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:slow metabolism: learned how to ignore the hunger",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:desert rat: desert rat",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:desert rat: go twice as far without drinking",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:desert rat: learned to love the dry air",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:evasive: evasive",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:evasive: dodge attacks more effectively",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:evasive: learned to be where they're not",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:precise: precise",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:precise: land blows more often",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:precise: learned to predict their movement",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:scout: scout",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:scout: see farther",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:scout: learned to look ahead",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:stealthy: stealthy",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:stealthy: better avoid conflict in the wild",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:stealthy: learned how not to be seen",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:gastronome: gastronome",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:gastronome: restore more health when eating",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:perk:gastronome: learned to make the most of food",
+      "status": "missing",
+      "batch": 5,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:fabricator:energy blade: energy blade",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:fabricator:energy blade: the blade hums, charged particles sparking and f",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:fabricator:fluid recycler: fluid recycler",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:fabricator:fluid recycler: water out, water in. waste not, want not.",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:fabricator:cargo drone: cargo drone",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:fabricator:cargo drone: the workhorse of the wanderer fleet.",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:fabricator:kinetic armour: kinetic armour",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:fabricator:kinetic armour: wanderer soldiers succeed by subverting the enem",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:fabricator:disruptor: disruptor",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:fabricator:disruptor: somtimes it is best not to fight.",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:fabricator:hypo: hypo",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:fabricator:hypo: a handful of hypos. life in a vial.",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:fabricator:stim: stim",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:fabricator:stim: sometimes it is best to fight without restraint.",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:fabricator:plasma rifle: plasma rifle",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:fabricator:plasma rifle: the peak of wanderer weapons technology, sleek a",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:fabricator:glowstone: glow stone",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    },
+    {
+      "id": "notification:fabricator:glowstone: a smooth, perfect sphere. its light is inextingu",
+      "status": "missing",
+      "batch": 8,
+      "numeric": "skip",
+      "note": "missing"
+    }
+  ]
+}

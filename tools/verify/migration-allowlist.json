@@ -1,0 +1,8 @@
+{
+  "policy": "Nothing is an intentional cut. WHITELIST / allowlist stays empty unless a reviewer names a specific original entry and a reason the remake may differ. Early-game slow pacing is intentional and must not change (do not retune gather/stoke/builder delays).",
+  "pacing": {
+    "intentional": true,
+    "must_not_change": ["gather delay 60s", "stoke cooldown 10s", "builder arrive 30s", "trap check 90s"]
+  },
+  "entries": []
+}

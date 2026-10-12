@@ -20,13 +20,15 @@ import { runTelemetry } from "./telemetry.mjs";
 import { runStory } from "./story.mjs";
 import { runParity } from "./parity.mjs";
 import { runIncome } from "./income.mjs";
+import { runMigration } from "./migration.mjs";
 
 const HELP = `adr verify suite
   node tools/verify/run.mjs [--url URL] [--styles pixel,text] [--widths 360,390,768,1024,1280,1440,1920]
-                            [--out artifacts] [--only cdp,screenshots,a11y,extremes,telemetry,story,income,parity] [--update-baselines]
+                            [--out artifacts] [--only cdp,screenshots,a11y,extremes,telemetry,story,income,parity,migration] [--update-baselines]
 
   node tools/verify/screenshot-diff.mjs --update   # rewrite committed baselines
   node tools/verify/run.mjs --only parity          # content parity (opt-in while gaps remain)
+  node tools/verify/run.mjs --only migration       # full original→remake review (exit 0 = REVIEW PASS)
 
 Exit 0 = all suites PASS. Exit 1 = any FAIL. JSON report on stdout.
 Default URL: ${DEFAULT_URL}
@@ -40,7 +42,7 @@ async function main() {
   }
   fs.mkdirSync(args.outDir, { recursive: true });
   const only = args.only && args.only.length ? args.only : ["cdp", "screenshots", "a11y", "extremes", "telemetry", "story", "income"];
-  const needsBrowser = only.some((k) => !["telemetry", "story", "income", "parity"].includes(k));
+  const needsBrowser = only.some((k) => !["telemetry", "story", "income", "parity", "migration"].includes(k));
   const browser = needsBrowser ? await launchBrowser() : null;
   const suites = [];
   const shared = { browser, ...args };
@@ -63,6 +65,8 @@ async function main() {
     if (only.includes("income")) suites.push(runIncome());
     // Opt-in while original-content gaps remain; promote to the default list once green.
     if (only.includes("parity")) suites.push(runParity().suite);
+    // Review gate: 0 missing / 0 no_producer / 0 numeric mismatch + per-batch reachability.
+    if (only.includes("migration")) suites.push(runMigration().suite);
   } finally {
     if (browser) await browser.close();
   }

@@ -13,9 +13,14 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { emptySuite, ok, fail, summarize } from "./lib/report.mjs";
-
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const rd = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
+import {
+  ROOT,
+  rd,
+  snake,
+  extractOriginal,
+  EVENT_ALIASES,
+  LANDMARK_IDS
+} from "./lib/original-extract.mjs";
 
 /** Entries listed here are accepted gaps. Must stay empty: nothing was cut on purpose. */
 export const WHITELIST = [];
@@ -90,7 +95,6 @@ export function originalContent() {
 const ENGINE = "godot/build/web/engine.js";
 const UI = "godot/build/web/ui.js";
 const EVENTS = "godot/data/events.json";
-const snake = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
 function lineOf(file, needle) {
   const lines = rd(file).split("\n");
   const i = lines.findIndex((l) => (needle instanceof RegExp ? needle.test(l) : l.includes(needle)));
@@ -122,20 +126,7 @@ export function remakeContent() {
   return { items, areas, buildingKinds, workers, landmarks, produced, buyable, events: ev };
 }
 
-// Original English event title -> remake events.json id (same content, Chinese text).
-const EVENT_ALIASES = {
-  "The Nomad": "nomad",
-  "Noises": "noises_outside",
-  "A Ruined Trap": "ruined_trap",
-  "A Beast Attack": "beast_attack",
-  "An Old House": "old_house",
-  "A Snarling Beast": "snarling_beast"
-};
-const LANDMARK_IDS = {
-  HOUSE: "old_house", CAVE: "cave", TOWN: "town", CITY: "city", OUTPOST: "outpost", SHIP: "ship",
-  BOREHOLE: "borehole", BATTLEFIELD: "battlefield", SWAMP: "swamp", CACHE: "cache", EXECUTIONER: "executioner",
-  IRON_MINE: "ironmine", COAL_MINE: "coalmine", SULPHUR_MINE: "sulphurmine"
-};
+export { EVENT_ALIASES, LANDMARK_IDS, extractOriginal };
 
 export function runParity() {
   const o = originalContent();
@@ -203,6 +194,34 @@ export function runParity() {
     "ending/prestige/score": /prestige|score|ending/.test(rd(ENGINE))
   };
   for (const [k, v] of Object.entries(phaseChecks)) add("later phase", k, v ? "present" : "missing", v ? lineOf(ENGINE, "var AREAS") : null);
+
+  const spec = extractOriginal();
+  for (const name of Object.keys(spec.perks)) {
+    add("perk", name, /perks/.test(rd(ENGINE)) && new RegExp(`["']${snake(name)}["']`).test(rd(ENGINE)) ? "present" : "missing", lineOf(ENGINE, snake(name)));
+  }
+  for (const [name, w] of Object.entries(spec.weapons)) {
+    if (name === "fists") continue;
+    const id = w.id;
+    const has = new RegExp(`["']${id}["']|${id}:`).test(rd(ENGINE));
+    add("weapon", name, has ? (r.items.includes(id) || r.produced.has(id) ? "present" : "no_producer") : "missing", has ? lineOf(ENGINE, id) : null);
+  }
+  const TERRAIN = new Set(["VILLAGE", "FOREST", "FIELD", "BARRENS", "ROAD"]);
+  for (const tile of Object.keys(spec.tiles)) {
+    if (!TERRAIN.has(tile)) continue;
+    const mapped = /village|forest|grass|dust|field|barrens|road/.test(rd(ENGINE));
+    add("world tile", tile, mapped ? "present" : "missing", lineOf(ENGINE, "function terrainAt"));
+  }
+  for (const key of Object.keys(spec.worldNums)) {
+    add("world mechanic", key, new RegExp(key).test(rd(ENGINE)) ? "present" : "missing", lineOf(ENGINE, key));
+  }
+  for (const key of Object.keys(spec.shipNums)) add("ship", key, /spaceShip|hull|thruster/.test(rd(ENGINE)) && new RegExp(key).test(rd(ENGINE)) ? "present" : "missing", null);
+  for (const key of Object.keys(spec.spaceNums)) add("space", key, new RegExp(key).test(rd(ENGINE)) ? "present" : "missing", null);
+  add("prestige", "storesMap + previous.stores", /prestige/.test(rd(ENGINE)) ? "present" : "missing", null);
+  add("score", "calculateScore + factors", /totalScore|calculateScore/.test(rd(ENGINE)) ? "present" : "missing", null);
+  for (const n of spec.notify) {
+    const inRemake = rd(ENGINE).includes(n.text) || rd(UI).includes(n.text);
+    add("notification", `${n.from}: ${n.text.slice(0, 48)}`, inRemake ? "present" : "missing", inRemake ? lineOf(ENGINE, n.text.slice(0, 24)) : null);
+  }
 
   // additions in the remake that the original does not have
   const origAll = new Set([...o.fab, ...o.buildings, ...o.gear, ...o.misc, ...o.weapons, ...o.trade, ...o.items].map(snake));
