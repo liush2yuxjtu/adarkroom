@@ -98,7 +98,7 @@ https://<project>.supabase.co/rest/v1/playtest_events
 npx vercel deploy --scope nyn5255-8475s-projects
 ```
 
-或调用 Vercel Deploy API。规则写在 `vercel.json` 的 `git.deploymentEnabled` 与 `scripts/vercel-ignore.sh`。仅改文档/工具的提交也会跳过：`*.md`、`reports/`、`tools/`、`agent/skills/`、`.github/`。浅克隆缺少 `HEAD^` 时脚本会选择构建，以免漏发。
+或调用 Vercel Deploy API。规则写在 `vercel.json` 的 `git.deploymentEnabled` 与 `scripts/vercel-ignore.sh`。仅改文档/工具的提交也会跳过：`*.md`、`reports/`、`tools/`、`agent/skills/`、`.cursor/skills/`、`.github/`。浅克隆缺少 `HEAD^` 时脚本会选择构建，以免漏发。
 
 ### 节奏分析器（由 verify 按需调用，无 cron）
 
