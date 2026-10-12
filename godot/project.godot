@@ -1,0 +1,35 @@
+; Engine configuration file.
+; This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+; Remake of A Dark Room (doublespeakgames) — keep MPL-2.0 and attribution.
+
+config_version=5
+
+[application]
+
+config/name="小黑屋"
+config/description="A Dark Room 简体中文 Godot 重制（早期循环）。原作 Michael Townsend / doublespeak games，MPL-2.0。"
+config/version="0.1.0"
+run/main_scene="res://scenes/Main.tscn"
+config/features=PackedStringArray("4.4", "GL Compatibility")
+config/icon="res://icon.svg"
+
+[autoload]
+
+Loc="*res://scripts/autoload/Loc.gd"
+GameState="*res://scripts/autoload/GameState.gd"
+ToolExecutor="*res://scripts/autoload/ToolExecutor.gd"
+Analytics="*res://scripts/autoload/Analytics.gd"
+DirectorHost="*res://scripts/autoload/DirectorHost.gd"
+
+[display]
+
+window/size/viewport_width=1100
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true

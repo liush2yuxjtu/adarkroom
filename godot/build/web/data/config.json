@@ -1,0 +1,12 @@
+{
+  "director": "rule",
+  "llm_endpoint": "",
+  "llm_api_key": "",
+  "analytics_endpoint": "",
+  "analytics_http_enabled": false,
+  "stuck_minutes": 3,
+  "snapshot_interval_sec": 30,
+  "time_scale": 1,
+  "fast_url_param": "fast",
+  "slice_goal": "visit_old_house_and_return"
+}
