@@ -115,5 +115,126 @@
     "notification": "一只野兽从灌木丛里蹿了出来",
     "text": ["一只野兽从灌木丛里蹿了出来。"],
     "combat": { "hp": 4, "dmg": 1, "name": "咆哮的野兽", "reward": { "fur": 1, "meat": 1 } }
+  },
+  "iron_mine": {
+    "title": "铁矿",
+    "notification": "一座废弃的铁矿嵌在岩壁里",
+    "text": ["生锈的铁轨伸进黑洞。深处传来敲击声。"],
+    "buttons": [
+      { "id": "enter", "text": "进入", "next": "clear" },
+      { "id": "leave", "text": "离开", "next": "end" }
+    ],
+    "scenes": {
+      "clear": {
+        "text": ["矿道尽头躺着几具枯骨和一堆还能用的矿镐。矿脉还在。"],
+        "reward": { "iron": 5 },
+        "set_flag": "cleared_iron_mine",
+        "buttons": [{ "id": "leave", "text": "离开", "next": "end" }]
+      }
+    }
+  },
+  "coal_mine": {
+    "title": "煤矿",
+    "notification": "空气里有煤烟和潮气",
+    "text": ["矿口用朽木撑着。里面黑得像没点过火的屋子。"],
+    "buttons": [
+      { "id": "enter", "text": "进入", "next": "clear" },
+      { "id": "leave", "text": "离开", "next": "end" }
+    ],
+    "scenes": {
+      "clear": {
+        "text": ["煤层裸露。村民以后可以来挖。"],
+        "reward": { "coal": 5 },
+        "set_flag": "cleared_coal_mine",
+        "buttons": [{ "id": "leave", "text": "离开", "next": "end" }]
+      }
+    }
+  },
+  "sulphur_mine": {
+    "title": "硫磺矿",
+    "notification": "空气刺鼻，像燃烧的火柴",
+    "text": ["黄色结晶从岩缝里长出来。"],
+    "buttons": [
+      { "id": "enter", "text": "进入", "next": "clear" },
+      { "id": "leave", "text": "离开", "next": "end" }
+    ],
+    "scenes": {
+      "clear": {
+        "text": ["硫磺够用了。军械坊会需要它。"],
+        "reward": { "sulphur": 5 },
+        "set_flag": "cleared_sulphur_mine",
+        "buttons": [{ "id": "leave", "text": "离开", "next": "end" }]
+      }
+    }
+  },
+  "crashed_ship": {
+    "title": "坠毁星舰",
+    "notification": "金属残骸刺破地平线",
+    "text": ["一艘星舰斜插在荒原上，外壳还在反光。舱门半开。"],
+    "buttons": [
+      { "id": "enter", "text": "进入", "next": "inside" },
+      { "id": "leave", "text": "离开", "next": "end" }
+    ],
+    "scenes": {
+      "inside": {
+        "text": ["驾驶座空着。控制台还能亮。船坞里有些外星合金。"],
+        "reward": { "alien_alloy": 4 },
+        "set_flag": "found_ship",
+        "unlock_area": "ship",
+        "buttons": [{ "id": "take", "text": "接手飞船", "next": "end", "unlock_area": "fabricator", "set_flag": "found_ship" }]
+      }
+    }
+  },
+  "dungeon": {
+    "title": "处决者地牢",
+    "notification": "岩缝里露出一座铁门",
+    "text": ["地牢很深。墙上刻着不属于这个时代的字。"],
+    "combat": { "hp": 8, "dmg": 1, "name": "处决者", "reward": { "alien_alloy": 3, "energy_cell": 2 } },
+    "on_win_flag": "cleared_dungeon",
+    "buttons": [
+      { "id": "enter", "text": "进入", "next": "fight" },
+      { "id": "leave", "text": "离开", "next": "end" }
+    ],
+    "scenes": {
+      "fight": {
+        "text": ["铁廊尽头站着一个高大的影子。"],
+        "buttons": [{ "id": "leave", "text": "离开", "next": "end" }],
+        "set_flag": "entered_dungeon"
+      }
+    }
+  },
+  "ruined_city": {
+    "title": "废墟之城",
+    "notification": "倒塌的塔楼像一排折断的牙",
+    "text": ["城里没有人。广场中央有一堆发光的金属。"],
+    "buttons": [
+      { "id": "scavenge", "text": "搜刮", "next": "loot" },
+      { "id": "leave", "text": "离开", "next": "end" }
+    ],
+    "scenes": {
+      "loot": {
+        "text": ["你带走了还能用的合金和一张残缺的图纸。"],
+        "reward": { "alien_alloy": 2, "steel": 10 },
+        "set_flag": "blueprint_plasma_rifle",
+        "buttons": [{ "id": "leave", "text": "离开", "next": "end" }]
+      }
+    }
+  },
+  "battlefield": {
+    "title": "古战场",
+    "notification": "风把旧旗帜吹得猎猎作响",
+    "text": ["盔甲和骨头埋在灰里。有些武器还没锈透。"],
+    "buttons": [
+      { "id": "search", "text": "搜寻", "next": "loot" },
+      { "id": "leave", "text": "离开", "next": "end" }
+    ],
+    "scenes": {
+      "loot": {
+        "text": ["你找到一柄还能用的刺刀，以及一小块合金。"],
+        "reward": { "alien_alloy": 1, "bayonet": 1, "bullets": 10 },
+        "set_flag": "blueprint_kinetic_armour",
+        "buttons": [{ "id": "leave", "text": "离开", "next": "end" }]
+      }
+    }
   }
 }
