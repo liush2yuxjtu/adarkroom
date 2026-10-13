@@ -17,6 +17,7 @@ Choose the recipe from [the surface index](references/verification-surfaces.md).
 | --- | --- | --- |
 | Deployment is live for commit X | `vercel-live-deploy` | `get_deployment` READY + matching SHA, build log, doctor 200s with content-types |
 | Remake is playable | `browser-remake` | Real-mouse `生火` → `#panel-room h1 == 生火间`, other buttons react, no console/4xx errors, CDP hit-test + listeners + node stability, `player_action` in localStorage, screenshot |
+| Live play produces telemetry | `live-play-telemetry` | `node tools/verify/live-telemetry.mjs <url>` exit 0 (≥1 POST `/api/playtest_events` 2xx, none ≥400, client sent `session_start`/`player_action`/`save_write`) **and** `execute_sql` shows those rows for the printed `session_id` inside the printed window |
 | Telemetry reaches the backend | `supabase-telemetry` | Rows in `playtest_events` for this run's `session_id` (via `execute_sql`), anon SELECT denied |
 | Original game works | `classic-subpath` | Real-mouse `生火` → title `生火间`, screenshot |
 | Early-game pacing is on-curve | `pacing-intent-check` | `python -m tools.pacing_analyzer --json` → `early_phase_slow` is false |
@@ -49,6 +50,21 @@ Every line must be `200`. `302` means Vercel Authentication protection is on: ei
 python3 -m tools.pacing_analyzer --json --input tools/testdata/playtest_events_sample.json                             # pacing-intent-check (every verify run)
 ```
 Exit 0 means PASS, 1 means FAIL. Per-surface steps, pass criteria and the 2026-10-12 regression (buttons rebuilt every frame) are in `references/`. `pacing-intent-check` is on-demand only — no GitHub Action or cron.
+
+## Gate: live-play telemetry
+
+Run on every verify of a deployed URL (production or PR preview). A Supabase row count from some earlier session does NOT pass this gate; it must be this run's `session_id`.
+
+```bash
+cd tools/verify && npm ci && npx playwright install chromium   # once
+DUR_SEC=90 node live-telemetry.mjs <base_url>                   # PROXY=http://127.0.0.1:7897 if vercel.app needs it; CHROME=<path> to reuse an installed headless shell
+```
+
+1. The script opens `<base_url>` in headless Chromium, reads `ADRTelemetry.sessionId()`, then for `DUR_SEC` (60–120s) hovers/clicks every visible button and tab (生火/添柴/伐木/陌生人/野外…), opens 设置, toggles 像素 twice, then flushes and closes the page.
+2. PASS needs: ≥1 `POST /api/playtest_events` with 2xx, zero POSTs ≥400, and the POST bodies for this `session_id` include `session_start`, `player_action`, `save_write`.
+3. Backend check: with `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` in env the script queries Supabase itself; otherwise it prints a SELECT. Run it **read-only** with Supabase MCP `execute_sql` (project `ywwguestvujaoimlqznq`) and require ≥1 row each of `session_start`, `player_action`, `save_write` for that `session_id` with `occurred_at` inside the window. Report times in CST (`occurred_at at time zone 'Asia/Shanghai'`).
+4. Evidence: `/tmp/adr-verify/live-telemetry.json` (`OUT=` to override): session_id, window, POST counts, failed bodies, event types, console errors. Never print keys.
+5. `page_unload`/`session_end` from a headless `page.close()` are not reliably delivered; they are not part of the gate. "No new rows since X" alone is not a pipeline failure (may simply be no players) — run this gate before declaring telemetry broken.
 
 ## Evidence
 
