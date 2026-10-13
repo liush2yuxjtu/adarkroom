@@ -15,6 +15,11 @@
  *   automation-flagged          payload.is_automation is true under navigator.webdriver / headless UA, false otherwise
  *   client-version-on-every-event  every buffered and posted payload carries client_version (build-time git SHA)
  *   cap-keeps-milestones        the per-session event cap drops UI noise but keeps milestone events
+ *   save-snapshot-milestones    save_snapshot fires on fire lit / build / stage / explore start+end / death / ending
+ *   save-snapshot-timer         save_snapshot fires every N minutes (default 5, configurable), not before
+ *   save-snapshot-sanitized     payload.save_data has no PII keys/emails/session id, under 16KB cap, purpose tag set
+ *   save-snapshot-endpoint      mocked playtest_events endpoint receives save_snapshot rows (201) within RLS size
+ *   save-snapshot-opt-out       adr.telemetry_optout=1 / ADR_TELEMETRY.save_snapshot=false suppress save_snapshot
  */
 import { fileURLToPath } from "node:url";
 import { makeSandbox, loadEvents, bufferOf, tickGame } from "./lib/engine-sandbox.mjs";
@@ -225,6 +230,115 @@ export function runTelemetry() {
     const keptAct = tail.includes("player_action");
     const droppedHover = !tail.includes("button_hover_enter");
     return { pass: keptPhase && keptAct && droppedHover, detail: `tail=${tail.join(",")}` };
+  });
+
+  // ---------- save_snapshot (behavior-analysis-only save telemetry) ----------
+  const snapSb = (o = {}) => {
+    const sb = makeSandbox({ telemetry: true, saveTelemetry: true, ...o });
+    const g = newGame(sb);
+    sb.ctx.__ADR_GAME = g;
+    return { sb, g, snaps: () => sb.ctx.ADRTelemetry._state.buffer.filter((e) => e.event_name === "save_snapshot") };
+  };
+  const PII_RE = /"(nick(name)?|e?mail|display_?name|user_?name|player_?name|name|session_id|user_?agent|ip|token|anon_?key|apikey)"\s*:/i;
+
+  check(suite, "save-snapshot-milestones", () => {
+    const { sb, g, snaps } = snapSb();
+    const A = sb.ctx.ADRTelemetry;
+    const want = {};
+    g.act("light_fire");
+    want.fire_lit = snaps().some((e) => e.payload.trigger === "fire_lit");
+    A.log("build", { building: "cart" });
+    want.building_built = snaps().some((e) => e.payload.trigger === "building_built");
+    A.log("stage_reached", { stage: "forest" });
+    want.stage_transition = snaps().some((e) => e.payload.trigger === "stage_transition");
+    g.state.world.on_expedition = true;
+    A.log("player_action", { action: "embark", ok: true });
+    want.explore_start = snaps().some((e) => e.payload.trigger === "explore_start");
+    g.state.world.on_expedition = false;
+    A.log("player_action", { action: "world_move", ok: true });
+    want.explore_end = snaps().some((e) => e.payload.trigger === "explore_end");
+    A.log("death", { cause: "verify" });
+    want.death = snaps().some((e) => e.payload.trigger === "death");
+    A.log("ending_reached", { ending: "verify" });
+    want.ending = snaps().some((e) => e.payload.trigger === "ending");
+    A.log("save_write", { save_id: "x" });
+    want.save = snaps().some((e) => e.payload.trigger === "save");
+    const missing = Object.keys(want).filter((k) => !want[k]);
+    return { pass: missing.length === 0, detail: `snaps=${snaps().length} missing=${missing.join(",") || "none"}` };
+  });
+
+  check(suite, "save-snapshot-timer", () => {
+    const { sb, snaps } = snapSb();
+    const S = sb.ctx.ADRSaveTelemetry;
+    S.tick(); // arm
+    sb.advance(4 * 60 * 1000);
+    S.tick();
+    const early = snaps().filter((e) => e.payload.trigger === "timer").length;
+    sb.advance(61 * 1000);
+    S.tick();
+    const fired = snaps().filter((e) => e.payload.trigger === "timer").length;
+    const { sb: sb2, snaps: snaps2 } = snapSb({ telemetryCfg: { save_snapshot_minutes: 1 } });
+    sb2.ctx.ADRSaveTelemetry.tick();
+    sb2.advance(61 * 1000);
+    sb2.ctx.ADRSaveTelemetry.tick();
+    const cfgFired = snaps2().filter((e) => e.payload.trigger === "timer").length;
+    const interval = fired ? snaps().find((e) => e.payload.trigger === "timer").payload.interval_min : null;
+    return { pass: early === 0 && fired === 1 && cfgFired === 1 && interval === 5, detail: `early=${early} fired=${fired} interval=${interval} cfg1min=${cfgFired}` };
+  });
+
+  check(suite, "save-snapshot-sanitized", () => {
+    const { sb, g, snaps } = snapSb();
+    g.act("light_fire");
+    g.persistSave(true);
+    const raw = JSON.parse(sb.ctx.localStorage.getItem("adr.save.v1"));
+    raw.state.player_name = "Alice";
+    raw.state.nickname = "al";
+    raw.state.email = "alice@example.com";
+    raw.state.flags = Object.assign({}, raw.state.flags, { display_name: "A", note: "mail me bob@example.com" });
+    raw.state.notifications = Array.from({ length: 400 }, (_, i) => ({ text: "x".repeat(150) + i }));
+    sb.ctx.localStorage.setItem("adr.save.v1", JSON.stringify(raw));
+    sb.ctx.ADRSaveTelemetry.snapshot("verify");
+    const ev = snaps().slice(-1)[0];
+    if (!ev) return { pass: false, detail: "no snapshot" };
+    const p = ev.payload;
+    const json = JSON.stringify(p.save_data);
+    const leaks = [];
+    if (PII_RE.test(json)) leaks.push("pii_key");
+    if (/@example\.com|Alice/.test(json)) leaks.push("pii_value");
+    const size = JSON.stringify(p).length;
+    const meta = p.snapshot_schema === 1 && p.anon_id === sb.ctx.ADRTelemetry.sessionId() && p.game_version && p.captured_at && p.purpose === "player_behavior_analysis_only";
+    const hasState = p.save_data && p.save_data.stores && p.save_data.phase;
+    return { pass: !leaks.length && size < 16384 && meta && hasState && p.dropped.includes("notifications"), detail: `size=${size} leaks=${leaks.join(",") || "none"} dropped=${p.dropped.join(",")} meta=${!!meta}` };
+  });
+
+  check(suite, "save-snapshot-endpoint", () => {
+    const { sb, g } = snapSb();
+    const posted = [];
+    const statuses = [];
+    sb.ctx.ADRSupabaseSink.postRows = (url, key, batch, opts) => {
+      posted.push(...batch);
+      statuses.push(201);
+      if (opts && opts.onOk) opts.onOk({ ok: true, status: 201, via: "mock" }, batch.length);
+      return Promise.resolve();
+    };
+    g.act("light_fire");
+    sb.ctx.ADRTelemetry._state.inflight = false;
+    sb.ctx.ADRTelemetry.flush("interval");
+    const rows = posted.filter((r) => r.event_name === "save_snapshot");
+    const sizes = rows.map((r) => Buffer.byteLength(JSON.stringify(r.payload)));
+    const okRow = rows.length > 0 && rows.every((r) => r.payload && r.payload.save_data && r.session_id) && sizes.every((n) => n < 16384);
+    return { pass: okRow && statuses.every((s) => s === 201), detail: `rows=${rows.length} max_bytes=${Math.max(0, ...sizes)} statuses=${statuses.join(",")}` };
+  });
+
+  check(suite, "save-snapshot-opt-out", () => {
+    const a = snapSb();
+    a.sb.ctx.localStorage.setItem("adr.telemetry_optout", "1");
+    const before = a.snaps().length;
+    a.g.act("light_fire");
+    a.sb.ctx.ADRSaveTelemetry.snapshot("verify");
+    const b = snapSb({ telemetryCfg: { save_snapshot: false } });
+    b.g.act("light_fire");
+    return { pass: a.snaps().length === before && b.snaps().length === 0, detail: `ls_optout=${a.snaps().length - before} cfg_optout=${b.snaps().length}` };
   });
 
   return suite;

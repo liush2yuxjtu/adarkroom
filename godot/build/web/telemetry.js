@@ -208,7 +208,7 @@
     slice_complete: 1, stuck: 1, player_action: 1, dialogue_choice: 1, save_load: 1,
     late_game_milestone: 1, ending_reached: 1, prestige_start: 1,
     new_game_start: 1, page_unload: 1, page_reload: 1, js_error: 1,
-    goal_prompt_shown: 1, goal_prompt_acted: 1, stage_reached: 1
+    goal_prompt_shown: 1, goal_prompt_acted: 1, stage_reached: 1, save_snapshot: 1
   };
 
   function clientVersion() {
@@ -287,6 +287,10 @@
       return null;
     }
     enqueueRow(ev, { skipHttp: level === "debug" && !debugOn });
+    /* save_snapshot milestones/timer (behavior analysis only; see save-telemetry.js) */
+    if (name !== "save_snapshot" && root.ADRSaveTelemetry && root.ADRSaveTelemetry.onEvent) {
+      try { root.ADRSaveTelemetry.onEvent(name, payload); } catch (e) { /* never break the game loop */ }
+    }
     return ev;
   }
 

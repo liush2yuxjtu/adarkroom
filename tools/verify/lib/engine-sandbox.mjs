@@ -71,6 +71,10 @@ export function makeSandbox(o = {}) {
     vm.runInContext('globalThis.ADR_TELEMETRY = { url: "https://example.invalid/rest/v1/playtest_events", anonKey: "verify-sandbox", client_version: "verify-sandbox" };', ctx);
     vm.runInContext(fs.readFileSync(path.join(WEB_DIR, "sinks/supabase.js"), "utf8"), ctx, { filename: "supabase.js" });
     vm.runInContext(fs.readFileSync(path.join(WEB_DIR, "telemetry.js"), "utf8"), ctx, { filename: "telemetry.js" });
+    if (o.saveTelemetry) {
+      if (o.telemetryCfg) vm.runInContext("Object.assign(globalThis.ADR_TELEMETRY, " + JSON.stringify(o.telemetryCfg) + ");", ctx);
+      vm.runInContext(fs.readFileSync(path.join(WEB_DIR, "save-telemetry.js"), "utf8"), ctx, { filename: "save-telemetry.js" });
+    }
   }
   vm.runInContext(fs.readFileSync(path.join(WEB_DIR, "engine.js"), "utf8"), ctx, { filename: "engine.js" });
   return {

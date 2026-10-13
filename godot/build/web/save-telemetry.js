@@ -38,7 +38,9 @@
   }
 
   function game() {
-    return root.__ADR_GAME || null;
+    if (root.__ADR_GAME) return root.__ADR_GAME;
+    var t = tel();
+    return (t && t._state && t._state.game) || null;
   }
 
   function snapshotFromState(state) {
@@ -360,6 +362,188 @@
     installStorageObserver();
   }
 
+
+  /* ===================== save_snapshot =====================
+   * PRIVACY / PURPOSE: save_snapshot uploads a sanitized copy of the adr.save.v1 game
+   * state ONLY so we can analyze player behavior (pacing, progression, where players get
+   * stuck or quit). It is used for nothing else: no ads, no profiling, no resale, no
+   * identity linking. It carries no personal info: only game state + the existing anonymous
+   * session id. Opt out: ?telemetry=0, localStorage adr.telemetry_optout=1, or
+   * ADR_TELEMETRY.save_snapshot === false. Rows go through the existing playtest_events
+   * channel (payload.save_data jsonb, no schema change).
+   */
+  var SNAP_SCHEMA = 1;
+  var SNAP_MAX_CHARS = 12000; /* RLS: pg_column_size(payload) < 16384 */
+  var SAVE_THROTTLE_MS = 60000;
+  var PII_KEY = /(^|_)(nick(name)?|e?mail|display_?name|user_?name|player_?name|real_?name|name|phone|ip|ip_addr|address|user_?agent|ua|device|fingerprint|screen|timezone|tz|locale|lang|token|api_?key|apikey|anon_?key|authorization|llm_endpoint|endpoint|url|headers)$/i;
+  var DROP_FOR_SIZE = ["notifications", "scheduled", "active_event", "goal"];
+  var snapState = { lastAt: 0, lastSaveTrigAt: 0, onExp: null, timer: 0, count: 0 };
+
+  function snapCfg() {
+    var c = (typeof root.ADR_TELEMETRY === "object" && root.ADR_TELEMETRY) || {};
+    var g = game();
+    var gc = (g && g.config) || {};
+    var min = Number(c.save_snapshot_minutes || gc.save_snapshot_minutes || 5);
+    if (!(min > 0)) min = 5;
+    return { intervalMs: min * 60000, minutes: min };
+  }
+
+  function optedOut() {
+    try {
+      var c = (typeof root.ADR_TELEMETRY === "object" && root.ADR_TELEMETRY) || {};
+      if (c.save_snapshot === false || c.optOut === true) return true;
+      if (typeof location !== "undefined" && location.search) {
+        var q = new URLSearchParams(location.search);
+        var v = q.get("telemetry");
+        if (v === "0" || v === "false" || v === "off") return true;
+      }
+      if (typeof localStorage !== "undefined") {
+        var o = localStorage.getItem("adr.telemetry_optout");
+        if (o === "1" || o === "true") return true;
+      }
+    } catch (e) { /* ignore */ }
+    return false;
+  }
+
+  function sanitize(v, depth) {
+    if (depth > 12) return null;
+    if (Array.isArray(v)) return v.slice(0, 200).map(function (x) { return sanitize(x, depth + 1); });
+    if (v && typeof v === "object") {
+      var out = {};
+      Object.keys(v).forEach(function (k) {
+        if (PII_KEY.test(k)) return;
+        out[k] = sanitize(v[k], depth + 1);
+      });
+      return out;
+    }
+    if (typeof v === "string") {
+      if (/[^\s@]+@[^\s@]+\.[^\s@]+/.test(v)) return "[redacted]";
+      return v.length > 200 ? v.slice(0, 200) : v;
+    }
+    if (typeof v === "number" && !isFinite(v)) return null;
+    return v;
+  }
+
+  /* Shrink until under the cap: drop free-text/log arrays, then compact visited map, then truncate. */
+  function fitSize(st) {
+    var info = { truncated: false, dropped: [] };
+    var json = JSON.stringify(st);
+    for (var i = 0; i < DROP_FOR_SIZE.length && json.length > SNAP_MAX_CHARS; i++) {
+      if (st[DROP_FOR_SIZE[i]] !== undefined) {
+        delete st[DROP_FOR_SIZE[i]];
+        info.dropped.push(DROP_FOR_SIZE[i]);
+        json = JSON.stringify(st);
+      }
+    }
+    if (json.length > SNAP_MAX_CHARS && st.world && st.world.visited && typeof st.world.visited === "object") {
+      st.world.visited_count = Object.keys(st.world.visited).length;
+      delete st.world.visited;
+      info.dropped.push("world.visited");
+      json = JSON.stringify(st);
+    }
+    if (json.length > SNAP_MAX_CHARS) {
+      var keep = ["phase", "fire", "temperature", "game_time_sec", "population", "builder_level", "stores", "buildings", "unlocked", "workers", "location", "ending_reached", "slice_complete"];
+      var slim = {};
+      keep.forEach(function (k) { if (st[k] !== undefined) slim[k] = st[k]; });
+      st = slim;
+      info.truncated = true;
+      json = JSON.stringify(st);
+    }
+    info.chars = json.length;
+    return { state: st, info: info };
+  }
+
+  function readSaveDoc() {
+    try {
+      if (typeof localStorage !== "undefined") {
+        var raw = localStorage.getItem("adr.save.v1");
+        if (raw) {
+          var d = JSON.parse(raw);
+          if (d && d.state && typeof d.state === "object") return d;
+        }
+      }
+    } catch (e) { /* ignore */ }
+    var g = game();
+    if (g && g.state) return { v: 1, state: JSON.parse(JSON.stringify(g.state)) };
+    return null;
+  }
+
+  function buildSnapshot(trigger, extra) {
+    var doc = readSaveDoc();
+    if (!doc) return null;
+    var clean = sanitize(doc.state, 0);
+    delete clean.session_id; /* anon id is sent once, at top level */
+    var fit = fitSize(clean);
+    var t = tel();
+    var c = (typeof root.ADR_TELEMETRY === "object" && root.ADR_TELEMETRY) || {};
+    return {
+      trigger: trigger,
+      milestone: (extra && extra.milestone) || null,
+      snapshot_schema: SNAP_SCHEMA,
+      save_version: doc.v || 1,
+      game_version: (t && t.clientVersion && t.clientVersion()) || c.client_version || "unknown",
+      anon_id: (t && t.sessionId && t.sessionId()) || (doc.save_id || null),
+      captured_at: new Date().toISOString(),
+      interval_min: snapCfg().minutes,
+      size_chars: fit.info.chars,
+      truncated: fit.info.truncated,
+      dropped: fit.info.dropped,
+      purpose: "player_behavior_analysis_only",
+      save_data: fit.state
+    };
+  }
+
+  function snapshot(trigger, extra) {
+    if (optedOut()) return null;
+    var t = tel();
+    if (!t || !t.log) return null;
+    var p = buildSnapshot(trigger || "manual", extra);
+    if (!p) return null;
+    snapState.lastAt = Date.now();
+    snapState.count += 1;
+    return t.log("save_snapshot", p);
+  }
+
+  function tick() {
+    if (!snapState.lastAt) { snapState.lastAt = Date.now(); return null; }
+    if (Date.now() - snapState.lastAt >= snapCfg().intervalMs) return snapshot("timer");
+    return null;
+  }
+
+  var MILESTONE_ACTIONS = { light_fire: "fire_lit", embark: "explore_start" };
+  /* Called by telemetry.js after every logged event. */
+  function onEvent(name, payload) {
+    if (name === "save_snapshot") return null;
+    payload = payload || {};
+    var g = game();
+    var onExp = !!(g && g.state && g.state.world && g.state.world.on_expedition);
+    var expEnded = snapState.onExp === true && !onExp;
+    snapState.onExp = onExp;
+    var trig = null;
+    var extra = {};
+    if (name === "player_action" && payload.ok !== false && MILESTONE_ACTIONS[payload.action]) trig = MILESTONE_ACTIONS[payload.action];
+    else if (name === "build") trig = "building_built";
+    else if (name === "stage_reached" || name === "unlock") trig = "stage_transition";
+    else if (name === "death") trig = "death";
+    else if (name === "ending_reached") trig = "ending";
+    else if (name === "late_game_milestone") { trig = "milestone"; extra.milestone = payload.milestone || null; }
+    else if (name === "prestige_start" || name === "new_game_start" || name === "slice_complete") trig = name;
+    else if (name === "save_load" && payload.ok) trig = "save_load";
+    else if (name === "save_write" && Date.now() - snapState.lastSaveTrigAt >= SAVE_THROTTLE_MS) {
+      snapState.lastSaveTrigAt = Date.now();
+      trig = "save";
+    }
+    if (expEnded && !trig) trig = "explore_end";
+    if (trig) return snapshot(trig, extra);
+    return tick();
+  }
+
+  function startTimer() {
+    if (snapState.timer || typeof setInterval !== "function") return;
+    snapState.lastAt = snapState.lastAt || Date.now();
+    snapState.timer = setInterval(tick, 30000) || 1;
+  }
+
   root.ADRSaveTelemetry = {
     hookGame: hookGame,
     hookKnownKeys: hookKnownKeys,
@@ -371,12 +555,22 @@
     previousSaveContext: previousSaveContext,
     validateBlob: validateBlob,
     checksum: checksum,
-    backupCorrupt: backupCorrupt
+    backupCorrupt: backupCorrupt,
+    snapshot: snapshot,
+    buildSnapshot: buildSnapshot,
+    sanitize: sanitize,
+    onEvent: onEvent,
+    tick: tick,
+    optedOut: optedOut,
+    startTimer: startTimer,
+    SNAP_MAX_CHARS: SNAP_MAX_CHARS,
+    _snap: snapState
   };
 
   if (typeof document !== "undefined") {
     setTimeout(function () {
       if (!hooked) hookGame(game());
+      startTimer();
     }, 0);
   }
 })(typeof self !== "undefined" ? self : this);
