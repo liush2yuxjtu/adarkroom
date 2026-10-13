@@ -80,6 +80,8 @@ func think() -> Array:
 			{ "tool": "narrate", "args": { "text": "醒来。头在痛。眼前模糊。去生火吧", "source": "room" } },
 		])
 
+	# Persistent one-liner lives in GoalPrompt (not a quest HUD). Wake is the one-shot.
+
 	return calls
 
 func _once(calls: Array, key: String, extra: Array) -> void:

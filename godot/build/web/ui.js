@@ -611,22 +611,36 @@
 
   function renderNotes() {
     var box = $("notifications");
+    var goal = game.state.goal;
+    var goalText = goal && goal.text ? goal.text : "";
     var notes = game.state.notifications.slice(0, 30);
     var want = notes.map(function (n) {
       if (isPixel()) return cueForNote(n.text) + (n.count > 1 ? ":" + n.count : "") + "|" + noteLabel(n);
       return noteLabel(n);
     });
     if (isPixel()) want.unshift("legend");
-    var have = [].slice.call(box.querySelectorAll(".note, .px-notes-legend")).map(function (n) {
+    if (goalText) want.unshift("goal:" + goalText);
+    var have = [];
+    var goalEl = box.querySelector("#goal-prompt");
+    if (goalEl) have.push("goal:" + (goalEl.textContent || ""));
+    have = have.concat([].slice.call(box.querySelectorAll(".note, .px-notes-legend")).map(function (n) {
       if (n.classList.contains("px-notes-legend")) return "legend";
       if (isPixel()) return (n.dataset.cue || "") + (n.dataset.count || "") + "|" + (n.getAttribute("title") || "");
       return n.textContent;
-    });
+    }));
     if (want.join("\n") === have.join("\n")) {
       syncScrollable(box, "游戏消息");
       return;
     }
     box.innerHTML = "";
+    if (goalText) {
+      var g = document.createElement("div");
+      g.id = "goal-prompt";
+      g.className = "goal-line";
+      g.setAttribute("role", "status");
+      g.textContent = goalText;
+      box.appendChild(g);
+    }
     if (isPixel()) {
       var legend = document.createElement("div");
       legend.className = "px-notes-legend";

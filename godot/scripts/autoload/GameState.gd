@@ -27,6 +27,7 @@ var combat: Variant = null
 var outfit: Dictionary = { "meat": 0, "cured_meat": 0 }
 var world: Dictionary = {}
 var slice_complete: bool = false
+var goal: Dictionary = {}
 var income_acc: Dictionary = { "builder": 0.0, "gatherer": 0.0 }
 var pop_timer: Variant = null
 # @pacing kind=interval id=time_scale value=1 phase=room_dark note=default 1x
@@ -97,6 +98,7 @@ func reset() -> void:
 		"visited": {}, "landmarks": { "8,3": "old_house" }, "seen_danger": false
 	}
 	slice_complete = false
+	goal = {}
 	income_acc = { "builder": 0.0, "gatherer": 0.0 }
 	pop_timer = null
 
