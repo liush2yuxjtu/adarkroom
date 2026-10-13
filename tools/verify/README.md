@@ -17,6 +17,8 @@ node screenshot-diff.mjs --update --url <url>   # rewrite committed baselines
 | `extremes.mjs` | Long text, stores=0, 1e9, corrupt saves (invalid JSON, missing fields, wrong types). |
 | `telemetry.mjs` | Headless engine + telemetry.js with mocked sink: phase re-sync after load, failed actions reported, stuck detector, dedup/event_id, session_start first, `is_automation`, `client_version` on every event, cap keeps milestones. No network. |
 | `story.mjs` | Seeded headless playthrough of every phase to `slice_complete`; per-node trigger/actual table. |
+| `playthrough.mjs` | Deterministic full run: village econ → world/combat → ship/space → fabricator → dungeon/ending → prestige. Reports game-time and wall-clock per stage. |
+| `classic-playthrough.mjs` | Same milestones timed from original JS constants (`script/room.js` / `outside.js` / `world.js`). |
 | `onboarding.mjs` | New save shows the persistent goal line; it updates fire → forest; telemetry carries `client_version`. |
 
 Stdout is JSON `{ pass, exitCode, failures, … }`. Exit 1 on any FAIL.
