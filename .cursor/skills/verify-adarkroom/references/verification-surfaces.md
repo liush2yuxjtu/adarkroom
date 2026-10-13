@@ -11,6 +11,7 @@ A surface is the actual runtime boundary a user or downstream program consumes. 
 | `pacing-intent-check` | `python -m tools.pacing_analyzer --json` vs tagged design curve (every verify run; no cron) | [Pacing intent check](pacing-intent-check.md) |
 | `telemetry-event-version` | every outbound payload carries `client_version`; drop old builds before PM/bug conclusions | [judgment recipe](../../verify/references/telemetry-event-version.md) |
 | `pm-telemetry-human-filter` | classify automated vs human-like **before** any retention/funnel number | [judgment recipe](../../verify/references/pm-telemetry-human-filter.md) |
+| `pm-recommendation-hygiene` | classify each PM issue (a) remake-wrong / (b) missing-competitor-pattern / (c) implemented-poorly before recommending a fix | [judgment recipe](../../verify/references/pm-recommendation-hygiene.md) |
 
 `localStorage['adr.telemetry']` is a check inside `browser-remake`, not a backend proof. A local or VM build is not any of these surfaces.
 
