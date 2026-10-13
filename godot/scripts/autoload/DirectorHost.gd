@@ -12,6 +12,7 @@ func _ready() -> void:
 	Analytics.configure(GameState.config)
 	Analytics.log_event("session_start", { "director": director_name })
 	_think()
+	GoalPrompt.sync()
 
 func _process(delta: float) -> void:
 	_acc += delta * GameState.time_scale

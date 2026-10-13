@@ -120,6 +120,10 @@ func _render() -> void:
 	_clear(header)
 	_clear(body)
 	_clear(stores)
+	if typeof(GameState.goal) == TYPE_DICTIONARY and str(GameState.goal.get("text", "")) != "":
+		var goal_l := _label(str(GameState.goal.get("text")), 14)
+		goal_l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		notes.add_child(goal_l)
 	for n in GameState.notifications.slice(0, 14):
 		var l := _label(str(n.text), 14)
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

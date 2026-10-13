@@ -7,7 +7,7 @@ Node `vm` sandbox (`tools/verify/lib/engine-sandbox.mjs`) with a fake wall clock
 ```bash
 node tools/verify/telemetry.mjs          # 10 checks, JSON, exit 1 on FAIL
 node tools/verify/story.mjs --runs 5     # phase ladder to slice_complete, per-node table
-node tools/verify/run.mjs --only telemetry,story
+node tools/verify/run.mjs --only telemetry,story,onboarding
 ```
 
 `run.mjs` includes both suites by default (story with 3 seeded runs).
@@ -25,7 +25,7 @@ node tools/verify/run.mjs --only telemetry,story
 | `session-start-first` | 32 sessions without `session_start` | first engine event of any session is `session_start` (synthetic `{synthetic:true,reason:"missing_session_start"}` if needed) |
 | `automation-flagged` | 236/251 sessions were headless test traffic, indistinguishable from players | `payload.is_automation` true for `navigator.webdriver` / headless UA, false for a normal UA |
 | `client-version-on-every-event` | payloads had no build identity, so old exports mixed with the current release | every buffered and posted `payload.client_version` is a non-empty string; telemetry.js path equals the sandbox stamp |
-| `cap-keeps-milestones` | a real session lost ~3,650 game-sec (village, compass, path) once the 2,500-row cap tripped on hover/mouse noise | after the cap, milestone events (`phase_time`, `player_action`, `build`, `unlock`, `death`, ...) are kept, UI noise dropped |
+| `cap-keeps-milestones` | a real session lost ~3,650 game-sec (village, compass, path) once the 2,500-row cap tripped on hover/mouse noise | after the cap, milestone events (`phase_time`, `player_action`, `build`, `unlock`, `death`, `goal_prompt_shown`, `goal_prompt_acted`, `stage_reached`, ...) are kept, UI noise dropped |
 
 Analysis queries should filter `coalesce((payload->>'is_automation')::boolean,false) = false` **and**
 `payload->>'client_version' = :current_release`, then still run surface `pm-telemetry-human-filter`

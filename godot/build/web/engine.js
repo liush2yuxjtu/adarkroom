@@ -144,7 +144,8 @@
         landmarks: { "8,3": "old_house" },
         seen_danger: false
       },
-      slice_complete: false
+      slice_complete: false,
+      goal: null
     };
   }
 
@@ -516,6 +517,7 @@
       ev ? ev.id : "", ev ? ev.scene : "",
       state.combat ? state.combat.hp : "",
       state.phase, state.slice_complete ? 1 : 0,
+      state.goal ? state.goal.id : "", state.goal ? state.goal.text : "",
       state.world.on_expedition ? 1 : 0, state.world.x, state.world.y,
       state.world.hp, state.world.water,
       state.outfit.meat, state.outfit.cured_meat
@@ -540,6 +542,73 @@
     if (state.builder_level >= 1) return "stranger";
     if (state.fire > 0) return "room_fire";
     return "room_dark";
+  }
+
+  /* Persistent dark-room one-liner. First matching early gate wins.
+   * Tone matches wake_line / RuleDirector: short, atmospheric Chinese. */
+  function deriveGoal(state) {
+    if (!state) return null;
+    if (state.slice_complete) return null;
+    if (state.world && state.world.on_expedition) return null;
+    var wood = (state.stores && state.stores.wood) || 0;
+    var trap = (state.buildings && state.buildings.trap) || 0;
+    var cart = (state.buildings && state.buildings.cart) || 0;
+    var hut = (state.buildings && state.buildings.hut) || 0;
+    var outside = !!(state.unlocked && state.unlocked.outside);
+    var path = !!(state.unlocked && state.unlocked.path);
+    var bl = state.builder_level;
+    var loc = state.location;
+    var seenForest = !!(state.flags && state.flags.goal_entered_forest);
+
+    if (state.fire <= 0) {
+      return { id: "light_fire", text: "火灭了，生火", stage: "room_dark", action: "light_fire" };
+    }
+    if (!outside && bl < 1) {
+      return { id: "stoke_fire", text: "火还在，添柴", stage: "room_fire", action: "stoke_fire" };
+    }
+    if (!outside && bl >= 1) {
+      return { id: "warm_stranger", text: "陌生人还在发抖，添柴", stage: "stranger", action: "stoke_fire" };
+    }
+    if (outside && !seenForest && loc !== "outside" && loc !== "path" && loc !== "world") {
+      return { id: "go_forest", text: "去森林看看", stage: "forest", action: "travel", actionArgs: { area: "outside" } };
+    }
+    if (bl < 4) {
+      return { id: "gather_wood", text: "林地上有枯枝，伐木", stage: "forest", action: "gather_wood" };
+    }
+    if (trap < 1) {
+      if (wood >= 10) {
+        return { id: "build_trap", text: "木头够了，做陷阱", stage: "forest", action: "build", actionArgs: { kind: "trap" } };
+      }
+      return { id: "gather_for_trap", text: "木头不够，去伐木", stage: "forest", action: "gather_wood" };
+    }
+    if (cart < 1) {
+      if (wood >= 30) {
+        return { id: "build_cart", text: "木头够了，造货车", stage: "forest", action: "build", actionArgs: { kind: "cart" } };
+      }
+      return { id: "gather_for_cart", text: "去伐木，造货车", stage: "forest", action: "gather_wood" };
+    }
+    if (hut < 1) {
+      if (wood >= 100) {
+        return { id: "build_hut", text: "木头够了，建小屋", stage: "forest", action: "build", actionArgs: { kind: "hut" } };
+      }
+      return { id: "gather_for_hut", text: "去伐木，建小屋", stage: "forest", action: "gather_wood" };
+    }
+    if (!path) {
+      return { id: "check_traps", text: "去看看陷阱", stage: "village", action: "check_traps" };
+    }
+    return { id: "follow_compass", text: "罗盘指向东方", stage: "path", action: "embark" };
+  }
+
+  function goalMatchesAction(goal, action, args) {
+    if (!goal || !goal.action || action !== goal.action) return false;
+    var want = goal.actionArgs;
+    if (!want) return true;
+    args = args || {};
+    var k;
+    for (k in want) {
+      if (Object.prototype.hasOwnProperty.call(want, k) && args[k] !== want[k]) return false;
+    }
+    return true;
   }
 
   function executeTool(state, call, ctx) {
@@ -1183,7 +1252,60 @@
     });
     this.persistSave(!!boot.fresh || restored);
     this.directorTick();
+    this.syncGoal("boot");
   }
+
+  Game.prototype.syncGoal = function (reason, action, args) {
+    var s = this.state;
+    var prev = s.goal || (s.flags && s.flags.goal_id ? {
+      id: s.flags.goal_id,
+      text: s.flags.goal_text || "",
+      stage: s.flags.goal_stage || "",
+      action: s.flags.goal_action || "",
+      actionArgs: s.flags.goal_action_args || null
+    } : null);
+    if (reason === "acted" && prev && goalMatchesAction(prev, action, args)) {
+      var actedKey = "goal_acted_" + prev.id;
+      if (!s.flags[actedKey]) {
+        s.flags[actedKey] = true;
+        this.analytics.log(s, "goal_prompt_acted", {
+          goal_id: prev.id,
+          text: prev.text,
+          stage: prev.stage,
+          action: action
+        });
+      }
+    }
+    if (action === "travel" && args && args.area === "outside") {
+      s.flags.goal_entered_forest = true;
+    }
+    var next = deriveGoal(s);
+    s.goal = next;
+    var nextId = next ? next.id : "";
+    var nextStage = next ? next.stage : "";
+    var prevId = prev ? prev.id : "";
+    var prevStage = prev ? prev.stage : "";
+    if (nextId === prevId) return next;
+    s.flags.goal_id = nextId;
+    s.flags.goal_text = next ? next.text : "";
+    s.flags.goal_stage = nextStage;
+    s.flags.goal_action = next ? next.action : "";
+    s.flags.goal_action_args = next && next.actionArgs ? next.actionArgs : {};
+    if (next) {
+      this.analytics.log(s, "goal_prompt_shown", {
+        goal_id: next.id,
+        text: next.text,
+        stage: next.stage
+      });
+      if (nextStage && nextStage !== prevStage) {
+        this.analytics.log(s, "stage_reached", {
+          stage: nextStage,
+          goal_id: next.id
+        });
+      }
+    }
+    return next;
+  };
 
   Game.prototype.cooldownLeft = function (id) {
     return cooldownLeft(this.state, id, this.timeScale);
@@ -1472,6 +1594,7 @@
         if (!s.unlocked[args.area] && args.area !== "room") return { ok: false, error: "locked" };
         if (s.world.on_expedition) return { ok: false, error: "away" };
         s.location = args.area;
+        if (args.area === "outside") s.flags.goal_entered_forest = true;
         break;
       case "pack":
         var item = args.item;
@@ -1624,6 +1747,7 @@
     }
     s.phase = derivePhase(s);
     this.directorTick();
+    this.syncGoal("acted", action, args);
     this.emit();
     if (action !== "quit") this.persistSave();
     return { ok: true };
@@ -1813,6 +1937,7 @@
     }
 
     s.phase = derivePhase(s);
+    this.syncGoal("tick");
     this.analytics.tickChecks(s);
     if (visualSig(s) !== beforeSig) this.emit();
     this._saveDirty = true;
@@ -1844,6 +1969,7 @@
     TEMP: TEMP,
     TOOL_SCHEMA: TOOL_SCHEMA,
     STRINGS: STRINGS,
+    deriveGoal: deriveGoal,
     t: t,
     createState: createState,
     directorState: directorState,

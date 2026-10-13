@@ -168,6 +168,7 @@ func act(action: String, args: Dictionary = {}) -> Dictionary:
 		s.save_game()
 		_last_save_at = s.game_time_sec
 	DirectorHost._think()
+	GoalPrompt.sync(action, args)
 	acted.emit()
 	return { "ok": true }
 
@@ -225,6 +226,7 @@ func tick(dt_real: float) -> void:
 		# @pacing kind=interval id=pop_timer_repeat value=60s phase=village
 		s.pop_timer = s.game_time_sec + 60 if cap > s.population else null
 	s.phase = s.derive_phase()
+	GoalPrompt.sync()
 	Analytics.tick_checks()
 	s.notify_changed()
 	# @pacing-ignore note=autosave interval, not game pacing
