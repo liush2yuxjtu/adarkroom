@@ -9,6 +9,8 @@ A surface is the actual runtime boundary a user or downstream program consumes. 
 | `supabase-telemetry` | Live page events → anon `POST /rest/v1/playtest_events` → rows in `adarkroom-telemetry.public.playtest_events` read back on the service side | [Supabase telemetry end-to-end](supabase-telemetry.md) |
 | `classic-subpath` | Real mouse click on the LIVE original game at `/classic/?lang=zh_cn` | [Classic sub-path](classic-subpath.md) |
 | `pacing-intent-check` | `python -m tools.pacing_analyzer --json` vs tagged design curve (every verify run; no cron) | [Pacing intent check](pacing-intent-check.md) |
+| `telemetry-event-version` | every outbound payload carries `client_version`; drop old builds before PM/bug conclusions | [judgment recipe](../../verify/references/telemetry-event-version.md) |
+| `pm-telemetry-human-filter` | classify automated vs human-like **before** any retention/funnel number | [judgment recipe](../../verify/references/pm-telemetry-human-filter.md) |
 
 `localStorage['adr.telemetry']` is a check inside `browser-remake`, not a backend proof. A local or VM build is not any of these surfaces.
 

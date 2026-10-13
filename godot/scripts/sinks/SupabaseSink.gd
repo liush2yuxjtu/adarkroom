@@ -18,12 +18,19 @@ static func headers_from_anon_key(anon_key: String) -> Dictionary:
 	}
 
 static func row_from_event(ev: Dictionary) -> Dictionary:
+	var payload: Dictionary = ev.get("payload", {})
+	if typeof(payload) != TYPE_DICTIONARY:
+		payload = {}
+	else:
+		payload = payload.duplicate()
+	if str(payload.get("client_version", "")) == "":
+		payload["client_version"] = "godot-dev"
 	return {
 		"session_id": ev.get("session_id", ""),
 		"event_name": ev.get("event_name", ""),
 		"occurred_at": ev.get("occurred_at", ""),
 		"game_time_sec": ev.get("game_time_sec", 0),
 		"phase": ev.get("phase", ""),
-		"payload": ev.get("payload", {}),
+		"payload": payload,
 		"user_agent": ev.get("user_agent", "godot"),
 	}

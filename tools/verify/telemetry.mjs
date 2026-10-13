@@ -13,6 +13,7 @@
  *   resend-carries-event-id         every sent row carries a client event_id, so retried rows can be collapsed (no blind duplicates)
  *   session-start-first         every session's first engine event is session_start (synthetic if missing)
  *   automation-flagged          payload.is_automation is true under navigator.webdriver / headless UA, false otherwise
+ *   client-version-on-every-event  every buffered and posted payload carries client_version (build-time git SHA)
  *   cap-keeps-milestones        the per-session event cap drops UI noise but keeps milestone events
  */
 import { fileURLToPath } from "node:url";
@@ -167,6 +168,48 @@ export function runTelemetry() {
       }
     }
     return { pass: true, detail: rows.join(" ") };
+  });
+
+  check(suite, "client-version-on-every-event", () => {
+    const rows = [];
+    for (const telemetry of [false, true]) {
+      const sb = makeSandbox({ telemetry });
+      const g = newGame(sb);
+      g.act("light_fire");
+      const evs = bufferOf(sb, g);
+      const missing = evs.filter((e) => !e.payload || !e.payload.client_version);
+      if (missing.length) {
+        return { pass: false, detail: `${telemetry ? "tel" : "eng"} missing client_version on ${missing.length}/${evs.length}` };
+      }
+      if (telemetry) {
+        const bad = evs.filter((e) => e.payload.client_version !== "verify-sandbox");
+        if (bad.length) {
+          return { pass: false, detail: `tel stamp=${JSON.stringify(bad[0] && bad[0].payload && bad[0].payload.client_version)}` };
+        }
+      }
+      rows.push(`${telemetry ? "tel" : "eng"}=${evs.length}:${evs[0].payload.client_version}`);
+    }
+    const sb = makeSandbox({ telemetry: true });
+    const posted = [];
+    sb.ctx.ADRSupabaseSink.postRows = (url, key, batch, opts) => {
+      posted.push(...batch);
+      if (opts && opts.onOk) opts.onOk({ ok: true, status: 201, via: "mock" }, 1);
+      return Promise.resolve();
+    };
+    newGame(sb);
+    sb.ctx.ADRTelemetry.log("resource_snapshot", { reason: "verify-version" });
+    const T = sb.ctx.ADRTelemetry._state;
+    T.inflight = false;
+    sb.ctx.ADRTelemetry.flush("interval");
+    const postedMissing = posted.filter((r) => !r.payload || !r.payload.client_version);
+    if (!posted.length || postedMissing.length) {
+      return { pass: false, detail: `posted=${posted.length} missing=${postedMissing.length} ${rows.join(" ")}` };
+    }
+    const postedBad = posted.filter((r) => r.payload.client_version !== "verify-sandbox");
+    return {
+      pass: postedBad.length === 0,
+      detail: `${rows.join(" ")} posted=${posted.length}`
+    };
   });
 
   check(suite, "cap-keeps-milestones", () => {

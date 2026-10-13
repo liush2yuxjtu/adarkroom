@@ -13,14 +13,26 @@
       Accept: "application/json"
     };
   }
+  function clientVersion() {
+    try {
+      var cfg = (typeof root.ADR_TELEMETRY === "object" && root.ADR_TELEMETRY) ||
+        (typeof globalThis !== "undefined" && globalThis.ADR_TELEMETRY) || {};
+      if (cfg && cfg.client_version) return String(cfg.client_version);
+    } catch (e) { /* ignore */ }
+    return "unknown";
+  }
+
   function rowFromEvent(ev) {
+    var payload = ev && ev.payload && typeof ev.payload === "object" ? ev.payload : {};
+    if (!payload.client_version) payload.client_version = clientVersion();
+    if (ev && ev.payload !== payload) ev.payload = payload;
     return {
       session_id: ev.session_id,
       event_name: ev.event_name,
       occurred_at: ev.occurred_at,
       game_time_sec: ev.game_time_sec,
       phase: ev.phase,
-      payload: ev.payload || {},
+      payload: payload,
       user_agent: ev.user_agent || ""
     };
   }

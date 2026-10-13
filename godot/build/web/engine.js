@@ -932,6 +932,14 @@
     } catch (e) { /* ignore */ }
   };
 
+  function clientVersion() {
+    try {
+      var cfg = (typeof globalThis !== "undefined" && globalThis.ADR_TELEMETRY) || {};
+      if (cfg && cfg.client_version) return String(cfg.client_version);
+    } catch (e) { /* ignore */ }
+    return "unknown";
+  }
+
   function isAutomation() {
     try {
       if (typeof globalThis !== "undefined" && globalThis.ADR_AUTOMATION === true) return true;
@@ -968,6 +976,7 @@
   Analytics.prototype.log = function (state, name, payload) {
     payload = payload ? Object.assign({}, payload) : {};
     if (payload.is_automation == null) payload.is_automation = isAutomation();
+    if (!payload.client_version) payload.client_version = clientVersion();
     if (name !== "director_think" && this._isDuplicate(state, name, payload)) return null;
     if (name === "session_start") {
       this.sessionStarted[state.session_id] = true;

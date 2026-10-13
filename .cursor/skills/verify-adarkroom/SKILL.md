@@ -20,6 +20,8 @@ Choose the recipe from [the surface index](references/verification-surfaces.md).
 | Telemetry reaches the backend | `supabase-telemetry` | Rows in `playtest_events` for this run's `session_id` (via `execute_sql`), anon SELECT denied |
 | Original game works | `classic-subpath` | Real-mouse `生火` → title `生火间`, screenshot |
 | Early-game pacing is on-curve | `pacing-intent-check` | `python -m tools.pacing_analyzer --json` → `early_phase_slow` is false |
+| New emits name the deployed build | `telemetry-event-version` (judgment skill) | `payload.client_version` present; analysis filters to current SHA |
+| A retention/funnel number is a product fact | `pm-telemetry-human-filter` (judgment skill) | raw + human-only medians; automated/old/self-test excluded |
 
 ## Launch
 

@@ -26,7 +26,7 @@ or in-process:
 from tools.pacing_analyzer import analyze
 ```
 
-The module reads `@pacing` tags to build an expected per-phase curve, then compares it to actual Supabase `playtest_events` phase times.
+The module reads `@pacing` tags to build an expected per-phase curve, then compares it to actual Supabase `playtest_events` phase times. If those rows are also used for a PM retention or funnel sentence, run [`pm-telemetry-human-filter`](pm-telemetry-human-filter.md) and [`telemetry-event-version`](telemetry-event-version.md) first — do not quote a raw median from unfiltered / old-build / headless sessions.
 
 | mode | how |
 |---|---|

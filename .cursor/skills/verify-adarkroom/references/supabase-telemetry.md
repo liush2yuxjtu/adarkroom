@@ -17,7 +17,7 @@ Backend: Supabase project `adarkroom-telemetry` (ref `ywwguestvujaoimlqznq`), ta
           jsonb_agg(payload) filter (where event_name='player_action') as actions
    from public.playtest_events where session_id = '<session_id>' group by 1;
    ```
-   Assert rows for `session_start`, `player_action` and `director_tool`, a non-null `occurred_at`, and a `player_action` payload that names the clicked action (e.g. light fire / stoke).
+   Assert rows for `session_start`, `player_action` and `director_tool`, a non-null `occurred_at`, a `player_action` payload that names the clicked action (e.g. light fire / stoke), and **`payload.client_version`** equal to the deployed short git SHA (surface `telemetry-event-version`).
 5. Confirm anon cannot read: `curl -s "$SUPABASE_URL/rest/v1/playtest_events?select=id&limit=1" -H "apikey: $ANON" -H "Authorization: Bearer $ANON"` must return an error / permission denied (or `[]`), never rows.
 6. Optional: open the Table Editor at https://supabase.com/dashboard/project/ywwguestvujaoimlqznq/editor and filter by the session_id for a screenshot.
 7. Lesson: events in localStorage alone do not prove the backend works. PASS needs rows in `playtest_events` for this run's session_id.

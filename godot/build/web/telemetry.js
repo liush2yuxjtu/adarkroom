@@ -209,6 +209,21 @@
     new_game_start: 1, page_unload: 1, page_reload: 1, js_error: 1
   };
 
+  function clientVersion() {
+    try {
+      var cfg = (typeof root.ADR_TELEMETRY === "object" && root.ADR_TELEMETRY) ||
+        (typeof globalThis !== "undefined" && globalThis.ADR_TELEMETRY) || {};
+      if (cfg && cfg.client_version) return String(cfg.client_version);
+    } catch (e) { /* ignore */ }
+    return "unknown";
+  }
+
+  function ensureClientVersion(payload) {
+    payload = payload && typeof payload === "object" ? payload : {};
+    if (!payload.client_version) payload.client_version = clientVersion();
+    return payload;
+  }
+
   function isAutomation() {
     try {
       if (root.ADR_AUTOMATION === true) return true;
@@ -253,6 +268,7 @@
     }
     payload = payload ? Object.assign({}, payload) : {};
     if (payload.is_automation == null) payload.is_automation = isAutomation();
+    if (!payload.client_version) payload.client_version = clientVersion();
     if (!payload.event_id) payload.event_id = uuid();
     var snap = gameSnap();
     var ev = {
@@ -279,6 +295,7 @@
   }
 
   function toRow(ev) {
+    if (ev && ev.payload) ev.payload = ensureClientVersion(ev.payload);
     var sink = sinkApi();
     return sink && sink.rowFromEvent ? sink.rowFromEvent(ev) : {
       session_id: ev.session_id,
@@ -286,7 +303,7 @@
       occurred_at: ev.occurred_at,
       game_time_sec: ev.game_time_sec,
       phase: ev.phase,
-      payload: ev.payload || {},
+      payload: ensureClientVersion(ev.payload || {}),
       user_agent: ev.user_agent || ""
     };
   }
@@ -797,6 +814,7 @@
     noteLastAction: noteLastAction,
     pageUnload: pageUnload,
     logFromGodot: logFromGodot,
+    clientVersion: clientVersion,
     debugEnabled: debugEnabled,
     EVENT_LEVEL: EVENT_LEVEL,
     activePlayMs: activePlayMs,

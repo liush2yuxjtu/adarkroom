@@ -31,20 +31,36 @@ for f in favicon.ico mobileWarning.html browserWarning.html; do
   fi
 done
 
-# Static site: inject Vercel SUPABASE_* at build time (empty = localStorage-only).
-python3 - "$DIST/telemetry-config.js" "${SUPABASE_URL:-}" "${SUPABASE_ANON_KEY:-}" "${TELEMETRY_DEBUG:-}" <<'PY'
+# Short git SHA of this deploy. Vercel sets VERCEL_GIT_COMMIT_SHA; local/export falls back to HEAD.
+CLIENT_SHA="${VERCEL_GIT_COMMIT_SHA:-}"
+if [[ -z "$CLIENT_SHA" ]]; then
+  CLIENT_SHA="$(git -C "$ROOT" rev-parse HEAD 2>/dev/null || true)"
+fi
+if [[ -n "$CLIENT_SHA" ]]; then
+  CLIENT_VERSION="${CLIENT_SHA:0:7}"
+else
+  CLIENT_VERSION="dev"
+fi
+
+# Static site: inject Vercel SUPABASE_* + client_version at build time (empty url = localStorage-only).
+python3 - "$DIST/telemetry-config.js" "${SUPABASE_URL:-}" "${SUPABASE_ANON_KEY:-}" "${TELEMETRY_DEBUG:-}" "$CLIENT_VERSION" <<'PY'
 import json, sys
-dest, raw_url, key, debug_raw = sys.argv[1], sys.argv[2].strip(), sys.argv[3].strip(), sys.argv[4].strip().lower()
+dest, raw_url, key, debug_raw, client_version = (
+    sys.argv[1], sys.argv[2].strip(), sys.argv[3].strip(), sys.argv[4].strip().lower(), sys.argv[5].strip()
+)
 url = ""
 if raw_url and key:
     # Same-origin path: Vercel rewrites /api/playtest_events → Supabase REST.
     # Avoids CORS preflight (Playwright records those as requestfailed/ERR_ABORTED).
     url = "/api/playtest_events"
 debug = debug_raw in ("1", "true", "yes")
+if not client_version:
+    client_version = "dev"
 with open(dest, "w", encoding="utf-8") as f:
-    f.write("self.ADR_TELEMETRY = { url: %s, anonKey: %s, debug: %s };\n" % (
-        json.dumps(url), json.dumps(key), "true" if debug else "false"))
-print("Wrote telemetry-config.js (%s, debug=%s)" % ("Supabase REST sink enabled" if url else "localStorage-only; SUPABASE_* unset", debug))
+    f.write("self.ADR_TELEMETRY = { url: %s, anonKey: %s, debug: %s, client_version: %s };\n" % (
+        json.dumps(url), json.dumps(key), "true" if debug else "false", json.dumps(client_version)))
+print("Wrote telemetry-config.js (%s, debug=%s, client_version=%s)" % (
+    "Supabase REST sink enabled" if url else "localStorage-only; SUPABASE_* unset", debug, client_version))
 PY
 
 echo "Prepared $DIST"
