@@ -2,7 +2,7 @@
 
 Before proposing **any** UI, art, or interaction change, check the original's actual implementation and design intent. Confirm the proposal does not conflict with that direction. If it does, flag it to the user as a **deliberate art-direction change**, not a fix.
 
-This surface is **not** `aesthetic-community-consensus` (opened community threads for taste), **not** `verification-scope-mismatch` (which remake path is live), and **not** `game-pacing-intent` (is a slow phase intentional?). Community quotes here are evidence of the original's direction, not a vote on a new style.
+This surface is **not** `aesthetic-community-consensus` (opened community threads for taste), **not** `verification-scope-mismatch` (which remake path is live), **not** `game-pacing-intent` (is a slow phase intentional?), and **not** `pm-recommendation-hygiene` (is the issue remake-wrong vs missing-competitor vs implemented-poorly?). Community quotes here are evidence of the original's direction, not a vote on a new style. A (b) competitor-pattern recommendation that is UI/art still runs this surface before it is sold as a fix.
 
 Skip only when there is no original (greenfield) or the change is not UI / art / interaction.
 
