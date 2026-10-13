@@ -7,7 +7,9 @@ Node `vm` sandbox (`tools/verify/lib/engine-sandbox.mjs`) with a fake wall clock
 ```bash
 node tools/verify/telemetry.mjs          # 10 checks, JSON, exit 1 on FAIL
 node tools/verify/story.mjs --runs 5     # phase ladder to slice_complete, per-node table
-node tools/verify/run.mjs --only telemetry,story,onboarding
+node tools/verify/playthrough.mjs        # full ending+prestige, game-time + wall-clock per stage
+node tools/verify/classic-playthrough.mjs
+node tools/verify/run.mjs --only telemetry,story,onboarding,playthrough
 ```
 
 `run.mjs` includes both suites by default (story with 3 seeded runs).
@@ -43,6 +45,12 @@ Drives the rule director with a deterministic player script. Per run, per node:
 | village | builder_level 4, 100 wood, warm room, build hut |
 | path | hut >= 1 and fur >= 1, compass event, take |
 | world | path unlocked + packed meat, embark |
-| slice_complete | visit old_house (8,3), return home alive |
+| slice_complete | pathfind to `old_house` landmark and return home alive |
 
 FAIL = any node not reached. Gameplay numbers are not touched by this check.
+
+## Full playthrough (`tools/verify/playthrough.mjs`)
+
+Drives the remake engine from a fresh save through village economy (lodge / tannery / smokehouse / 熏肉 / 皮革), world map, combat, mines, dungeon, ship, fabricator, space ending, and prestige. Time scale 50×. Each stage records game-time and wall-clock. Exit 1 if any stage in `STAGES` is missing. Stuck report includes room, event id, last action, and missing flags.
+
+Classic comparison: `classic-playthrough.mjs` uses the original cost/income/delay constants (cited `file:line`) for the same milestones.

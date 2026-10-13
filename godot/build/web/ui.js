@@ -14,6 +14,9 @@
   var PX_ICON = {
     fire: "stoke", gather: "gather", traps: "trap",
     "build-trap": "trap", "build-cart": "cart", "build-hut": "hut",
+    "build-lodge": "hut", "build-tannery": "hut", "build-smokehouse": "hut",
+    "build-workshop": "hut", "build-steelworks": "hut", "build-armoury": "hut",
+    "build-trading_post": "hut", punch: "punch", attack: "punch",
     north: "north", west: "west", east: "east", south: "south",
     embark: "embark", punch: "punch", flee: "flee"
   };
@@ -78,7 +81,7 @@
     document.querySelectorAll(".px-scene-host").forEach(function (el) {
       if (el.parentNode) el.parentNode.removeChild(el);
     });
-    ["panel-room", "panel-outside", "panel-path"].forEach(function (id) {
+    ["panel-room", "panel-outside", "panel-path", "panel-ship", "panel-space", "panel-fabricator"].forEach(function (id) {
       var p = $(id);
       if (!p) return;
       delete p.dataset.ready;
@@ -570,8 +573,13 @@
     var tabs = [
       { id: "room", label: ADR.roomTitle(game.state) },
       { id: "outside", label: game.state.unlocked.outside ? ADR.hutTitle(game.state.buildings.hut) : ADR.t("Outside") },
-      { id: "path", label: ADR.t("A Dusty Path") }
+      { id: "path", label: ADR.t("A Dusty Path") },
+      { id: "ship", label: ADR.t("An Old Starship") },
+      { id: "fabricator", label: ADR.t("Fabricator") }
     ];
+    if (game.state.location === "space") {
+      tabs.push({ id: "space", label: "太空" });
+    }
     tabs.forEach(function (tab) {
       var b = h.querySelector('[data-tab="' + tab.id + '"]');
       if (!b) {
@@ -596,8 +604,13 @@
       } else if (b.textContent !== tab.label) {
         b.textContent = tab.label;
       }
+      if (tab.id !== "room" && tab.id !== "space" && !game.state.unlocked[tab.id]) {
+        if (b.parentNode) b.parentNode.removeChild(b);
+        return;
+      }
       var locked = !game.state.unlocked[tab.id] && tab.id !== "room";
-      b.disabled = locked;
+      if (tab.id === "space") locked = game.state.location !== "space";
+      b.disabled = locked || (game.state.location === "space" && tab.id !== "space");
       var active = game.state.location === tab.id || (tab.id === "path" && game.state.location === "world");
       b.className = (active ? "active" : "") + (isPixel() ? " px-tab" : "");
     });
@@ -807,7 +820,7 @@
       }
     });
     ADR.Game.prototype.visibleCrafts.call(game).forEach(function (c) {
-      var name = { trap: "陷阱", cart: "货车", hut: "小屋" }[c.kind];
+      var name = (ADR.BUILDING_CN && ADR.BUILDING_CN[c.kind]) || (ADR.ITEM_CN && ADR.ITEM_CN[c.kind]) || c.kind;
       var cost = Object.keys(c.cost).map(function (k) {
         return (ADR.ITEM_CN[k] || k) + c.cost[k];
       }).join(" ");
@@ -855,6 +868,24 @@
         label: ADR.t("check traps"),
         cdId: "traps",
         onClick: function () { game.act("check_traps"); }
+      });
+    }
+    if (game.state.population > 0 && game.visibleWorkers) {
+      var idle = game.state.workers.gatherer || 0;
+      game.visibleWorkers().forEach(function (w) {
+        if (w.job === "gatherer") return;
+        keys.push("wplus-" + w.job);
+        keys.push("wminus-" + w.job);
+        upsertButton($("out-btns"), "wplus-" + w.job, {
+          label: (w.name || w.job) + " + (" + w.count + ")",
+          disabled: idle <= 0,
+          onClick: function () { game.act("assign_worker", { job: w.job, delta: 1 }); }
+        });
+        upsertButton($("out-btns"), "wminus-" + w.job, {
+          label: (w.name || w.job) + " −",
+          disabled: w.count <= 0,
+          onClick: function () { game.act("assign_worker", { job: w.job, delta: -1 }); }
+        });
       });
     }
     keepButtons($("out-btns"), keys);
@@ -1103,18 +1134,88 @@
     ov.appendChild(modal);
   }
 
+  function renderShip() {
+    if (!$("panel-ship")) return;
+    ensureScaffold("panel-ship", "ship-title", "ship-status", "ship-btns", "ship-hint");
+    $("ship-title").textContent = ADR.t("An Old Starship");
+    $("ship-status").textContent = ADR.t("hull:") + " " + (game.state.ship.hull || 0) + "  ·  引擎 " + (game.state.ship.thrusters || 1);
+    var keys = ["reinforce", "engine", "liftoff"];
+    upsertButton($("ship-btns"), "reinforce", {
+      label: ADR.t("reinforce hull") + "（外星合金1）",
+      disabled: (game.state.stores.alien_alloy || 0) < 1,
+      onClick: function () { game.act("reinforce_hull"); }
+    });
+    upsertButton($("ship-btns"), "engine", {
+      label: ADR.t("upgrade engine") + "（外星合金1）",
+      disabled: (game.state.stores.alien_alloy || 0) < 1,
+      onClick: function () { game.act("upgrade_engine"); }
+    });
+    upsertButton($("ship-btns"), "liftoff", {
+      label: ADR.t("lift off"),
+      disabled: (game.state.ship.hull || 0) < 1,
+      cdId: "liftoff",
+      onClick: function () { game.act("liftoff"); }
+    });
+    keepButtons($("ship-btns"), keys);
+  }
+
+  function renderSpace() {
+    if (!$("panel-space")) return;
+    ensureScaffold("panel-space", "space-title", "space-status", "space-btns", "space-hint");
+    var sp = game.state.space || {};
+    $("space-title").textContent = sp.altitude >= 60 ? "太空" : "上升";
+    $("space-status").textContent = "高度 " + (sp.altitude || 0) + "  ·  船身 " + (sp.hull || 0) + "/" + (sp.max_hull || 0) + "  ·  位置 " + (sp.x || 0);
+    var keys = ["sleft", "shold", "sright"];
+    if (game.state.ending_reached) {
+      keys = ["prestige"];
+      upsertButton($("space-btns"), "prestige", {
+        label: "转生",
+        onClick: function () { game.act("prestige"); }
+      });
+    } else {
+      upsertButton($("space-btns"), "sleft", { label: "左", onClick: function () { game.act("space_steer", { dx: -1 }); } });
+      upsertButton($("space-btns"), "shold", { label: "直飞", onClick: function () { game.act("space_steer", { dx: 0 }); } });
+      upsertButton($("space-btns"), "sright", { label: "右", onClick: function () { game.act("space_steer", { dx: 1 }); } });
+    }
+    keepButtons($("space-btns"), keys);
+  }
+
+  function renderFabricator() {
+    if (!$("panel-fabricator")) return;
+    ensureScaffold("panel-fabricator", "fab-title", "fab-status", "fab-btns", "fab-hint");
+    $("fab-title").textContent = ADR.t("Fabricator");
+    $("fab-status").textContent = "外星合金 " + (game.state.stores.alien_alloy || 0);
+    var keys = [];
+    (game.visibleFabricator ? game.visibleFabricator() : []).forEach(function (c) {
+      keys.push("fab-" + c.kind);
+      var cost = Object.keys(c.cost).map(function (k) { return (ADR.ITEM_CN[k] || k) + c.cost[k]; }).join(" ");
+      upsertButton($("fab-btns"), "fab-" + c.kind, {
+        label: (ADR.ITEM_CN[c.kind] || c.kind) + " (" + cost + ")",
+        disabled: !c.can,
+        onClick: function () { game.act("fabricate", { kind: c.kind }); }
+      });
+    });
+    keepButtons($("fab-btns"), keys);
+  }
+
   function renderAll() {
     fitChrome();
     var loc = game.state.location;
     $("panel-room").className = "panel" + (loc === "room" ? " active" : "");
     $("panel-outside").className = "panel" + (loc === "outside" ? " active" : "");
     $("panel-path").className = "panel" + (loc === "path" || loc === "world" ? " active" : "");
+    if ($("panel-ship")) $("panel-ship").className = "panel" + (loc === "ship" ? " active" : "");
+    if ($("panel-space")) $("panel-space").className = "panel" + (loc === "space" ? " active" : "");
+    if ($("panel-fabricator")) $("panel-fabricator").className = "panel" + (loc === "fabricator" ? " active" : "");
     renderHeader();
     renderNotes();
     renderStores();
     if (loc === "room") renderRoom();
     if (loc === "outside") renderOutside();
     if (loc === "path" || loc === "world") renderPath();
+    if (loc === "ship") renderShip();
+    if (loc === "space") renderSpace();
+    if (loc === "fabricator") renderFabricator();
     renderEvent();
     playPhaseWipe(loc);
     if (isPixel()) {

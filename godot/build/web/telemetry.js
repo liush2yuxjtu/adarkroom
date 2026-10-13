@@ -206,6 +206,7 @@
   var CAP_EXEMPT = {
     session_start: 1, session_end: 1, phase_time: 1, unlock: 1, build: 1, death: 1,
     slice_complete: 1, stuck: 1, player_action: 1, dialogue_choice: 1, save_load: 1,
+    late_game_milestone: 1, ending_reached: 1, prestige_start: 1,
     new_game_start: 1, page_unload: 1, page_reload: 1, js_error: 1,
     goal_prompt_shown: 1, goal_prompt_acted: 1, stage_reached: 1
   };

@@ -10,6 +10,7 @@
 import { fileURLToPath } from "node:url";
 import { makeSandbox, loadEvents } from "./lib/engine-sandbox.mjs";
 import { emptySuite, ok, fail, summarize } from "./lib/report.mjs";
+import { landmarkKey, parseXY, stepToward, pathHome } from "./lib/playthrough-policy.mjs";
 
 export const PHASES = ["room_fire", "stranger", "forest", "village", "path", "world", "slice_complete"];
 
@@ -80,10 +81,27 @@ export function playthrough({ maxGameSec = 9000, seed = 1 } = {}) {
   A("travel", { area: "path" });
   A("pack", { item: "meat", amount: S().stores.meat || 0 });
   A("embark");
-  const mv = (dx, dy) => { A("world_move", { dx, dy }); let k = 0; while (S().active_event && k++ < 40) resolve(); };
-  for (const [dx, dy] of [[1, 0], [1, 0], [1, 0], [0, -1], [0, -1], [0, 1], [0, 1], [-1, 0], [-1, 0], [-1, 0]]) {
-    if (!S().world.on_expedition) break;
-    mv(dx, dy);
+  const mv = (dx, dy) => { A("world_move", { dx, dy }); let k = 0; while ((S().active_event || S().combat) && k++ < 40) resolve(); };
+  const destKey = landmarkKey(S().world.landmarks, "old_house");
+  const dest = parseXY(destKey) || { x: 33, y: 28 };
+  const home = pathHome(S().world);
+  let guard = 0;
+  while (S().world.on_expedition && guard++ < 80) {
+    if (S().world.x === dest.x && S().world.y === dest.y) {
+      let k = 0;
+      while ((S().active_event || S().combat) && k++ < 40) resolve();
+      break;
+    }
+    const step = stepToward({ x: S().world.x, y: S().world.y }, dest);
+    if (!step) break;
+    mv(step.dx, step.dy);
+  }
+  guard = 0;
+  while (S().world.on_expedition && guard++ < 80) {
+    if (S().world.x === home.x && S().world.y === home.y) break;
+    const step = stepToward({ x: S().world.x, y: S().world.y }, home);
+    if (!step) break;
+    mv(step.dx, step.dy);
   }
   tick(2);
   return {
@@ -104,7 +122,7 @@ const TRIGGERS = {
   village: "builder_level 4, 100 wood, warm room -> build hut",
   path: "hut >= 1 and fur >= 1 -> builder_finds_compass -> take compass",
   world: "path unlocked + packed meat -> embark",
-  slice_complete: "visit old_house (8,3) and return home alive"
+  slice_complete: "visit old_house landmark and return home alive"
 };
 
 export function runStory({ runs = 5 } = {}) {
