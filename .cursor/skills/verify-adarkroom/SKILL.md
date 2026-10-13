@@ -23,6 +23,7 @@ Choose the recipe from [the surface index](references/verification-surfaces.md).
 | Early-game pacing is on-curve | `pacing-intent-check` | `python -m tools.pacing_analyzer --json` → `early_phase_slow` is false |
 | New emits name the deployed build | `telemetry-event-version` (judgment skill) | `payload.client_version` present; analysis filters to current SHA |
 | A retention/funnel number is a product fact | `pm-telemetry-human-filter` (judgment skill) | raw + human-only medians; automated/old/self-test excluded |
+| A PM recommendation is actionable | `pm-recommendation-hygiene` (judgment skill) | each issue classified (a)/(b)/(c) with evidence; no (a)/(b) fix without that class |
 
 ## Launch
 
