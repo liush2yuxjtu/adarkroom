@@ -82,6 +82,9 @@ func log_event(name: String, payload: Dictionary = {}, level: String = "") -> vo
 	if buffer.size() + pending_http.size() >= session_cap and name not in ["page_unload", "page_reload", "js_error", "session_end", "save_corrupt"]:
 		dropped += 1
 		return
+	payload = payload.duplicate()
+	if str(payload.get("client_version", "")) == "":
+		payload["client_version"] = _client_version()
 	if name == "player_action":
 		last_action = payload
 		recent_actions.append({
@@ -115,6 +118,14 @@ func log_event(name: String, payload: Dictionary = {}, level: String = "") -> vo
 		pending_http.append(SupabaseSink.row_from_event(ev))
 		if pending_http.size() >= 15:
 			_flush_http()
+
+func _client_version() -> String:
+	if OS.has_feature("web") and Engine.has_singleton("JavaScriptBridge"):
+		var js := Engine.get_singleton("JavaScriptBridge")
+		var v: Variant = js.eval("(self.ADR_TELEMETRY&&ADR_TELEMETRY.client_version)||''")
+		if str(v) != "":
+			return str(v)
+	return "godot-dev"
 
 func export_json() -> String:
 	return JSON.stringify(buffer)

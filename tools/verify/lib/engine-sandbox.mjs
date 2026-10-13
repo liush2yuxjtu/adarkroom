@@ -68,7 +68,7 @@ export function makeSandbox(o = {}) {
   }
   if (o.telemetry) {
     // Mocked endpoint: the fetch above records nothing real; ADRSupabaseSink.postRows is replaced below.
-    vm.runInContext('globalThis.ADR_TELEMETRY = { url: "https://example.invalid/rest/v1/playtest_events", anonKey: "verify-sandbox" };', ctx);
+    vm.runInContext('globalThis.ADR_TELEMETRY = { url: "https://example.invalid/rest/v1/playtest_events", anonKey: "verify-sandbox", client_version: "verify-sandbox" };', ctx);
     vm.runInContext(fs.readFileSync(path.join(WEB_DIR, "sinks/supabase.js"), "utf8"), ctx, { filename: "supabase.js" });
     vm.runInContext(fs.readFileSync(path.join(WEB_DIR, "telemetry.js"), "utf8"), ctx, { filename: "telemetry.js" });
   }

@@ -24,7 +24,7 @@ Use the project's existing telemetry pipeline. Write to the Supabase `playtest_e
 | `occurred_at` | wall-clock timestamp |
 | `game_time_sec` | in-game time (pauses independently of wall clock) |
 | `phase` | game phase |
-| `payload` | jsonb fields for this event type |
+| `payload` | jsonb fields for this event type. Every emit also carries `client_version` (short git SHA); see [`telemetry-event-version.md`](telemetry-event-version.md). |
 
 Do not create a parallel pipeline. Do not invent `event_name`s that are not in the diff.
 

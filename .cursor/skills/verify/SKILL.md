@@ -1,6 +1,6 @@
 ---
 name: verify
-description: "Verify a change at the real caller surface. Judgment surfaces (aesthetic consensus, PR telemetry, timeline vs mechanics, scope mismatch, pacing intent, art-style boredom mitigation, wrong-repo PR, original intent) plus an on-demand execution checklist. Use on every PR merge or task completion in this adarkroom remake."
+description: "Verify a change at the real caller surface. Judgment surfaces (aesthetic consensus, PR telemetry, timeline vs mechanics, scope mismatch, pacing intent, art-style boredom mitigation, wrong-repo PR, original intent, telemetry event version, PM human-filter) plus an on-demand execution checklist. Use on every PR merge or task completion in this adarkroom remake."
 ---
 
 # Verify by runtime observation
@@ -38,6 +38,8 @@ Follow changed code outward to the actual boundary:
 | This repo when `tools/pacing_analyzer.py` exists | `game-pacing-intent`: verify itself must call the analyzer; intent question, never a bug. Then run `art-style-boredom-mitigation` on the same early-wait. |
 | Game-code or game-verification PR | `wrong-repo-pr`: target repo must be `liush2yuxjtu/adarkroom`, not the dot-pi agent framework |
 | UI / art / interaction proposal (remake or original exists) | `original-intent-check`: read the original implementation and design intent before proposing; conflicts are art-direction choices, not fixes |
+| Telemetry emit path / `playtest_events` payload | `telemetry-event-version`: every outbound payload has `client_version`; old builds dropped |
+| PM retention / session duration / funnel from `playtest_events` | `pm-telemetry-human-filter`: classify automated vs human-like **before** the metric |
 
 An internal helper is not the final surface when a real caller exists. For a docs-only or tests-only change with no runtime behavior, return **SKIP**.
 
@@ -55,6 +57,8 @@ Named surfaces live in [`references/verification-surfaces.md`](references/verifi
 | Early waiting + an art style can fill the wait | `art-style-boredom-mitigation` | run with the analyzer; `?style=text` → Rajan PASS; `?style=pixel` → `NEEDS ALTERNATIVE` + pixel mitigations |
 | Game work landed in the right GitHub repo | `wrong-repo-pr` | target repo + description + file paths match adarkroom ownership |
 | A UI/art/interaction proposal is a fix, not a new direction | `original-intent-check` | original `file:line` + intent sources; conflict flagged to the user as art direction, not a fix |
+| New client telemetry includes a build identity | `telemetry-event-version` | `payload.client_version` on every emit; SQL filters to current release SHA |
+| A retention / funnel number is a product fact | `pm-telemetry-human-filter` | raw median **and** human-only median + class counts; automated/old/self-test excluded |
 
 ## Two layers: surfaces judge, steps execute
 
@@ -62,10 +66,10 @@ Keep these layers separate. Do not merge a step into a surface or a surface into
 
 | Layer | What it is | Where |
 |---|---|---|
-| **Judgment** | Named **surfaces**. Each decides what evidence means (community consensus, merge telemetry, bug yes/no, live path, pacing intent, art-style boredom mitigation, repo ownership, original intent). | [`references/verification-surfaces.md`](references/verification-surfaces.md) and each recipe |
+| **Judgment** | Named **surfaces**. Each decides what evidence means (community consensus, merge telemetry, bug yes/no, live path, pacing intent, art-style boredom mitigation, repo ownership, original intent, event version, PM human-filter). | [`references/verification-surfaces.md`](references/verification-surfaces.md) and each recipe |
 | **Execution** | Concrete **steps**. A standard checklist run **on demand before each PR merge**, selected by the diff. Playwright / SQL, pass criteria, failure handling. | [`references/concrete-verification-steps.md`](references/concrete-verification-steps.md) |
 
-The eight judgment-layer surfaces are `aesthetic-community-consensus`, `pr-telemetry-required`, `behavior-timeline-vs-mechanics`, `verification-scope-mismatch`, `game-pacing-intent`, `art-style-boredom-mitigation`, `wrong-repo-pr`, and `original-intent-check`.
+The ten judgment-layer surfaces are `aesthetic-community-consensus`, `pr-telemetry-required`, `behavior-timeline-vs-mechanics`, `verification-scope-mismatch`, `game-pacing-intent`, `art-style-boredom-mitigation`, `wrong-repo-pr`, `original-intent-check`, `telemetry-event-version`, and `pm-telemetry-human-filter`.
 
 Before merge, map changed file types to steps, run those steps, then feed the artifacts into the matching surfaces. Examples: a font change runs step 1 (computed family/weight, `document.fonts`, tofu, screenshot) **plus** `aesthetic-community-consensus`. A telemetry change runs step 4 (unique session + service/read-key SELECT) **plus** `pr-telemetry-required`. A UI layout change runs steps 6–9 (`node tools/verify/run.mjs`) **plus** `verification-scope-mismatch`. A UI/art/interaction **proposal** runs `original-intent-check` first. For `verification-scope-mismatch`, run the step on the code that **actually runs live**.
 
@@ -75,7 +79,7 @@ Prefer the project verifier `.cursor/skills/verify-adarkroom/`. Use its Doctor/D
 
 ## Vercel deployment playability check (web games / web apps)
 
-In a project verifier, give each boundary its own surface entry (e.g. `vercel-live-deploy`, `browser-<app>`, `<sink>-telemetry`, `aesthetic-community-consensus`, `pr-telemetry-required`, `behavior-timeline-vs-mechanics`, `verification-scope-mismatch`, `game-pacing-intent`, `art-style-boredom-mitigation`, `wrong-repo-pr`, `original-intent-check`, one per sub-path app) in a `references/verification-surfaces.md` index (`| Surface | Public caller boundary | Operational recipe |`) with one recipe file per surface, and a `| Claim | Real surface | Required evidence |` table in SKILL.md. Keep the execution checklist in `references/concrete-verification-steps.md`; do not list steps as surfaces.
+In a project verifier, give each boundary its own surface entry (e.g. `vercel-live-deploy`, `browser-<app>`, `<sink>-telemetry`, `aesthetic-community-consensus`, `pr-telemetry-required`, `behavior-timeline-vs-mechanics`, `verification-scope-mismatch`, `game-pacing-intent`, `art-style-boredom-mitigation`, `wrong-repo-pr`, `original-intent-check`, `telemetry-event-version`, `pm-telemetry-human-filter`, one per sub-path app) in a `references/verification-surfaces.md` index (`| Surface | Public caller boundary | Operational recipe |`) with one recipe file per surface, and a `| Claim | Real surface | Required evidence |` table in SKILL.md. Keep the execution checklist in `references/concrete-verification-steps.md`; do not list steps as surfaces.
 
 For a Vercel-hosted web game or web app, "it works" means the LIVE deployment is playable. Run every step against the deployed URL:
 
@@ -253,6 +257,31 @@ This surface is not `aesthetic-community-consensus` (community taste), not `veri
 
 Worked example (2026-10-12 stoke cooldown): original buttons are plain text in a bordered `div` (`css/main.css:243-249`, Times New Roman at `css/main.css:3`) with a shrinking grey overlay (`script/Button.js:26` / `108`). Grep of the original UI for `<canvas`, `drawImage`, `sprite`, `.png`: no hits. *In Media Res*: "a single button-like bounded text box" that "becomes a shrinking gray box". Proposal: 16×16 pixel-art flame/woodpile sprites. Conflict: new pixel-art direction vs minimal-text style. Resolution: ask the user; compatible alternative is CSS-only (shrinking overlay, optional text/glyph tint, no number). See `references/original-intent-check.md`.
 
+## Surface `telemetry-event-version`
+
+Every outbound `playtest_events` payload must include a build identity. Historical rows may lack it. New client emits must set **`payload.client_version`** to the short git SHA baked at Vercel build time (`scripts/prepare-vercel.sh` → `ADR_TELEMETRY.client_version`).
+
+**Triggers.** Telemetry emit-path diffs, or any analysis of `playtest_events` used for retention or bugs. The repeatable gate is `node tools/verify/telemetry.mjs` check `client-version-on-every-event`.
+
+**When analyzing PM telemetry**, filter out events from old versions (below the current release) before retention or bug conclusions. Old-version bugs are not actionable. Current release = short SHA of live `cursor/godot-chinese-remake-5c3a` HEAD (or the Vercel deployment SHA).
+
+```sql
+SELECT session_id, event_name, occurred_at, payload->>'client_version' AS client_version
+FROM playtest_events
+WHERE payload->>'client_version' = :current_release
+ORDER BY occurred_at;
+```
+
+Treat `NULL` / `dev` / `unknown` / `godot-dev` as pre-release. See [`references/telemetry-event-version.md`](references/telemetry-event-version.md).
+
+## Surface `pm-telemetry-human-filter`
+
+**Before any PM retention / session-duration / funnel analysis**, classify sessions as automated vs human-like. A raw "~2.6s median" on `is_automation ≠ true` was polluted (235/265 untagged HeadlessChrome, same 2.60s median; ~16 human-like at ~5.86s; six >2min sessions were one Windows Edge/155 self-test). Those counts are guidance, not frozen KPIs — re-run the query.
+
+**Signals (any one → exclude from product medians):** `payload.is_automation=true`; UA Headless/Playwright/Puppeteer/missing/fake-short; uniform sub-second gaps or director/save floods without hover/mouse; missing or below-current `payload.client_version`. **No IP column** exists on `playtest_events` (`user_agent` is a table column). Always report **raw median and human-only median** plus class counts.
+
+See [`references/pm-telemetry-human-filter.md`](references/pm-telemetry-human-filter.md) for the sample SQL (duration = `max(occurred_at)-min(occurred_at)`).
+
 ## Execution layer (before merge)
 
 Engine/telemetry/story changes also run the headless checks (no network, mocked sink):
@@ -267,7 +296,7 @@ Run only the steps the mapping table selects for the diff. Each step has a trigg
 2. **Save and refresh** — click to save, read the `localStorage` key, reload, diff phase / resources / NPC JSON.
 3. **Cooldown bar** — full button-height overlay, width shrinking, button opacity 1, countdown number, screenshot.
 4. **Telemetry write** — unique session, then SELECT `playtest_events` with the service/read key (anon is insert-only).
-5. **Mapping** — file types → steps → surfaces. Font → step 1 + `aesthetic-community-consensus`. Telemetry → step 4 + `pr-telemetry-required`. `verification-scope-mismatch` → measure the live path. Game docs/skills in the wrong GitHub repo → `wrong-repo-pr`. UI/art/interaction proposal → `original-intent-check` **before** proposing the change. Pacing analyzer / `early_phase_slow` → `game-pacing-intent` **plus** `art-style-boredom-mitigation`.
+5. **Mapping** — file types → steps → surfaces. Font → step 1 + `aesthetic-community-consensus`. Telemetry → step 4 + `pr-telemetry-required` + `telemetry-event-version`. PM retention/funnel → `pm-telemetry-human-filter` **before** the number. `verification-scope-mismatch` → measure the live path. Game docs/skills in the wrong GitHub repo → `wrong-repo-pr`. UI/art/interaction proposal → `original-intent-check` **before** proposing the change. Pacing analyzer / `early_phase_slow` → `game-pacing-intent` **plus** `art-style-boredom-mitigation`.
 6. **Playwright multi-viewport UI audit** — 1280×800, **1024×768**, 390×844, 1920×1080; layout, spacing, contrast (WCAG 4.5:1), tap targets ≥44px, alignment, overlap/clipping (`x<0`), horizontal scroll; classify `realFailures` vs paired `ERR_ABORTED`+2xx; confirm the verify-script URL; numbered issues + screenshots, then P0–P5 triage; stop rounds when no new issues. Worked example: 2026-10-12 12-issue audit (PR #7 / `2361374`).
 7. **CDP layout metrics** — `node tools/verify/run.mjs --only cdp`. Playwright CDPSession: `Page.getLayoutMetrics`, `DOMSnapshot.captureSnapshot` (font-size, color, background-color, z-index, display, visibility), `DOM.getBoxModel`. No page-JS DOM queries. Detect toolbar (incl. `#btn-style`) vs notes/scene/stores, overflow, clip, below-the-fold.
 8. **Screenshot diff** — widths 360, 390, 768, 1024, 1280, 1440, 1920 × pixel/text vs `tools/verify/baselines/`. `node tools/verify/screenshot-diff.mjs --update` rewrites baselines.

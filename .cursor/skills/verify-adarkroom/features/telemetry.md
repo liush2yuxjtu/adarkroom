@@ -12,3 +12,4 @@ After the 生火 click, `verify_live.py` reads the key and requires `player_acti
 
 ## Gotchas
 - `session_start`/`director_*` events appear without any input, so their presence does not prove a click worked. Require `player_action`.
+- Every outbound payload must include `client_version` (short git SHA from `ADR_TELEMETRY`). PM numbers must run `pm-telemetry-human-filter` before quoting a median.

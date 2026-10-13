@@ -8,7 +8,7 @@ Verification has **two layers**. Surfaces **judge**. Concrete steps **execute**.
 
 | Layer | Role | Index |
 |---|---|---|
-| Judgment | Eight surfaces decide what evidence means | [`references/verification-surfaces.md`](references/verification-surfaces.md) |
+| Judgment | Ten surfaces decide what evidence means | [`references/verification-surfaces.md`](references/verification-surfaces.md) |
 | Execution | Pre-merge checklist, selected by the diff | [`references/concrete-verification-steps.md`](references/concrete-verification-steps.md) |
 
 ## Surfaces
@@ -27,6 +27,8 @@ Index: [`references/verification-surfaces.md`](references/verification-surfaces.
 | `art-style-boredom-mitigation` | Together with the pacing analyzer whenever the game has early-waiting design (`early_phase_slow`, cooldowns, resource accumulation) | `?style=text` → Rajan timed text available, **PASS**. `?style=pixel` (no fonts) → Rajan unavailable, **NEEDS ALTERNATIVE** + pixel mitigations. |
 | `wrong-repo-pr` | Game-code / game-verification work (or a PR whose paths and examples are about this remake) | Target repo, description, and file paths must match content ownership. Game work belongs in `liush2yuxjtu/adarkroom`, not `dot-pi`. If wrong: migrate, comment, close. |
 | `original-intent-check` | Before proposing any UI / art / interaction change, when an original exists | Read the original implementation (`file:line`) and design intent. A conflict is a deliberate art-direction choice, not a fix. |
+| `telemetry-event-version` | Telemetry emit-path diffs, or any `playtest_events` analysis used for retention/bugs | Every outbound payload has `client_version` (short git SHA). Filter `payload->>'client_version' = :current_release` before conclusions. Headless gate: `client-version-on-every-event`. |
+| `pm-telemetry-human-filter` | Before any PM retention / session-duration / funnel number | Classify automated vs human-like (UA, timing, `is_automation`, version; no IP column). Report raw **and** human-only medians plus class counts. |
 
 ### `aesthetic-community-consensus`
 
@@ -115,6 +117,24 @@ Before proposing any UI, art, or interaction change, check the original's actual
 
 Recipe: [`references/original-intent-check.md`](references/original-intent-check.md).
 
+### `telemetry-event-version`
+
+Every outbound `playtest_events` payload must include **`payload.client_version`** (short git SHA baked by `scripts/prepare-vercel.sh` into `ADR_TELEMETRY.client_version`). Historical rows may lack it. Before retention or bug conclusions, keep only the current release:
+
+```sql
+WHERE payload->>'client_version' = :current_release
+```
+
+Repeatable gate: `node tools/verify/telemetry.mjs` check `client-version-on-every-event`.
+
+Recipe: [`references/telemetry-event-version.md`](references/telemetry-event-version.md).
+
+### `pm-telemetry-human-filter`
+
+Before any PM retention / duration / funnel analysis, classify sessions (UA Headless/Playwright, `is_automation`, event timing, missing/old `client_version`). `playtest_events` has **no IP column**. Always report raw median **and** human-only median plus class counts. The "~2.6s non-automated median" was HeadlessChrome pollution — see the recipe; do not freeze those counts.
+
+Recipe: [`references/pm-telemetry-human-filter.md`](references/pm-telemetry-human-filter.md).
+
 ## Execution layer
 
 Standard checklist, run **on demand before each PR merge**. Not a surface. Pick steps from the mapping table; feed their artifacts into the matching surfaces.
@@ -132,7 +152,7 @@ Standard checklist, run **on demand before each PR merge**. Not a surface. Pick 
 | 9 Accessibility | UI controls / color / tap | axe-core; contrast 4.5:1 (3:1 large); tap 44px mobile / 24px desktop incl. `#btn-style`; names; Tab focus visible |
 | 10 Extreme cases | save / stores / notifications / robustness | Long text, resources 0, 1e9, corrupt saves (invalid JSON, missing fields, wrong types). `save_corrupt` + `save_recover` |
 
-**Mapping (how steps feed surfaces).** A font change → step 1 **plus** `aesthetic-community-consensus`. A telemetry change → step 4 **plus** `pr-telemetry-required`. A UI/layout change → steps **6 + 7 + 8 + 9** **plus** `verification-scope-mismatch`. Save/corrupt/extremes → **2 + 10**. For `verification-scope-mismatch`, run the matching step on the code that **actually runs live**. Pacing analyzer files have no checklist step; `game-pacing-intent` auto-calls the tool and then `art-style-boredom-mitigation`. Game work opened against `dot-pi` → `wrong-repo-pr`. Any UI/art/interaction proposal → `original-intent-check` first.
+**Mapping (how steps feed surfaces).** A font change → step 1 **plus** `aesthetic-community-consensus`. A telemetry change → step 4 **plus** `pr-telemetry-required` **plus** `telemetry-event-version`. A PM retention/funnel claim → `pm-telemetry-human-filter` **before** the number. A UI/layout change → steps **6 + 7 + 8 + 9** **plus** `verification-scope-mismatch`. Save/corrupt/extremes → **2 + 10**. For `verification-scope-mismatch`, run the matching step on the code that **actually runs live**. Pacing analyzer files have no checklist step; `game-pacing-intent` auto-calls the tool and then `art-style-boredom-mitigation`. Game work opened against `dot-pi` → `wrong-repo-pr`. Any UI/art/interaction proposal → `original-intent-check` first.
 
 Runnable scripts live in [`tools/verify/`](../../../tools/verify/README.md). `node tools/verify/run.mjs --url <live>` is the machine-readable gate (exit 1 on FAIL).
 
@@ -149,3 +169,5 @@ Recipe: [`references/concrete-verification-steps.md`](references/concrete-verifi
 - [`references/wrong-repo-pr.md`](references/wrong-repo-pr.md) — game work must land in this repo
 - [`references/original-intent-check.md`](references/original-intent-check.md) — remake UI/art/interaction vs the original's direction
 - [`references/art-style-boredom-mitigation.md`](references/art-style-boredom-mitigation.md) — Rajan vs pixel mitigations on early waits
+- [`references/telemetry-event-version.md`](references/telemetry-event-version.md) — `payload.client_version` on every emit; filter old builds
+- [`references/pm-telemetry-human-filter.md`](references/pm-telemetry-human-filter.md) — classify automated vs human before PM medians

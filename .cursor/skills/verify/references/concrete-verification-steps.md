@@ -223,7 +223,7 @@ ORDER BY occurred_at;
 
 Confirm the anon key cannot SELECT (insert-only RLS).
 
-**Pass.** At least one new row for this run's `session_id`. `event_name` matches the claim. Required payload fields are present. `occurred_at` is non-null and recent. `game_time_sec` / `phase` match the session. Anon SELECT is denied.
+**Pass.** At least one new row for this run's `session_id`. `event_name` matches the claim. Required payload fields are present, including **`payload.client_version`** (short git SHA of the deployed client; see surface `telemetry-event-version`). `occurred_at` is non-null and recent. `game_time_sec` / `phase` match the session. Anon SELECT is denied.
 
 **Failure handling.** **FAIL** if no row, wrong `event_name` / fields, or a stale timestamp. `localStorage` alone is not a pass. **BLOCKED** if `SUPABASE_URL` or the service/read key is missing — do not fall back to anon SELECT. Then run surface `pr-telemetry-required` (problem, new event types+fields, verification query + landed rows). This step is the landed-row evidence; that surface is the merge judgment.
 
@@ -237,7 +237,8 @@ Select every matching row. A file can require more than one step and more than o
 | `*theme*` `*.css` `*.scss` UI color / palette (no font files) | **1** if type is involved; else none of 1–4 unless a visual claim names a face | `aesthetic-community-consensus` |
 | save / load / `localStorage` / persist / refresh / `save_write` | **2** save and refresh | `pr-telemetry-required` when the PR is a save bug-fix. Persistence claim also needs the reload read-back in SKILL.md. |
 | cooldown / `.cd` / `paintCooldowns` / disabled button / gather / stoke / traps UI | **3** cooldown bar **and** the tab-hide remaining check in the same step | `verification-scope-mismatch`: measure the code that **actually runs live**, not a sibling Godot/web path. |
-| `playtest_events` / `event_name` / telemetry / analytics sink / flush | **4** telemetry write | `pr-telemetry-required` (bug-fix or data-question PR) and `<sink>-telemetry` (row read-back). |
+| `playtest_events` / `event_name` / telemetry / analytics sink / flush | **4** telemetry write | `pr-telemetry-required` (bug-fix or data-question PR), `<sink>-telemetry` (row read-back), and `telemetry-event-version` (`payload.client_version` on every emit). |
+| PM retention / session duration / funnel / "median playtime" / bounce | no extra Playwright step — run the classification SQL | `pm-telemetry-human-filter` **before** the metric (raw + human-only medians). Also `telemetry-event-version` (drop old builds). |
 | `tools/pacing_analyzer.py` / `@pacing` / early-phase timing | no checklist step — verify **auto-calls** the analyzer | `game-pacing-intent` **plus** `art-style-boredom-mitigation` (same `early_phase_slow` wait; style decides Rajan vs pixel mitigations) |
 | `?style=` / `assets/pixel/` / art-style boredom | no extra Playwright step | `art-style-boredom-mitigation`: text → PASS; pixel → **NEEDS ALTERNATIVE** |
 | unusual click frequency / cooldown-cap question (no UI CSS change) | no extra step beyond the session query the surface names | `behavior-timeline-vs-mechanics` |
@@ -247,7 +248,7 @@ Select every matching row. A file can require more than one step and more than o
 | UI / art / sprite / canvas / interaction proposal | no extra checklist step before the proposal is written | `original-intent-check`: original `file:line` + intent; conflict = art-direction choice, not a fix |
 | game files / verify recipes / `tools/pacing_analyzer.py` opened against `dot-pi` or another non-game repo | no extra Playwright step | `wrong-repo-pr`: migrate to `liush2yuxjtu/adarkroom` and comment on the original PR |
 
-**Rule.** A font change triggers step 1 **plus** `aesthetic-community-consensus`. A telemetry change triggers step 4 **plus** `pr-telemetry-required`. A UI/layout change triggers steps **6 + 7 + 8 + 9** **plus** `verification-scope-mismatch`. Save/corrupt/extremes trigger **2 + 10**. For `verification-scope-mismatch`, verify the code that actually runs live.
+**Rule.** A font change triggers step 1 **plus** `aesthetic-community-consensus`. A telemetry change triggers step 4 **plus** `pr-telemetry-required` **plus** `telemetry-event-version`. A PM retention/funnel claim triggers `pm-telemetry-human-filter` before the number. A UI/layout change triggers steps **6 + 7 + 8 + 9** **plus** `verification-scope-mismatch`. Save/corrupt/extremes trigger **2 + 10**. For `verification-scope-mismatch`, verify the code that actually runs live.
 
 Skip a step only when its trigger does not match the diff. Record the skip. Do not invent measurements.
 
@@ -438,14 +439,14 @@ prints one JSON object `{ pass, exitCode, failures, suites, perWidth }` and exit
 
 ## Step 11 — Telemetry contract + story progression (headless)
 
-Any change to `godot/build/web/engine.js`, `telemetry.js`, `save-telemetry.js`, `sinks/*`, or `godot/data/events.json`:
+Any change to `godot/build/web/engine.js`, `telemetry.js`, `save-telemetry.js`, `sinks/*`, `telemetry-config.js`, `scripts/prepare-vercel.sh`, or `godot/data/events.json`:
 
 ```bash
 node tools/verify/telemetry.mjs
 node tools/verify/story.mjs --runs 5
 ```
 
-Both must exit 0. Details and the bug each check guards: [`telemetry-and-story-checks.md`](telemetry-and-story-checks.md).
+Both must exit 0. `telemetry.mjs` includes `client-version-on-every-event` (feeds `telemetry-event-version`). Details and the bug each check guards: [`telemetry-and-story-checks.md`](telemetry-and-story-checks.md).
 
 ## Worked example: 2026-10-12 12-issue audit
 
