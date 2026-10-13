@@ -78,3 +78,14 @@ HTTP 上报：构建时把 sink 写成同源 `/api/playtest_events`（`vercel.js
 | `?telemetry_debug=1` | `5768c975-e0a6-42d4-9b9e-a55f180f0f9e` | **55** | 99 | debug 级这才进 `playtest_events` |
 
 再确认：`af26834e-…` 默认 0 think；`c0bb741e-…` debug 54 think。anon RLS 仍只有 INSERT（`session_id` 1–128、`event_name` 1–64、`payload` < 16KB）。短局 `?fast=1` 墙钟约 6–7s，默认约 820 行/分、debug 约 990 行/分；其中 debug 增量几乎全是每秒一条的 `director_think`。正常 1× 时间、不开 debug 时不再有这 60 行/分。
+
+
+### 存档快照遥测（save_snapshot）——仅用于分析玩家行为
+
+`save-telemetry.js` 会把**脱敏后的** `adr.save.v1` 游戏状态作为 `save_snapshot` 事件，经现有遥测通道写入 Supabase `playtest_events.payload.save_data`（无表结构变更、无迁移）。
+
+- **用途声明：这些数据只用于分析玩家行为（节奏、进度、卡点、流失点），不做任何其他用途**——不做广告、不做画像、不出售、不关联真实身份。
+- 触发：点火、建造、阶段推进/解锁、出发探索、探索结束、死亡、结局、late-game 里程碑、读档、存档（最多每 60 秒一次），以及**每 N 分钟定时**（默认 5，可用 `ADR_TELEMETRY.save_snapshot_minutes` 配置）。
+- 脱敏：只保留游戏状态；剔除昵称/邮箱/显示名/用户名/UA/设备/IP/token/endpoint 等键，字符串里的邮箱替换为 `[redacted]`，`session_id` 不放进存档体，只在顶层带现有匿名 id（`anon_id`）。
+- 体积：存档体上限 12000 字符（RLS 要求 `pg_column_size(payload) < 16384`）；超限依次丢弃 `notifications`/`scheduled`/`active_event`/`goal`，再把 `world.visited` 压成计数，仍超限则截断为核心字段，并在 `truncated`/`dropped` 里标明。
+- 退出：`?telemetry=0`、`localStorage.adr.telemetry_optout = "1"` 或 `ADR_TELEMETRY.save_snapshot = false` 均不发送 save_snapshot。
