@@ -208,7 +208,8 @@
     slice_complete: 1, stuck: 1, player_action: 1, dialogue_choice: 1, save_load: 1,
     late_game_milestone: 1, ending_reached: 1, prestige_start: 1,
     new_game_start: 1, page_unload: 1, page_reload: 1, js_error: 1,
-    goal_prompt_shown: 1, goal_prompt_acted: 1, stage_reached: 1, save_snapshot: 1
+    goal_prompt_shown: 1, goal_prompt_acted: 1, stage_reached: 1, save_snapshot: 1,
+    ui_shell: 1
   };
 
   function clientVersion() {

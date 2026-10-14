@@ -14,6 +14,7 @@
  *   session-start-first         every session's first engine event is session_start (synthetic if missing)
  *   automation-flagged          payload.is_automation is true under navigator.webdriver / headless UA, false otherwise
  *   client-version-on-every-event  every buffered and posted payload carries client_version (build-time git SHA)
+ *   ui-shell-event              ui_shell carries scroll_max_* + scene_border_* + client_version (shell chrome fix)
  *   cap-keeps-milestones        the per-session event cap drops UI noise but keeps milestone events
  *   save-snapshot-milestones    save_snapshot fires on fire lit / build / stage / explore start+end / death / ending
  *   save-snapshot-timer         save_snapshot fires every N minutes (default 5, configurable), not before
@@ -215,6 +216,34 @@ export function runTelemetry() {
       pass: postedBad.length === 0,
       detail: `${rows.join(" ")} posted=${posted.length}`
     };
+  });
+
+  check(suite, "ui-shell-event", () => {
+    const sb = makeSandbox({ telemetry: true });
+    newGame(sb);
+    sb.ctx.ADRTelemetry.log("ui_shell", {
+      style: "text",
+      width: 1280,
+      height: 800,
+      layout: "desktop",
+      scroll_max_x: 0,
+      scroll_max_y: 0,
+      html_overflow_x: "visible",
+      html_overflow_y: "visible",
+      body_overflow_x: "visible",
+      body_overflow_y: "visible",
+      scene_border_width: "0px",
+      scene_border_style: "none",
+      has_canvas: false
+    });
+    const evs = sb.ctx.ADRTelemetry._state.buffer.filter((e) => e.event_name === "ui_shell");
+    if (!evs.length) return { pass: false, detail: "no ui_shell in buffer" };
+    const p = evs[0].payload || {};
+    const missing = ["style", "scroll_max_x", "scroll_max_y", "scene_border_width", "client_version"]
+      .filter((k) => p[k] == null || p[k] === "");
+    if (missing.length) return { pass: false, detail: "missing " + missing.join(",") };
+    if (p.client_version !== "verify-sandbox") return { pass: false, detail: "client_version=" + p.client_version };
+    return { pass: true, detail: `style=${p.style} scroll_max_y=${p.scroll_max_y} border=${p.scene_border_width}` };
   });
 
   check(suite, "cap-keeps-milestones", () => {

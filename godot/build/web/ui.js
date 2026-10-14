@@ -343,12 +343,20 @@
     var availW = Math.max(160, vw - pad - notesCol - side - gaps);
     var headerEl = $("header");
     var headerH = headerEl ? headerEl.getBoundingClientRect().height : 64;
-    var availH = Math.max(160, vh - menuH - headerH - 16);
+    var stackedExtra = 0;
+    if (!wide) {
+      var notesEl = $("notifications");
+      if (notesEl) stackedExtra += notesEl.getBoundingClientRect().height || 0;
+      if (hasStores && storesBox) stackedExtra += storesBox.getBoundingClientRect().height || 0;
+      stackedExtra += 24;
+    }
+    var availH = Math.max(120, vh - menuH - headerH - stackedExtra - 16);
     var nativeW = 640;
     var nativeH = 384;
-    var scale = Math.min(Math.floor(availW / nativeW) || 0, Math.floor(availH / nativeH) || 0);
-    if (scale < 1) scale = 0.5;
-    if (scale > 3) scale = 3;
+    var raw = Math.min(availW / nativeW, availH / nativeH);
+    var scale;
+    if (raw >= 1) scale = Math.min(3, Math.floor(raw) || 1);
+    else scale = Math.max(0.4, Math.round(raw * 20) / 20);
     var uiScale = scale >= 2 ? scale : 1;
     document.documentElement.style.setProperty("--px-ui-scale", String(uiScale));
     document.querySelectorAll(".px-scene").forEach(function (sc) {
@@ -1380,6 +1388,23 @@
       overlap = !(storesR.right <= hostR.left || storesR.left >= hostR.right || storesR.bottom <= hostR.top || storesR.top >= hostR.bottom);
     }
     var scale = scene ? parseFloat(getComputedStyle(scene).getPropertyValue("--px-scale")) || 1 : null;
+    var html = document.documentElement;
+    var sceneCs = scene ? getComputedStyle(scene) : null;
+    ADRTelemetry.log("ui_shell", {
+      style: isPixel() ? "pixel" : "text",
+      width: w,
+      height: h,
+      layout: layout,
+      scroll_max_x: Math.max(0, (html.scrollWidth || 0) - w),
+      scroll_max_y: Math.max(0, (html.scrollHeight || 0) - h),
+      html_overflow_x: getComputedStyle(html).overflowX,
+      html_overflow_y: getComputedStyle(html).overflowY,
+      body_overflow_x: getComputedStyle(document.body).overflowX,
+      body_overflow_y: getComputedStyle(document.body).overflowY,
+      scene_border_width: sceneCs ? sceneCs.borderWidth : "none",
+      scene_border_style: sceneCs ? sceneCs.borderStyle : "none",
+      has_canvas: !!document.querySelector("canvas")
+    });
     ADRTelemetry.log("viewport_layout", {
       width: w,
       height: h,
