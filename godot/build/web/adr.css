@@ -50,9 +50,9 @@ input:focus-visible {
   outline-offset: 2px;
 }
 
-/* Document is the only vertical scroller. height:100% + overflow-x:hidden
-   pairs overflow-y to auto on both html and body, which forces a nested
-   scrollbar even when the early-game chrome would otherwise fit. */
+/* Do not pair height:100% with overflow-x:hidden on html/body — that
+   computes overflow-y to auto on both and nests a forced page scrollbar.
+   #notifications / #stores may still scroll locally when their log is long. */
 html, body {
   min-height: 100%;
   margin: 0;

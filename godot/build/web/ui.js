@@ -356,7 +356,7 @@
     var raw = Math.min(availW / nativeW, availH / nativeH);
     var scale;
     if (raw >= 1) scale = Math.min(3, Math.floor(raw) || 1);
-    else scale = Math.max(0.4, Math.round(raw * 20) / 20);
+    else scale = Math.max(0.4, Math.floor(raw * 20) / 20);
     var uiScale = scale >= 2 ? scale : 1;
     document.documentElement.style.setProperty("--px-ui-scale", String(uiScale));
     document.querySelectorAll(".px-scene").forEach(function (sc) {
