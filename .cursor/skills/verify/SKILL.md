@@ -258,6 +258,7 @@ Worked example (2026-10-12 stoke cooldown): original buttons are plain text in a
 Engine/telemetry/story changes also run the headless checks (no network, mocked sink):
 `node tools/verify/telemetry.mjs` and `node tools/verify/story.mjs` (both included in `node tools/verify/run.mjs`).
 See [`references/telemetry-and-story-checks.md`](references/telemetry-and-story-checks.md).
+Content parity with the original (all content required, empty whitelist): `node tools/verify/parity.mjs`, see [`references/content-parity.md`](references/content-parity.md).
 
 Surfaces above are judgment. The pre-merge checklist is execution: [`references/concrete-verification-steps.md`](references/concrete-verification-steps.md).
 

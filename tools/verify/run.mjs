@@ -18,10 +18,11 @@ import { runA11y } from "./a11y.mjs";
 import { runExtremes } from "./extremes.mjs";
 import { runTelemetry } from "./telemetry.mjs";
 import { runStory } from "./story.mjs";
+import { runParity } from "./parity.mjs";
 
 const HELP = `adr verify suite
   node tools/verify/run.mjs [--url URL] [--styles pixel,text] [--widths 360,390,768,1024,1280,1440,1920]
-                            [--out artifacts] [--only cdp,screenshots,a11y,extremes,telemetry,story] [--update-baselines]
+                            [--out artifacts] [--only cdp,screenshots,a11y,extremes,telemetry,story,parity] [--update-baselines]
 
   node tools/verify/screenshot-diff.mjs --update   # rewrite committed baselines
 
@@ -37,7 +38,7 @@ async function main() {
   }
   fs.mkdirSync(args.outDir, { recursive: true });
   const only = args.only && args.only.length ? args.only : ["cdp", "screenshots", "a11y", "extremes", "telemetry", "story"];
-  const needsBrowser = only.some((k) => !["telemetry", "story"].includes(k));
+  const needsBrowser = only.some((k) => !["telemetry", "story", "parity"].includes(k));
   const browser = needsBrowser ? await launchBrowser() : null;
   const suites = [];
   const shared = { browser, ...args };
@@ -57,6 +58,8 @@ async function main() {
     // Headless engine checks (mocked sink, no network): telemetry contract + story progression.
     if (only.includes("telemetry")) suites.push(runTelemetry());
     if (only.includes("story")) suites.push(runStory({ runs: 3 }));
+    // Content parity with the original (opt-in via --only parity until the gaps are closed).
+    if (only.includes("parity")) suites.push(runParity().suite);
   } finally {
     if (browser) await browser.close();
   }
