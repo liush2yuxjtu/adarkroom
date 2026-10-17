@@ -16,12 +16,17 @@ import { runStory } from "./story.mjs";
 import { runOnboarding } from "./onboarding.mjs";
 import { runPlaythrough } from "./playthrough.mjs";
 import { runClassicPlaythrough } from "./classic-playthrough.mjs";
+import { runParity } from "./parity.mjs";
+import { runIncome } from "./income.mjs";
+import { runMigration } from "./migration.mjs";
 
 const HELP = `adr verify suite
   node tools/verify/run.mjs [--url URL] [--styles pixel,text] [--widths 360,390,768,1024,1280,1440,1920]
-                            [--out artifacts] [--only cdp,screenshots,a11y,extremes,telemetry,story,onboarding,playthrough,classic-playthrough] [--update-baselines]
+                            [--out artifacts] [--only cdp,screenshots,a11y,extremes,telemetry,story,onboarding,playthrough,classic-playthrough,income,parity,migration] [--update-baselines]
 
   node tools/verify/screenshot-diff.mjs --update   # rewrite committed baselines
+  node tools/verify/run.mjs --only parity          # content parity (opt-in while gaps remain)
+  node tools/verify/run.mjs --only migration       # full original→remake review (exit 0 = REVIEW PASS)
 
 Exit 0 = all suites PASS. Exit 1 = any FAIL. JSON report on stdout.
 Default URL: ${DEFAULT_URL}
@@ -34,8 +39,12 @@ async function main() {
     process.exit(0);
   }
   fs.mkdirSync(args.outDir, { recursive: true });
-  const only = args.only && args.only.length ? args.only : ["cdp", "screenshots", "a11y", "extremes", "telemetry", "story", "onboarding", "playthrough", "classic-playthrough"];
-  const needsBrowser = only.some((k) => !["telemetry", "story", "onboarding", "playthrough", "classic-playthrough"].includes(k));
+  // playthrough stays opt-in: it still walks the pre-migration landmark ids
+  // (iron_mine / cleared_iron_mine / ending_reached). The migrated world uses
+  // ironmine / world_ironmine / state.ending. story.mjs covers slice_complete.
+  const only = args.only && args.only.length ? args.only : ["cdp", "screenshots", "a11y", "extremes", "telemetry", "story", "onboarding", "classic-playthrough", "income"];
+  const headless = ["telemetry", "story", "onboarding", "playthrough", "classic-playthrough", "income", "parity", "migration"];
+  const needsBrowser = only.some((k) => !headless.includes(k));
   let browser = null;
   if (needsBrowser) {
     const { launchBrowser } = await import("./lib/browser.mjs");
@@ -66,6 +75,11 @@ async function main() {
     if (only.includes("onboarding")) suites.push(runOnboarding());
     if (only.includes("playthrough")) suites.push(runPlaythrough({ seed: 7 }));
     if (only.includes("classic-playthrough")) suites.push(runClassicPlaythrough());
+    if (only.includes("income")) suites.push(runIncome());
+    // Opt-in while original-content gaps remain; promote to the default list once green.
+    if (only.includes("parity")) suites.push(runParity().suite);
+    // Review gate: 0 missing / 0 no_producer / 0 numeric mismatch + per-batch reachability.
+    if (only.includes("migration")) suites.push(runMigration().suite);
   } finally {
     if (browser) await browser.close();
   }

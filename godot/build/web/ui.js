@@ -14,9 +14,18 @@
   var PX_ICON = {
     fire: "stoke", gather: "gather", traps: "trap",
     "build-trap": "trap", "build-cart": "cart", "build-hut": "hut",
-    "build-lodge": "hut", "build-tannery": "hut", "build-smokehouse": "hut",
-    "build-workshop": "hut", "build-steelworks": "hut", "build-armoury": "hut",
-    "build-trading_post": "hut", punch: "punch", attack: "punch",
+    "build-lodge": "hut", "build-trading_post": "trade", "build-tannery": "fur",
+    "build-smokehouse": "cured_meat", "build-workshop": "settings",
+    "build-steelworks": "spark", "build-armoury": "spark",
+    "build-torch": "light", "build-waterskin": "stores", "build-cask": "stores",
+    "build-water_tank": "stores", "build-bone_spear": "punch", "build-rucksack": "fur",
+    "build-wagon": "cart", "build-convoy": "cart", "build-l_armour": "fur",
+    "build-i_armour": "spark", "build-s_armour": "spark", "build-iron_sword": "punch",
+    "build-steel_sword": "punch", "build-rifle": "spark",
+    "buy-scales": "fur", "buy-teeth": "fur", "buy-iron": "spark", "buy-coal": "spark",
+    "buy-steel": "spark", "buy-medicine": "stores", "buy-bullets": "spark",
+    "buy-energy_cell": "spark", "buy-bolas": "punch", "buy-grenade": "spark",
+    "buy-bayonet": "punch", "buy-alien_alloy": "spark", "buy-compass": "compass",
     north: "north", west: "west", east: "east", south: "south",
     embark: "embark", punch: "punch", flee: "flee"
   };
@@ -81,7 +90,7 @@
     document.querySelectorAll(".px-scene-host").forEach(function (el) {
       if (el.parentNode) el.parentNode.removeChild(el);
     });
-    ["panel-room", "panel-outside", "panel-path", "panel-ship", "panel-space", "panel-fabricator"].forEach(function (id) {
+    ["panel-room", "panel-outside", "panel-path", "panel-ship", "panel-space", "panel-fabricator", "panel-ending"].forEach(function (id) {
       var p = $(id);
       if (!p) return;
       delete p.dataset.ready;
@@ -375,7 +384,13 @@
     fitPixelScene();
     var loc = game.state.location;
     var kind = loc === "outside" ? "outside" : loc === "world" ? "world" : loc;
-    var panel = loc === "outside" ? $("panel-outside") : loc === "path" || loc === "world" ? $("panel-path") : $("panel-room");
+    var panel = loc === "outside" ? $("panel-outside")
+      : loc === "path" || loc === "world" ? $("panel-path")
+      : loc === "ship" ? $("panel-ship")
+      : loc === "space" ? $("panel-space")
+      : loc === "fabricator" ? $("panel-fabricator")
+      : loc === "ending" ? $("panel-ending")
+      : $("panel-room");
     if (!panel) return;
     var sc = panel.querySelector(".px-scene");
     if (!sc) return;
@@ -486,7 +501,7 @@
     }
     if (barEl) {
       barEl.style.width = (ratio * 100) + "%";
-      var max = { stoke: 10, gather: 60, traps: 90 }[cdId] || 1;
+      var max = { stoke: 10, gather: 60, traps: 90, liftoff: 120 }[cdId] || 1;
       barEl.style.animationDelay = left > 0 ? (-(max - left)) + "s" : "0s";
     }
   }
@@ -581,12 +596,13 @@
     var tabs = [
       { id: "room", label: ADR.roomTitle(game.state) },
       { id: "outside", label: game.state.unlocked.outside ? ADR.hutTitle(game.state.buildings.hut) : ADR.t("Outside") },
-      { id: "path", label: ADR.t("A Dusty Path") },
-      { id: "ship", label: ADR.t("An Old Starship") },
-      { id: "fabricator", label: ADR.t("Fabricator") }
+      { id: "path", label: ADR.t("A Dusty Path") }
     ];
-    if (game.state.location === "space") {
-      tabs.push({ id: "space", label: "太空" });
+    if (game.state.unlocked.fabricator) {
+      tabs.push({ id: "fabricator", label: ADR.t("A Whirring Fabricator") });
+    }
+    if (game.state.unlocked.ship) {
+      tabs.push({ id: "ship", label: ADR.t("An Old Starship") });
     }
     tabs.forEach(function (tab) {
       var b = h.querySelector('[data-tab="' + tab.id + '"]');
@@ -612,14 +628,11 @@
       } else if (b.textContent !== tab.label) {
         b.textContent = tab.label;
       }
-      if (tab.id !== "room" && tab.id !== "space" && !game.state.unlocked[tab.id]) {
-        if (b.parentNode) b.parentNode.removeChild(b);
-        return;
-      }
       var locked = !game.state.unlocked[tab.id] && tab.id !== "room";
-      if (tab.id === "space") locked = game.state.location !== "space";
-      b.disabled = locked || (game.state.location === "space" && tab.id !== "space");
-      var active = game.state.location === tab.id || (tab.id === "path" && game.state.location === "world");
+      b.disabled = locked;
+      var active = game.state.location === tab.id
+        || (tab.id === "path" && game.state.location === "world")
+        || (tab.id === "ship" && game.state.location === "space");
       b.className = (active ? "active" : "") + (isPixel() ? " px-tab" : "");
     });
   }
@@ -723,7 +736,7 @@
         var n = game.state.stores[k] || 0;
         if (n <= 0 && k !== "wood") return;
         if (k === "wood" && !game.state.wood_initialized) return;
-        var icon = k === "cured_meat" ? "cured_meat" : k;
+        var icon = ({ cured_meat: "cured_meat", leather: "fur", iron: "spark", coal: "spark", steel: "spark", sulphur: "spark", bullets: "spark" }[k]) || k;
         html += '<div class="store-row" role="group" aria-label="' + (ADR.ITEM_CN[k] || k) + " " + n + '">';
         html += '<span class="px-icon px-' + icon + '" aria-hidden="true"></span>';
         html += '<span class="px-caption px-store-n">' + formatStoreN(n) + "</span></div>";
@@ -793,6 +806,36 @@
     col.className = "btn-col";
     col.id = btnsId;
     p.appendChild(col);
+    if (panelId === "panel-room") {
+      var craftWrap = document.createElement("div");
+      craftWrap.id = "room-craft-wrap";
+      craftWrap.className = "craft-wrap";
+      craftWrap.hidden = true;
+      var legend = document.createElement("div");
+      legend.className = "btn-legend";
+      legend.id = "room-craft-legend";
+      legend.textContent = ADR.t("craft:");
+      var craftCol = document.createElement("div");
+      craftCol.className = "btn-col";
+      craftCol.id = "room-craft-btns";
+      craftWrap.appendChild(legend);
+      craftWrap.appendChild(craftCol);
+      p.appendChild(craftWrap);
+      var buyWrap = document.createElement("div");
+      buyWrap.id = "room-buy-wrap";
+      buyWrap.className = "craft-wrap";
+      buyWrap.hidden = true;
+      var buyLegend = document.createElement("div");
+      buyLegend.className = "btn-legend";
+      buyLegend.id = "room-buy-legend";
+      buyLegend.textContent = ADR.t("buy:");
+      var buyCol = document.createElement("div");
+      buyCol.className = "btn-col";
+      buyCol.id = "room-buy-btns";
+      buyWrap.appendChild(buyLegend);
+      buyWrap.appendChild(buyCol);
+      p.appendChild(buyWrap);
+    }
     if (hintId) {
       var hint = document.createElement("div");
       hint.className = "hint";
@@ -819,6 +862,7 @@
       $("room-status").innerHTML = "房间" + ADR.TEMP[game.state.temperature] + "<br>火堆" + ADR.FIRE[game.state.fire];
     }
     var keys = ["fire"];
+    var craftKeys = [];
     upsertButton($("room-btns"), "fire", {
       label: game.state.fire <= 0 ? ADR.t("light fire") : ADR.t("stoke fire"),
       icon: game.state.fire <= 0 ? "light" : "stoke",
@@ -827,20 +871,65 @@
         game.act(game.state.fire <= 0 ? "light_fire" : "stoke_fire");
       }
     });
+    var craftHost = $("room-craft-btns");
+    var craftWrap = $("room-craft-wrap");
     ADR.Game.prototype.visibleCrafts.call(game).forEach(function (c) {
-      var name = (ADR.BUILDING_CN && ADR.BUILDING_CN[c.kind]) || (ADR.ITEM_CN && ADR.ITEM_CN[c.kind]) || c.kind;
+      var name = (c.section === "craft"
+        ? (ADR.ITEM_CN && ADR.ITEM_CN[c.kind])
+        : (ADR.BUILDING_CN && ADR.BUILDING_CN[c.kind])) || { trap: "陷阱", cart: "货车", hut: "小屋" }[c.kind] || c.kind;
       var cost = Object.keys(c.cost).map(function (k) {
         return (ADR.ITEM_CN[k] || k) + c.cost[k];
       }).join(" ");
-      keys.push("build-" + c.kind);
-      upsertButton($("room-btns"), "build-" + c.kind, {
+      var btnKey = "build-" + c.kind;
+      var host = c.section === "craft" && craftHost ? craftHost : $("room-btns");
+      if (c.section === "craft") craftKeys.push(btnKey);
+      else keys.push(btnKey);
+      upsertButton(host, btnKey, {
         label: name + " (" + cost + ")",
-        icon: c.kind,
+        icon: PX_ICON[btnKey] || c.kind,
         disabled: !c.can,
         onClick: function () { game.act("build", { kind: c.kind }); }
       });
     });
     keepButtons($("room-btns"), keys);
+    if (craftHost) keepButtons(craftHost, craftKeys);
+    if (craftWrap) {
+      var showCraft = craftKeys.length > 0;
+      craftWrap.hidden = !showCraft;
+      if (isPixel()) {
+        var lg = $("room-craft-legend");
+        if (lg) lg.textContent = showCraft ? ADR.t("craft:") : "";
+      }
+    }
+    var buyHost = $("room-buy-btns");
+    var buyWrapEl = $("room-buy-wrap");
+    var buyKeys = [];
+    if (ADR.Game.prototype.visibleTrades) {
+      ADR.Game.prototype.visibleTrades.call(game).forEach(function (c) {
+        var name = (ADR.ITEM_CN && ADR.ITEM_CN[c.kind]) || c.kind;
+        var cost = Object.keys(c.cost).map(function (k) {
+          return (ADR.ITEM_CN[k] || k) + c.cost[k];
+        }).join(" ");
+        var btnKey = "buy-" + c.kind;
+        buyKeys.push(btnKey);
+        if (!buyHost) return;
+        upsertButton(buyHost, btnKey, {
+          label: name + " (" + cost + ")",
+          icon: PX_ICON[btnKey] || "trade",
+          disabled: !c.can,
+          onClick: function () { game.act("buy", { kind: c.kind }); }
+        });
+      });
+    }
+    if (buyHost) keepButtons(buyHost, buyKeys);
+    if (buyWrapEl) {
+      var showBuy = buyKeys.length > 0;
+      buyWrapEl.hidden = !showBuy;
+      if (isPixel()) {
+        var bl = $("room-buy-legend");
+        if (bl) bl.textContent = showBuy ? ADR.t("buy:") : "";
+      }
+    }
     var hint = $("room-hint");
     if (game.state.builder_level >= 1 && game.state.builder_level < 4) {
       hint.textContent = isPixel() ? "" : "角落里有人。把屋子烧暖些。";
@@ -878,33 +967,136 @@
         onClick: function () { game.act("check_traps"); }
       });
     }
-    if (game.state.population > 0 && game.visibleWorkers) {
-      var idle = game.state.workers.gatherer || 0;
-      game.visibleWorkers().forEach(function (w) {
-        if (w.job === "gatherer") return;
-        keys.push("wplus-" + w.job);
-        keys.push("wminus-" + w.job);
-        upsertButton($("out-btns"), "wplus-" + w.job, {
-          label: (w.name || w.job) + " + (" + w.count + ")",
-          disabled: idle <= 0,
-          onClick: function () { game.act("assign_worker", { job: w.job, delta: 1 }); }
-        });
-        upsertButton($("out-btns"), "wminus-" + w.job, {
-          label: (w.name || w.job) + " −",
-          disabled: w.count <= 0,
-          onClick: function () { game.act("assign_worker", { job: w.job, delta: -1 }); }
-        });
-      });
-    }
     keepButtons($("out-btns"), keys);
+    renderWorkers();
     var hint = $("out-hint");
     if (game.state.population > 0 && !isPixel()) {
-      hint.textContent = "伐木者 " + (game.state.workers.gatherer || 0) + " · " + ADR.t("pop ") + game.state.population;
+      hint.textContent = ADR.t("pop ") + game.state.population + " / " + ((game.state.buildings.hut || 0) * 4);
       hint.style.display = "";
     } else {
       hint.textContent = "";
       hint.style.display = "none";
     }
+  }
+
+  function renderWorkers() {
+    var panel = $("panel-outside");
+    if (!panel) return;
+    var host = $("workers");
+    if (!host) {
+      host = document.createElement("div");
+      host.id = "workers";
+      host.className = "workers";
+      var hint = $("out-hint");
+      if (hint && hint.parentNode) hint.parentNode.insertBefore(host, hint);
+      else panel.appendChild(host);
+    }
+    var jobs = typeof ADR.visibleJobs === "function" ? ADR.visibleJobs(game.state) : [];
+    if (!jobs.length) {
+      host.style.display = "none";
+      host.innerHTML = "";
+      delete host.dataset.html;
+      return;
+    }
+    host.style.display = "";
+    host.setAttribute("role", "group");
+    host.setAttribute("aria-label", "村民工作");
+    var gatherers = game.state.workers.gatherer || 0;
+    var existing = {};
+    [].slice.call(host.querySelectorAll(".worker-row")).forEach(function (row) {
+      existing[row.dataset.job] = row;
+    });
+    jobs.forEach(function (job) {
+      var n = job === "gatherer" ? gatherers : (game.state.workers[job] || 0);
+      var label = (ADR.WORKER_CN && ADR.WORKER_CN[job]) || ADR.t(job) || job;
+      var row = existing[job];
+      if (!row) {
+        row = document.createElement("div");
+        row.className = "worker-row";
+        row.dataset.job = job;
+        row.setAttribute("role", "group");
+        host.appendChild(row);
+      }
+      row.setAttribute("aria-label", label + " " + n);
+      if (isPixel()) {
+        if (row.dataset.mode !== "pixel") {
+          row.innerHTML = "";
+          row.dataset.mode = "pixel";
+          var ic = document.createElement("span");
+          ic.className = "px-icon px-person";
+          ic.setAttribute("aria-hidden", "true");
+          row.appendChild(ic);
+          var cap = document.createElement("span");
+          cap.className = "px-caption worker-name";
+          cap.textContent = label;
+          row.appendChild(cap);
+          var cnt = document.createElement("span");
+          cnt.className = "px-caption worker-count";
+          cnt.textContent = String(n);
+          row.appendChild(cnt);
+          if (job !== "gatherer") {
+            [-1, 1].forEach(function (d) {
+              var b = document.createElement("button");
+              b.type = "button";
+              b.className = "worker-btn px-btn";
+              b.dataset.delta = String(d);
+              b.setAttribute("aria-label", (d > 0 ? "分配 " : "撤下 ") + label);
+              b.appendChild(pxIconEl(d > 0 ? "plus" : "minus"));
+              b.addEventListener("click", function () {
+                game.act("assign_worker", { job: job, delta: d });
+              });
+              row.appendChild(b);
+            });
+          }
+        } else {
+          var countEl = row.querySelector(".worker-count");
+          if (countEl) countEl.textContent = String(n);
+        }
+      } else if (row.dataset.mode !== "text") {
+        row.innerHTML = "";
+        row.dataset.mode = "text";
+        var name = document.createElement("span");
+        name.className = "worker-name";
+        name.textContent = label;
+        row.appendChild(name);
+        var count = document.createElement("span");
+        count.className = "worker-count";
+        count.textContent = String(n);
+        row.appendChild(count);
+        if (job !== "gatherer") {
+          [
+            { d: -10, t: "−10" },
+            { d: -1, t: "−" },
+            { d: 1, t: "+" },
+            { d: 10, t: "+10" }
+          ].forEach(function (spec) {
+            var b = document.createElement("button");
+            b.type = "button";
+            b.className = "worker-btn";
+            b.dataset.delta = String(spec.d);
+            b.textContent = spec.t;
+            b.setAttribute("aria-label", (spec.d > 0 ? "分配 " : "撤下 ") + Math.abs(spec.d) + " 名" + label);
+            b.addEventListener("click", function () {
+              game.act("assign_worker", { job: job, delta: spec.d });
+            });
+            row.appendChild(b);
+          });
+        }
+      } else {
+        var c2 = row.querySelector(".worker-count");
+        if (c2) c2.textContent = String(n);
+      }
+      var canUp = gatherers > 0;
+      var canDown = n > 0;
+      [].slice.call(row.querySelectorAll(".worker-btn")).forEach(function (b) {
+        var d = Number(b.dataset.delta) || 0;
+        b.disabled = d > 0 ? !canUp : !canDown;
+      });
+      delete existing[job];
+    });
+    Object.keys(existing).forEach(function (job) {
+      if (existing[job].parentNode) existing[job].parentNode.removeChild(existing[job]);
+    });
   }
 
   function renderPath() {
@@ -932,35 +1124,45 @@
         map.id = "world-map";
         $("path-status").insertAdjacentElement("afterend", map);
       }
+      var view = 11;
+      var half = Math.floor(view / 2);
+      var x0 = s.x - half;
+      var y0 = s.y - half;
       if (isPixel()) {
         var tiles = [];
         var y;
-        for (y = 0; y < s.size; y++) {
+        for (y = 0; y < view; y++) {
           var x;
-          for (x = 0; x < s.size; x++) {
+          for (x = 0; x < view; x++) {
+            var wx = x0 + x;
+            var wy = y0 + y;
             var cls = "t-void";
-            if (x === s.x && y === s.y) cls = "t-player";
-            else if (s.landmarks[x + "," + y]) cls = "t-house";
-            else if (s.visited[x + "," + y]) {
-              var ter = ADR.terrainAt(x, y, s.size);
+            if (wx < 0 || wy < 0 || wx >= s.size || wy >= s.size) cls = "t-void";
+            else if (wx === s.x && wy === s.y) cls = "t-player";
+            else if (s.landmarks[wx + "," + wy]) cls = "t-house";
+            else if (s.visited[wx + "," + wy]) {
+              var ter = ADR.terrainAt(wx, wy, s.size);
               cls = ter === "village" ? "t-village" : ter === "forest" ? "t-forest" : ter === "grass" ? "t-grass" : "t-sand";
             }
             tiles.push('<span class="px-tile ' + cls + '"></span>');
           }
         }
-        map.style.gridTemplateColumns = "repeat(" + s.size + ", 16px)";
+        map.style.gridTemplateColumns = "repeat(" + view + ", 16px)";
         map.innerHTML = tiles.join("");
       } else {
         var lines = [];
-        for (var y = 0; y < s.size; y++) {
+        for (var y = 0; y < view; y++) {
           var row = "";
-          for (var x = 0; x < s.size; x++) {
-            if (x === s.x && y === s.y) row += "@";
-            else if (s.landmarks[x + "," + y]) row += "H";
-            else if (!s.visited[x + "," + y]) row += " ";
+          for (var x = 0; x < view; x++) {
+            var wx2 = x0 + x;
+            var wy2 = y0 + y;
+            if (wx2 < 0 || wy2 < 0 || wx2 >= s.size || wy2 >= s.size) row += " ";
+            else if (wx2 === s.x && wy2 === s.y) row += "@";
+            else if (s.landmarks[wx2 + "," + wy2]) row += ({ old_house: "H", cave: "V", town: "O", city: "Y", outpost: "P", ship: "W", borehole: "B", battlefield: "F", swamp: "M", cache: "U", executioner: "X", ironmine: "I", coalmine: "C", sulphurmine: "S" }[s.landmarks[wx2 + "," + wy2]] || "H");
+            else if (!s.visited[wx2 + "," + wy2]) row += " ";
             else {
-              var ter = ADR.terrainAt(x, y, s.size);
-              row += ter === "village" ? "A" : ter === "forest" ? "#" : ter === "grass" ? "," : ".";
+              var ter2 = ADR.terrainAt(wx2, wy2, s.size);
+              row += ter2 === "village" ? "A" : ter2 === "forest" ? "#" : ter2 === "grass" ? "," : ".";
             }
           }
           lines.push(row);
@@ -1009,15 +1211,33 @@
       }
       extraBox.appendChild(ban);
     }
+    var armourName = ADR.t("none");
+    if ((game.state.stores.s_armour || 0) > 0) armourName = ADR.t("steel");
+    else if ((game.state.stores.i_armour || 0) > 0) armourName = ADR.t("iron");
+    else if ((game.state.stores.l_armour || 0) > 0) armourName = ADR.t("leather");
+    var info = document.createElement("div");
+    info.className = "path-outfit-meta";
+    var waterMax = ADR.getMaxWater ? ADR.getMaxWater(game.state) : 10;
+    var cap = ADR.bagCapacity ? ADR.bagCapacity(game.state) : 10;
+    var used = ADR.bagUsed ? ADR.bagUsed(game.state) : 0;
+    var freeTxt = ADR.t("free {0}/{1}").replace("{0}", String(Math.floor(cap - used))).replace("{1}", String(cap));
+    if (isPixel()) {
+      info.setAttribute("aria-label", ADR.t("armour") + " " + armourName + " " + ADR.t("water") + " " + waterMax);
+    } else {
+      info.innerHTML = "<div>" + ADR.t("armour") + " " + armourName + "</div><div>" + ADR.t("water") + " " + waterMax + "</div><div>" + freeTxt + "</div>";
+    }
+    extraBox.appendChild(info);
     var supplies = document.createElement("div");
     if (isPixel()) supplies.appendChild(pxIconEl("stores"));
     else supplies.textContent = ADR.t("supplies:");
     extraBox.appendChild(supplies);
-    ["meat", "cured_meat", "fur"].forEach(function (item) {
-      var row = document.createElement("div");
-      row.className = "pack-row";
+    var packItems = ["meat", "cured_meat", "fur", "torch", "bone_spear", "iron_sword", "steel_sword", "rifle", "bullets", "medicine", "energy_cell", "bolas", "grenade", "bayonet", "alien_alloy"];
+    packItems.forEach(function (item) {
       var have = game.state.stores[item] || 0;
       var packed = game.state.outfit[item] || 0;
+      if (["torch", "bone_spear", "iron_sword", "steel_sword", "rifle", "bullets", "medicine", "energy_cell", "bolas", "grenade", "bayonet", "alien_alloy"].indexOf(item) >= 0 && have <= 0 && packed <= 0) return;
+      var row = document.createElement("div");
+      row.className = "pack-row";
       if (isPixel()) {
         var stack = document.createElement("div");
         stack.className = "px-stack";
@@ -1061,6 +1281,140 @@
     $("path-hint").textContent = isPixel() ? "" : "带上肉再出发。向东北走，能看见一座旧房子。回到村子格子即可回家。";
   }
 
+  function renderShip() {
+    ensureScaffold("panel-ship", "ship-title", "ship-status", "ship-btns", "ship-hint");
+    var ship = game.state.spaceShip || { hull: 0, thrusters: 1 };
+    if (isPixel()) {
+      $("ship-title").textContent = "";
+      $("ship-title").setAttribute("aria-label", ADR.t("An Old Starship"));
+      $("ship-status").textContent = "";
+    } else {
+      $("ship-title").textContent = ADR.t("An Old Starship");
+      $("ship-status").innerHTML = ADR.t("hull:") + " " + ship.hull + "<br>" + ADR.t("engine:") + " " + ship.thrusters;
+    }
+    var alloy = game.state.stores.alien_alloy || 0;
+    upsertButton($("ship-btns"), "reinforce_hull", {
+      label: ADR.t("reinforce hull") + " (" + (ADR.ITEM_CN.alien_alloy || "外星合金") + (ADR.ALLOY_PER_HULL || 1) + ")",
+      icon: "spark",
+      disabled: alloy < (ADR.ALLOY_PER_HULL || 1),
+      onClick: function () { game.act("reinforce_hull"); }
+    });
+    upsertButton($("ship-btns"), "upgrade_engine", {
+      label: ADR.t("upgrade engine") + " (" + (ADR.ITEM_CN.alien_alloy || "外星合金") + (ADR.ALLOY_PER_THRUSTER || 1) + ")",
+      icon: "spark",
+      disabled: alloy < (ADR.ALLOY_PER_THRUSTER || 1),
+      onClick: function () { game.act("upgrade_engine"); }
+    });
+    upsertButton($("ship-btns"), "lift_off", {
+      label: ADR.t("lift off"),
+      icon: "embark",
+      cdId: "liftoff",
+      disabled: ship.hull <= 0,
+      onClick: function () { game.act("lift_off"); }
+    });
+    keepButtons($("ship-btns"), ["reinforce_hull", "upgrade_engine", "lift_off"]);
+    $("ship-hint").textContent = isPixel() ? "" : "用外星合金加固船身、升级引擎，然后点火起飞。";
+  }
+
+  function spaceFieldText(sp) {
+    var cols = 35;
+    var rows = 16;
+    var grid = [];
+    var r;
+    var c;
+    for (r = 0; r < rows; r++) {
+      var line = [];
+      for (c = 0; c < cols; c++) line.push(" ");
+      grid.push(line);
+    }
+    var toC = function (x) { return Math.max(0, Math.min(cols - 1, Math.round(x / 700 * (cols - 1)))); };
+    var toR = function (y) { return Math.max(0, Math.min(rows - 1, Math.round(y / 700 * (rows - 1)))); };
+    (sp.asteroids || []).forEach(function (a) {
+      grid[toR(a.y)][toC(a.x)] = a.glyph || "#";
+    });
+    grid[toR(sp.shipY)][toC(sp.shipX)] = "@";
+    return grid.map(function (line) { return line.join(""); }).join("\n");
+  }
+
+  function renderSpace() {
+    ensureScaffold("panel-space", "space-title", "space-status", "space-btns", "space-hint");
+    var sp = game.state.space || { altitude: 0, hull: 0, maxHull: 0, asteroids: [], shipX: 350, shipY: 350 };
+    var title = ADR.spaceLayerTitle ? ADR.spaceLayerTitle(sp.altitude || 0) : ADR.t("Space");
+    if (isPixel()) {
+      $("space-title").textContent = "";
+      $("space-title").setAttribute("aria-label", title);
+      $("space-status").textContent = "";
+    } else {
+      $("space-title").textContent = title;
+      $("space-status").textContent = ADR.t("hull: ") + (sp.hull || 0) + "/" + (sp.maxHull || 0);
+    }
+    var field = $("space-field");
+    if (!field) {
+      field = document.createElement("pre");
+      field.id = "space-field";
+      field.className = "space-field";
+      field.setAttribute("aria-label", "太空航道");
+      var hint = $("space-hint");
+      $("panel-space").insertBefore(field, hint);
+    }
+    field.textContent = spaceFieldText(sp);
+    keepButtons($("space-btns"), []);
+    $("space-hint").textContent = isPixel() ? "" : (game.state.flags.space_escaped ? "冲出大气层。" : "方向键或 WASD 躲避陨石。");
+  }
+
+  function renderFabricator() {
+    ensureScaffold("panel-fabricator", "fab-title", "fab-status", "fab-btns", "fab-hint");
+    if (isPixel()) {
+      $("fab-title").textContent = "";
+      $("fab-title").setAttribute("aria-label", ADR.t("A Whirring Fabricator"));
+      $("fab-status").textContent = "";
+    } else {
+      $("fab-title").textContent = ADR.t("A Whirring Fabricator");
+      var known = Object.keys(game.state.blueprints || {}).filter(function (k) { return game.state.blueprints[k]; });
+      $("fab-status").textContent = known.length
+        ? ADR.t("blueprints") + " " + known.map(function (k) { return ADR.ITEM_CN[k] || k; }).join(" · ")
+        : "";
+    }
+    var keys = [];
+    var list = ADR.Game.prototype.visibleFabrications ? ADR.Game.prototype.visibleFabrications.call(game) : [];
+    list.forEach(function (c) {
+      var name = (ADR.ITEM_CN && ADR.ITEM_CN[c.kind]) || c.kind;
+      if ((c.quantity || 1) > 1) name += " (x" + c.quantity + ")";
+      var cost = Object.keys(c.cost || {}).map(function (k) {
+        return (ADR.ITEM_CN[k] || k) + c.cost[k];
+      }).join(" ");
+      var btnKey = "fab-" + c.kind;
+      keys.push(btnKey);
+      upsertButton($("fab-btns"), btnKey, {
+        label: name + (cost ? " (" + cost + ")" : ""),
+        icon: "spark",
+        disabled: !c.can,
+        onClick: function () { game.act("fabricate", { kind: c.kind }); }
+      });
+    });
+    keepButtons($("fab-btns"), keys);
+    $("fab-hint").textContent = isPixel() ? "" : "用外星合金制造流浪者装置。有的图纸要先带回家。";
+  }
+
+  function renderEnding() {
+    ensureScaffold("panel-ending", "end-title", "end-status", "end-btns", "end-hint");
+    var s = game.state;
+    var run = ADR.calculateScore ? ADR.calculateScore(s) : 0;
+    var total = ADR.totalScore ? ADR.totalScore(s) : run;
+    $("end-title").textContent = isPixel() ? "" : ADR.t("ending");
+    $("end-status").textContent = isPixel() ? "" : (
+      ADR.t("score for this game: {0}").replace("{0}", String(run)) + "\n" +
+      ADR.t("total score: {0}").replace("{0}", String(s.previous && s.previous.score || total))
+    );
+    keepButtons($("end-btns"), ["end-restart"]);
+    upsertButton($("end-btns"), "end-restart", {
+      label: ADR.t("restart."),
+      icon: "restart",
+      onClick: function () { game.act("restart"); }
+    });
+    $("end-hint").textContent = isPixel() ? "" : ADR.t("expanded story. alternate ending. behind the scenes commentary. get the app.");
+  }
+
   function renderEvent() {
     var ov = $("overlay");
     var ev = game.state.active_event;
@@ -1090,18 +1444,37 @@
         modal.appendChild(pxIconEl("beast"));
         modal.lastChild.classList.add("px-event-icon");
       } else {
-        modal.innerHTML = "<h2>" + combat.name + "</h2><div class='body'><p>一只野兽从灌木丛里蹿了出来。</p><p>野兽生命 " + combat.hp + " · 你 " + game.state.world.hp + "</p></div>";
+        modal.innerHTML = "<h2>" + combat.name + "</h2><div class='body'><p>" + (combat.death ? combat.name : "") + "</p><p>生命 " + combat.hp + " · 你 " + game.state.world.hp + "</p></div>";
       }
       var actsC = document.createElement("div");
       actsC.className = "modal-actions";
       upsertButton(actsC, "punch", { label: "挥拳", icon: "punch", onClick: function () { game.act("combat", { move: "punch" }); } });
+      if (ADR.WEAPONS) {
+        Object.keys(ADR.WEAPONS).forEach(function (wid) {
+          if (wid === "fists") return;
+          var have = (game.state.outfit[wid] || 0) + (game.state.stores[wid] || 0);
+          if (have <= 0) return;
+          var w = ADR.WEAPONS[wid];
+          upsertButton(actsC, "w-" + wid, {
+            label: (ADR.ITEM_CN && ADR.ITEM_CN[wid]) || wid,
+            icon: "punch",
+            onClick: function () { game.act("combat", { move: wid }); }
+          });
+        });
+      }
+      if ((game.state.outfit.cured_meat || 0) + (game.state.outfit.meat || 0) > 0) {
+        upsertButton(actsC, "eat", { label: "吃肉", icon: "ok", onClick: function () { game.act("combat", { move: "eat" }); } });
+      }
+      if ((game.state.outfit.medicine || 0) + (game.state.stores.medicine || 0) > 0) {
+        upsertButton(actsC, "meds", { label: "用药", icon: "ok", onClick: function () { game.act("combat", { move: "meds" }); } });
+      }
       upsertButton(actsC, "flee", { label: "逃跑", icon: "flee", onClick: function () { game.act("combat", { move: "flee" }); } });
       modal.appendChild(actsC);
       ov.appendChild(modal);
       return;
     }
     var spec = ev.spec;
-    var scene = ev.scene === "start" ? spec : (spec.scenes && spec.scenes[ev.scene]) || spec;
+    var scene = (ADR.currentScene && ADR.currentScene(ev)) || (ev.scene === "start" ? spec : (spec.scenes && spec.scenes[ev.scene]) || spec);
     if (isPixel()) {
       var evIcon = pxIconEl(eventIcon(ev.id));
       evIcon.classList.add("px-event-icon");
@@ -1122,9 +1495,14 @@
     var acts = document.createElement("div");
     acts.className = "modal-actions";
     (scene.buttons || spec.buttons || []).forEach(function (b) {
+      if (ADR.buttonAvailable && !ADR.buttonAvailable(game.state, b)) return;
       var disabled = false;
       if (b.cost) {
-        disabled = Object.keys(b.cost).some(function (k) { return (game.state.stores[k] || 0) < b.cost[k]; });
+        disabled = Object.keys(b.cost).some(function (k) {
+          var have = (game.state.stores[k] || 0);
+          if (game.state.world && game.state.world.on_expedition) have += (game.state.outfit[k] || 0);
+          return have < b.cost[k];
+        });
       }
       if (b.require_no && (game.state.stores[b.require_no] || 0) > 0) disabled = true;
       var label = b.text;
@@ -1135,75 +1513,16 @@
         label: label,
         icon: /ignore|goodbye/.test(b.id) ? "no" : (b.cost ? Object.keys(b.cost)[0] : "ok"),
         disabled: disabled,
-        onClick: function () { game.act("event_choice", { button: b.id }); }
+        onClick: function () {
+          if (b.link && typeof window !== "undefined" && window.open) {
+            try { window.open(b.link, "_blank", "noopener"); } catch (e) { /* ignore */ }
+          }
+          game.act("event_choice", { button: b.id });
+        }
       });
     });
     modal.appendChild(acts);
     ov.appendChild(modal);
-  }
-
-  function renderShip() {
-    if (!$("panel-ship")) return;
-    ensureScaffold("panel-ship", "ship-title", "ship-status", "ship-btns", "ship-hint");
-    $("ship-title").textContent = ADR.t("An Old Starship");
-    $("ship-status").textContent = ADR.t("hull:") + " " + (game.state.ship.hull || 0) + "  ·  引擎 " + (game.state.ship.thrusters || 1);
-    var keys = ["reinforce", "engine", "liftoff"];
-    upsertButton($("ship-btns"), "reinforce", {
-      label: ADR.t("reinforce hull") + "（外星合金1）",
-      disabled: (game.state.stores.alien_alloy || 0) < 1,
-      onClick: function () { game.act("reinforce_hull"); }
-    });
-    upsertButton($("ship-btns"), "engine", {
-      label: ADR.t("upgrade engine") + "（外星合金1）",
-      disabled: (game.state.stores.alien_alloy || 0) < 1,
-      onClick: function () { game.act("upgrade_engine"); }
-    });
-    upsertButton($("ship-btns"), "liftoff", {
-      label: ADR.t("lift off"),
-      disabled: (game.state.ship.hull || 0) < 1,
-      cdId: "liftoff",
-      onClick: function () { game.act("liftoff"); }
-    });
-    keepButtons($("ship-btns"), keys);
-  }
-
-  function renderSpace() {
-    if (!$("panel-space")) return;
-    ensureScaffold("panel-space", "space-title", "space-status", "space-btns", "space-hint");
-    var sp = game.state.space || {};
-    $("space-title").textContent = sp.altitude >= 60 ? "太空" : "上升";
-    $("space-status").textContent = "高度 " + (sp.altitude || 0) + "  ·  船身 " + (sp.hull || 0) + "/" + (sp.max_hull || 0) + "  ·  位置 " + (sp.x || 0);
-    var keys = ["sleft", "shold", "sright"];
-    if (game.state.ending_reached) {
-      keys = ["prestige"];
-      upsertButton($("space-btns"), "prestige", {
-        label: "转生",
-        onClick: function () { game.act("prestige"); }
-      });
-    } else {
-      upsertButton($("space-btns"), "sleft", { label: "左", onClick: function () { game.act("space_steer", { dx: -1 }); } });
-      upsertButton($("space-btns"), "shold", { label: "直飞", onClick: function () { game.act("space_steer", { dx: 0 }); } });
-      upsertButton($("space-btns"), "sright", { label: "右", onClick: function () { game.act("space_steer", { dx: 1 }); } });
-    }
-    keepButtons($("space-btns"), keys);
-  }
-
-  function renderFabricator() {
-    if (!$("panel-fabricator")) return;
-    ensureScaffold("panel-fabricator", "fab-title", "fab-status", "fab-btns", "fab-hint");
-    $("fab-title").textContent = ADR.t("Fabricator");
-    $("fab-status").textContent = "外星合金 " + (game.state.stores.alien_alloy || 0);
-    var keys = [];
-    (game.visibleFabricator ? game.visibleFabricator() : []).forEach(function (c) {
-      keys.push("fab-" + c.kind);
-      var cost = Object.keys(c.cost).map(function (k) { return (ADR.ITEM_CN[k] || k) + c.cost[k]; }).join(" ");
-      upsertButton($("fab-btns"), "fab-" + c.kind, {
-        label: (ADR.ITEM_CN[c.kind] || c.kind) + " (" + cost + ")",
-        disabled: !c.can,
-        onClick: function () { game.act("fabricate", { kind: c.kind }); }
-      });
-    });
-    keepButtons($("fab-btns"), keys);
   }
 
   function renderAll() {
@@ -1215,6 +1534,7 @@
     if ($("panel-ship")) $("panel-ship").className = "panel" + (loc === "ship" ? " active" : "");
     if ($("panel-space")) $("panel-space").className = "panel" + (loc === "space" ? " active" : "");
     if ($("panel-fabricator")) $("panel-fabricator").className = "panel" + (loc === "fabricator" ? " active" : "");
+    if ($("panel-ending")) $("panel-ending").className = "panel" + (loc === "ending" ? " active" : "");
     renderHeader();
     renderNotes();
     renderStores();
@@ -1224,6 +1544,7 @@
     if (loc === "ship") renderShip();
     if (loc === "space") renderSpace();
     if (loc === "fabricator") renderFabricator();
+    if (loc === "ending") renderEnding();
     renderEvent();
     playPhaseWipe(loc);
     if (isPixel()) {
@@ -1584,13 +1905,30 @@
         return true;
       }
     };
+    var spaceDir = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right", w: "up", s: "down", a: "left", d: "right", W: "up", S: "down", A: "left", D: "right" };
     window.addEventListener("keydown", function (e) {
+      if (game.state.location === "space") {
+        var sdir = spaceDir[e.key];
+        if (sdir) {
+          e.preventDefault();
+          game.act("space_steer", { dir: sdir, down: true });
+        }
+        return;
+      }
       if (!game.state.world.on_expedition) return;
       var map = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0], w: [0, -1], s: [0, 1], a: [-1, 0], d: [1, 0] };
       var m = map[e.key];
       if (m) {
         e.preventDefault();
         game.act("world_move", { dx: m[0], dy: m[1] });
+      }
+    });
+    window.addEventListener("keyup", function (e) {
+      if (game.state.location !== "space") return;
+      var udir = spaceDir[e.key];
+      if (udir) {
+        e.preventDefault();
+        game.act("space_steer", { dir: udir, down: false });
       }
     });
   }

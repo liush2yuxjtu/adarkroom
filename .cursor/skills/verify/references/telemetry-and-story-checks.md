@@ -5,7 +5,7 @@ Node `vm` sandbox (`tools/verify/lib/engine-sandbox.mjs`) with a fake wall clock
 `localStorage`, a mocked sink, and optional seeded `Math.random`. Production Supabase is never written.
 
 ```bash
-node tools/verify/telemetry.mjs          # 10 checks, JSON, exit 1 on FAIL
+node tools/verify/telemetry.mjs          # headless checks, JSON, exit 1 on FAIL
 node tools/verify/story.mjs --runs 5     # phase ladder to slice_complete, per-node table
 node tools/verify/playthrough.mjs        # full ending+prestige, game-time + wall-clock per stage
 node tools/verify/classic-playthrough.mjs
@@ -28,6 +28,8 @@ node tools/verify/run.mjs --only telemetry,story,onboarding,playthrough
 | `automation-flagged` | 236/251 sessions were headless test traffic, indistinguishable from players | `payload.is_automation` true for `navigator.webdriver` / headless UA, false for a normal UA |
 | `client-version-on-every-event` | payloads had no build identity, so old exports mixed with the current release | every buffered and posted `payload.client_version` is a non-empty string; telemetry.js path equals the sandbox stamp |
 | `cap-keeps-milestones` | a real session lost ~3,650 game-sec (village, compass, path) once the 2,500-row cap tripped on hover/mouse noise | after the cap, milestone events (`phase_time`, `player_action`, `build`, `unlock`, `death`, `goal_prompt_shown`, `goal_prompt_acted`, `stage_reached`, ...) are kept, UI noise dropped |
+| `worker-assign-logged` | village job assignment had no event, so cured-meat / income bugs could not be attributed | `assign_worker` writes `worker_assign {job, delta, workers, population, buildings}` |
+| `cured-meat-first-logged` | `cured meat` was consumed but never produced (`no_producer`) | first charcutier yield writes `cured_meat_first {source, workers, cured_meat, stores}` |
 
 Analysis queries should filter `coalesce((payload->>'is_automation')::boolean,false) = false` **and**
 `payload->>'client_version' = :current_release`, then still run surface `pm-telemetry-human-filter`
@@ -45,9 +47,15 @@ Drives the rule director with a deterministic player script. Per run, per node:
 | village | builder_level 4, 100 wood, warm room, build hut |
 | path | hut >= 1 and fur >= 1, compass event, take |
 | world | path unlocked + packed meat, embark |
-| slice_complete | pathfind to `old_house` landmark and return home alive |
+| slice_complete | pack cured meat, embark, walk the short path, return home alive |
+| lodge | village + 200 wood / 10 fur / 5 meat, warm room → build lodge |
+| smokehouse | lodge + 600 wood / 50 meat → build smokehouse |
+| charcutier | assign a villager to charcutier |
+| cured_meat | charcutier income raises `stores.cured_meat` above 0; it can be packed for embark |
 
 FAIL = any node not reached. Gameplay numbers are not touched by this check.
+
+Worker incomes (`tools/verify/income.mjs`) tick `INCOME` in isolation and assert the original `_INCOME` rates (hunter 0.5 fur+meat / 10s, charcutier 1 cured meat per 5 meat + 5 wood / 10s, skip when inputs are short).
 
 ## Full playthrough (`tools/verify/playthrough.mjs`)
 

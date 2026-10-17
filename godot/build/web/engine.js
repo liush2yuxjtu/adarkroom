@@ -8,14 +8,7 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
 
-  var ITEMS = [
-    "wood", "fur", "meat", "scales", "teeth", "cloth", "bait", "charm", "compass", "cured_meat",
-    "leather", "iron", "coal", "sulphur", "steel", "bullets", "alien_alloy", "energy_cell",
-    "torch", "waterskin", "cask", "water_tank", "bone_spear", "rucksack", "wagon", "convoy",
-    "l_armour", "i_armour", "s_armour", "iron_sword", "steel_sword", "rifle", "bayonet",
-    "laser_rifle", "grenade", "bolas", "medicine", "energy_blade", "fluid_recycler",
-    "cargo_drone", "kinetic_armour", "disruptor", "hypo", "stim", "plasma_rifle"
-  ];
+  var ITEMS = ["wood", "fur", "meat", "scales", "teeth", "cloth", "bait", "charm", "compass", "cured_meat", "leather", "iron", "coal", "steel", "sulphur", "bullets", "torch", "waterskin", "cask", "water_tank", "bone_spear", "rucksack", "wagon", "convoy", "l_armour", "i_armour", "s_armour", "iron_sword", "steel_sword", "rifle", "medicine", "energy_cell", "bolas", "grenade", "bayonet", "alien_alloy", "laser_rifle", "plasma_rifle", "energy_blade", "disruptor", "fluid_recycler", "cargo_drone", "kinetic_armour", "hypo", "stim", "glowstone", "fleet_beacon", "hypo_blueprint", "kinetic_armour_blueprint", "disruptor_blueprint", "plasma_rifle_blueprint", "stim_blueprint", "glowstone_blueprint"];
   var AREAS = ["room", "outside", "path", "world", "ship", "space", "fabricator"];
   var NPCS = ["builder", "nomad", "villagers"];
   var MOODS = ["unknown", "collapsed", "shivering", "sleeping", "helping", "neutral", "wary", "grateful"];
@@ -24,35 +17,60 @@
   var ITEM_CN = {
     wood: "木头", fur: "毛皮", meat: "肉", scales: "鳞片", teeth: "牙齿",
     cloth: "布料", bait: "诱饵", charm: "符咒", compass: "罗盘", cured_meat: "熏肉",
-    leather: "皮革", iron: "铁", coal: "煤", sulphur: "硫磺", steel: "钢",
-    bullets: "子弹", alien_alloy: "外星合金", energy_cell: "能量电池",
-    torch: "火把", waterskin: "水壶", cask: "水桶", water_tank: "水罐",
-    bone_spear: "骨枪", rucksack: "双肩包", wagon: "篷车", convoy: "车队",
-    l_armour: "皮甲", i_armour: "铁甲", s_armour: "钢甲",
-    iron_sword: "铁剑", steel_sword: "钢剑", rifle: "步枪", bayonet: "刺刀",
-    laser_rifle: "激光步枪", grenade: "手雷", bolas: "套索", medicine: "药品",
-    energy_blade: "能量刃", fluid_recycler: "流体回收器", cargo_drone: "货运无人机",
-    kinetic_armour: "动能装甲", disruptor: "扰乱器", hypo: "注射剂", stim: "兴奋剂",
-    plasma_rifle: "等离子步枪"
+    leather: "皮革", iron: "铁", coal: "煤", steel: "钢", sulphur: "硫磺", bullets: "子弹",
+    torch: "火把", waterskin: "水壶", cask: "水桶", water_tank: "水罐", bone_spear: "骨枪",
+    rucksack: "双肩包", wagon: "篷车", convoy: "车队", l_armour: "皮甲", i_armour: "铁甲",
+    s_armour: "钢甲", iron_sword: "铁剑", steel_sword: "钢剑", rifle: "步枪",
+    medicine: "药剂", energy_cell: "能量元件", bolas: "套索", grenade: "手雷",
+    bayonet: "刺刀", alien_alloy: "外星合金",
+    laser_rifle: "激光步枪", plasma_rifle: "等离子步枪", energy_blade: "能量刃", disruptor: "扰乱器",
+    fluid_recycler: "流体回收器", cargo_drone: "货运无人机", kinetic_armour: "动能护甲",
+    hypo: "针剂", stim: "兴奋剂", glowstone: "辉光石", fleet_beacon: "舰队信标",
+    hypo_blueprint: "针剂蓝图", kinetic_armour_blueprint: "动能护甲蓝图",
+    disruptor_blueprint: "扰乱器蓝图", plasma_rifle_blueprint: "等离子步枪蓝图",
+    stim_blueprint: "兴奋剂蓝图", glowstone_blueprint: "辉光石蓝图"
   };
   var BUILDING_CN = {
-    trap: "陷阱", cart: "货车", hut: "小屋", lodge: "狩猎小屋",
-    trading_post: "贸易站", tannery: "制革屋", smokehouse: "熏肉房",
-    workshop: "工坊", steelworks: "炼钢坊", armoury: "军械坊"
+    trap: "陷阱", cart: "货车", hut: "小屋", lodge: "狩猎小屋", trading_post: "贸易站",
+    tannery: "制革屋", smokehouse: "熏肉房", workshop: "工坊", steelworks: "炼钢坊", armoury: "军械坊",
+    iron_mine: "铁矿", coal_mine: "煤矿", sulphur_mine: "硫磺矿"
   };
   var WORKER_CN = {
-    gatherer: "伐木者", hunter: "猎人", trapper: "捕兽者", tanner: "制革匠",
-    charcutier: "熏肉匠", iron_miner: "铁矿工", coal_miner: "煤矿工",
-    sulphur_miner: "硫矿工", steelworker: "炼钢工", armourer: "军械匠"
+    gatherer: "伐木者", hunter: "猎人", trapper: "陷阱师", tanner: "皮革师", charcutier: "熏肉师",
+    iron_miner: "铁矿工人", coal_miner: "煤矿工人", sulphur_miner: "硫磺矿工",
+    steelworker: "炼钢工人", armourer: "军械工人"
   };
-  var BUILDING_MAX = {
-    trap: 10, cart: 1, hut: 20, lodge: 1, trading_post: 1,
-    tannery: 1, smokehouse: 1, workshop: 1, steelworks: 1, armoury: 1
+  var BUILDABLE = ["trap", "cart", "hut", "lodge", "trading_post", "tannery", "smokehouse", "workshop", "steelworks", "armoury"];
+  var BUILDING_KEYS = ["trap", "cart", "hut", "lodge", "trading_post", "tannery", "smokehouse", "workshop", "steelworks", "armoury", "iron_mine", "coal_mine", "sulphur_mine"];
+  var WORKER_KEYS = ["gatherer", "hunter", "trapper", "tanner", "charcutier", "iron_miner", "coal_miner", "sulphur_miner", "steelworker", "armourer"];
+  var JOB_BUILDING = {
+    hunter: "lodge", trapper: "lodge", tanner: "tannery", charcutier: "smokehouse",
+    iron_miner: "iron_mine", coal_miner: "coal_mine", sulphur_miner: "sulphur_mine",
+    steelworker: "steelworks", armourer: "armoury"
   };
-  var BUILDING_MSG = {
-    trap: "more traps to catch more creatures",
-    cart: "the rickety cart will carry more wood from the forest",
-    hut: "builder puts up a hut, out in the forest. says word will get around.",
+  /* Faithful copy of script/outside.js _INCOME (delay 10s). Keys are snake_case. */
+  var INCOME = {
+    gatherer: { delay: 10, stores: { wood: 1 } },
+    hunter: { delay: 10, stores: { fur: 0.5, meat: 0.5 } },
+    trapper: { delay: 10, stores: { meat: -1, bait: 1 } },
+    tanner: { delay: 10, stores: { fur: -5, leather: 1 } },
+    charcutier: { delay: 10, stores: { meat: -5, wood: -5, cured_meat: 1 } },
+    iron_miner: { delay: 10, stores: { cured_meat: -1, iron: 1 } },
+    coal_miner: { delay: 10, stores: { cured_meat: -1, coal: 1 } },
+    sulphur_miner: { delay: 10, stores: { cured_meat: -1, sulphur: 1 } },
+    steelworker: { delay: 10, stores: { iron: -1, coal: -1, steel: 1 } },
+    armourer: { delay: 10, stores: { steel: -1, sulphur: -1, bullets: 1 } }
+  };
+  var BUILD_AVAILABLE = {
+    lodge: "villagers could help hunt, given the means",
+    trading_post: "a trading post would make commerce easier",
+    tannery: "builder says leather could be useful. says the villagers could make it.",
+    smokehouse: "should cure the meat, or it'll spoil. builder says she can fix something up.",
+    workshop: "builder says she could make finer things, if she had the tools",
+    steelworks: "builder says the villagers could make steel, given the tools",
+    armoury: "builder says it'd be useful to have a steady source of bullets"
+  };
+  var BUILD_DONE = {
     lodge: "the hunting lodge stands in the forest, a ways out of town",
     trading_post: "now the nomads have a place to set up shop, they might stick around a while",
     tannery: "tannery goes up quick, on the edge of the village",
@@ -61,68 +79,141 @@
     steelworks: "a haze falls over the village as the steelworks fires up",
     armoury: "armoury's done, welcoming back the weapons of the past."
   };
-  var WORKER_JOBS = {
-    gatherer: { delay: 10, stores: { wood: 1 }, need: null },
-    hunter: { delay: 10, stores: { fur: 0.5, meat: 0.5 }, need: "lodge" },
-    trapper: { delay: 10, stores: { meat: -1, bait: 1 }, need: "lodge" },
-    tanner: { delay: 10, stores: { fur: -5, leather: 1 }, need: "tannery" },
-    charcutier: { delay: 10, stores: { meat: -5, wood: -5, cured_meat: 1 }, need: "smokehouse" },
-    iron_miner: { delay: 10, stores: { cured_meat: -1, iron: 1 }, needFlag: "cleared_iron_mine" },
-    coal_miner: { delay: 10, stores: { cured_meat: -1, coal: 1 }, needFlag: "cleared_coal_mine" },
-    sulphur_miner: { delay: 10, stores: { cured_meat: -1, sulphur: 1 }, needFlag: "cleared_sulphur_mine" },
-    steelworker: { delay: 10, stores: { iron: -1, coal: -1, steel: 1 }, need: "steelworks" },
-    armourer: { delay: 10, stores: { steel: -1, sulphur: -1, bullets: 1 }, need: "armoury" }
+  /* Faithful copy of script/room.js Craftables tools/weapons/upgrades (batch 2). Costs are n=0. */
+  var CRAFTABLE = {
+    torch: { type: "tool", cost: { wood: 1, cloth: 1 }, buildMsg: "a torch to keep the dark away" },
+    waterskin: { type: "upgrade", max: 1, cost: { leather: 50 }, buildMsg: "this waterskin'll hold a bit of water, at least" },
+    cask: { type: "upgrade", max: 1, cost: { leather: 100, iron: 20 }, buildMsg: "the cask holds enough water for longer expeditions" },
+    water_tank: { type: "upgrade", max: 1, cost: { iron: 100, steel: 50 }, buildMsg: "never go thirsty again" },
+    bone_spear: { type: "weapon", cost: { wood: 100, teeth: 5 }, buildMsg: "this spear's not elegant, but it's pretty good at stabbing" },
+    rucksack: { type: "upgrade", max: 1, cost: { leather: 200 }, buildMsg: "carrying more means longer expeditions to the wilds" },
+    wagon: { type: "upgrade", max: 1, cost: { wood: 500, iron: 100 }, buildMsg: "the wagon can carry a lot of supplies" },
+    convoy: { type: "upgrade", max: 1, cost: { wood: 1000, iron: 200, steel: 100 }, buildMsg: "the convoy can haul mostly everything" },
+    l_armour: { type: "upgrade", max: 1, cost: { leather: 200, scales: 20 }, buildMsg: "leather's not strong. better than rags, though." },
+    i_armour: { type: "upgrade", max: 1, cost: { leather: 200, iron: 100 }, buildMsg: "iron's stronger than leather" },
+    s_armour: { type: "upgrade", max: 1, cost: { leather: 200, steel: 100 }, buildMsg: "steel's stronger than iron" },
+    iron_sword: { type: "weapon", cost: { wood: 200, leather: 50, iron: 20 }, buildMsg: "sword is sharp. good protection out in the wilds." },
+    steel_sword: { type: "weapon", cost: { wood: 500, leather: 100, steel: 20 }, buildMsg: "the steel is strong, and the blade true." },
+    rifle: { type: "weapon", cost: { wood: 200, steel: 50, sulphur: 50 }, buildMsg: "black powder and bullets, like the old days." }
   };
-  var CRAFTABLES = {
-    torch: { type: "tool", cost: { wood: 1, cloth: 1 }, msg: "a torch to keep the dark away" },
-    waterskin: { type: "upgrade", max: 1, cost: { leather: 50 }, msg: "this waterskin'll hold a bit of water, at least" },
-    cask: { type: "upgrade", max: 1, cost: { leather: 100, iron: 20 }, msg: "the cask holds enough water for longer expeditions" },
-    water_tank: { type: "upgrade", max: 1, cost: { iron: 100, steel: 50 }, msg: "never go thirsty again" },
-    bone_spear: { type: "weapon", cost: { wood: 100, teeth: 5 }, msg: "this spear's not elegant, but it's pretty good at stabbing" },
-    rucksack: { type: "upgrade", max: 1, cost: { leather: 200 }, msg: "carrying more means longer expeditions to the wilds" },
-    wagon: { type: "upgrade", max: 1, cost: { wood: 500, iron: 100 }, msg: "the wagon can carry a lot of supplies" },
-    convoy: { type: "upgrade", max: 1, cost: { wood: 1000, iron: 200, steel: 100 }, msg: "the convoy can haul mostly everything" },
-    l_armour: { type: "upgrade", max: 1, cost: { leather: 200, scales: 20 }, msg: "leather's not strong. better than rags, though." },
-    i_armour: { type: "upgrade", max: 1, cost: { leather: 200, iron: 100 }, msg: "iron's stronger than leather" },
-    s_armour: { type: "upgrade", max: 1, cost: { leather: 200, steel: 100 }, msg: "steel's stronger than iron" },
-    iron_sword: { type: "weapon", cost: { wood: 200, leather: 50, iron: 20 }, msg: "sword is sharp. good protection out in the wilds." },
-    steel_sword: { type: "weapon", cost: { wood: 500, leather: 100, steel: 20 }, msg: "the steel is strong, and the blade true." },
-    rifle: { type: "weapon", cost: { wood: 200, steel: 50, sulphur: 50 }, msg: "black powder and bullets, like the old days." }
+  var CRAFT_KEYS = Object.keys(CRAFTABLE);
+  /* Faithful copy of script/fabricator.js Craftables (batch 8). */
+  var FABRICABLE = {
+    energy_blade: { type: "weapon", cost: { alien_alloy: 1 }, buildMsg: "the blade hums, charged particles sparking and fizzing." },
+    fluid_recycler: { type: "upgrade", max: 1, cost: { alien_alloy: 2 }, buildMsg: "water out, water in. waste not, want not." },
+    cargo_drone: { type: "upgrade", max: 1, cost: { alien_alloy: 2 }, buildMsg: "the workhorse of the wanderer fleet." },
+    kinetic_armour: { type: "upgrade", max: 1, blueprint: true, cost: { alien_alloy: 2 }, buildMsg: "wanderer soldiers succeed by subverting the enemy's rage." },
+    disruptor: { type: "weapon", blueprint: true, cost: { alien_alloy: 1 }, buildMsg: "somtimes it is best not to fight." },
+    hypo: { type: "tool", blueprint: true, quantity: 5, cost: { alien_alloy: 1 }, buildMsg: "a handful of hypos. life in a vial." },
+    stim: { type: "tool", blueprint: true, cost: { alien_alloy: 1 }, buildMsg: "sometimes it is best to fight without restraint." },
+    plasma_rifle: { type: "weapon", blueprint: true, cost: { alien_alloy: 1 }, buildMsg: "the peak of wanderer weapons technology, sleek and deadly." },
+    glowstone: { type: "tool", blueprint: true, cost: { alien_alloy: 1 }, buildMsg: "a smooth, perfect sphere. its light is inextinguishable." }
   };
-  var FABRICATOR_CRAFTS = {
-    energy_blade: { cost: { alien_alloy: 1 }, msg: "the blade hums, charged particles sparking and fizzing." },
-    fluid_recycler: { cost: { alien_alloy: 2 }, max: 1, msg: "water out, water in. waste not, want not." },
-    cargo_drone: { cost: { alien_alloy: 2 }, max: 1, msg: "the workhorse of the wanderer fleet." },
-    kinetic_armour: { cost: { alien_alloy: 2 }, max: 1, needFlag: "blueprint_kinetic_armour", msg: "wanderer soldiers succeed by subverting the enemy's rage." },
-    disruptor: { cost: { alien_alloy: 1 }, needFlag: "blueprint_disruptor", msg: "sometimes it is best not to fight." },
-    hypo: { cost: { alien_alloy: 1 }, qty: 5, needFlag: "blueprint_hypo", msg: "a handful of hypos. life in a vial." },
-    stim: { cost: { alien_alloy: 1 }, needFlag: "blueprint_stim", msg: "sometimes it is best to fight without restraint." },
-    plasma_rifle: { cost: { alien_alloy: 1 }, needFlag: "blueprint_plasma_rifle", msg: "the peak of wanderer weapons technology, sleek and deadly." }
+  var FABRICATE_KEYS = Object.keys(FABRICABLE);
+  var BLUEPRINT_REDEEM = {
+    hypo_blueprint: "hypo",
+    kinetic_armour_blueprint: "kinetic_armour",
+    disruptor_blueprint: "disruptor",
+    plasma_rifle_blueprint: "plasma_rifle",
+    stim_blueprint: "stim",
+    glowstone_blueprint: "glowstone"
   };
+  /* Faithful copy of script/room.js TradeGoods (n=0). Compass is always listed once a trading post exists; others after the store has been seen. */
+  var TRADEABLE = {
+    scales: { type: "good", cost: { fur: 150 } },
+    teeth: { type: "good", cost: { fur: 300 } },
+    iron: { type: "good", cost: { fur: 150, scales: 50 } },
+    coal: { type: "good", cost: { fur: 200, teeth: 50 } },
+    steel: { type: "good", cost: { fur: 300, scales: 50, teeth: 50 } },
+    medicine: { type: "good", cost: { scales: 50, teeth: 30 } },
+    bullets: { type: "good", cost: { scales: 10 } },
+    energy_cell: { type: "good", cost: { scales: 10, teeth: 10 } },
+    bolas: { type: "weapon", cost: { teeth: 10 } },
+    grenade: { type: "weapon", cost: { scales: 100, teeth: 50 } },
+    bayonet: { type: "weapon", cost: { scales: 500, teeth: 250 } },
+    alien_alloy: { type: "good", cost: { fur: 1500, scales: 750, teeth: 300 } },
+    compass: { type: "special", max: 1, cost: { fur: 400, scales: 20, teeth: 10 } }
+  };
+  var TRADE_KEYS = Object.keys(TRADEABLE);
+  /* Faithful copy of script/world.js constants (batch 5). */
+  var RADIUS = 30;
+  var STICKINESS = 0.5;
+  var LIGHT_RADIUS = 2;
+  var BASE_WATER = 10;
+  var MOVES_PER_FOOD = 2;
+  var MOVES_PER_WATER = 1;
+  var DEATH_COOLDOWN = 120;
+  var FIGHT_CHANCE = 0.20;
+  var BASE_HEALTH = 10;
+  var BASE_HIT_CHANCE = 0.8;
+  var MEAT_HEAL = 8;
+  var MEDS_HEAL = 20;
+  var HYPO_HEAL = 30;
+  var FIGHT_DELAY = 3;
+  var WORLD_SIZE = RADIUS * 2 + 1;
+  var VILLAGE_X = RADIUS;
+  var VILLAGE_Y = RADIUS;
+  /* Faithful copy of script/ship.js + script/space.js (batch 7). */
+  var LIFTOFF_COOLDOWN = 120;
+  var ALLOY_PER_HULL = 1;
+  var ALLOY_PER_THRUSTER = 1;
+  var BASE_HULL = 0;
+  var BASE_THRUSTERS = 1;
+  var SHIP_SPEED = 3;
+  var BASE_ASTEROID_DELAY = 500;
+  var BASE_ASTEROID_SPEED = 1500;
+  var FTB_SPEED = 60000;
+  /* Faithful copy of script/prestige.js storesMap + script/scoring.js factor (batch 9). */
+  var PRESTIGE_STORES = [
+    { id: "wood", type: "g" }, { id: "fur", type: "g" }, { id: "meat", type: "g" },
+    { id: "iron", type: "g" }, { id: "coal", type: "g" }, { id: "sulphur", type: "g" },
+    { id: "steel", type: "g" }, { id: "cured_meat", type: "g" }, { id: "scales", type: "g" },
+    { id: "teeth", type: "g" }, { id: "leather", type: "g" }, { id: "bait", type: "g" },
+    { id: "torch", type: "g" }, { id: "cloth", type: "g" }, { id: "bone_spear", type: "w" },
+    { id: "iron_sword", type: "w" }, { id: "steel_sword", type: "w" }, { id: "bayonet", type: "w" },
+    { id: "rifle", type: "w" }, { id: "laser_rifle", type: "w" }, { id: "bullets", type: "a" },
+    { id: "energy_cell", type: "a" }, { id: "grenade", type: "a" }, { id: "bolas", type: "a" }
+  ];
+  var SCORE_FACTORS = [1, 1.5, 1, 2, 2, 3, 3, 2, 2, 2, 2, 1.5, 1, 1, 10, 30, 50, 100, 150, 150, 3, 3, 5, 4];
+  var SPACE_WIDTH = 700;
+  var SPACE_HEIGHT = 700;
+  var ASTEROID_GLYPHS = ["#", "$", "%", "&", "H"];
+  /* Faithful copy of script/world.js Weapons. */
   var WEAPONS = {
-    fists: { dmg: 1, type: "unarmed" },
-    bone_spear: { dmg: 2, type: "melee" },
-    iron_sword: { dmg: 4, type: "melee" },
-    steel_sword: { dmg: 6, type: "melee" },
-    bayonet: { dmg: 8, type: "melee" },
-    energy_blade: { dmg: 10, type: "melee" },
-    rifle: { dmg: 5, type: "ranged", cost: { bullets: 1 } },
-    laser_rifle: { dmg: 8, type: "ranged", cost: { energy_cell: 1 } },
-    plasma_rifle: { dmg: 12, type: "ranged", cost: { energy_cell: 1 } },
-    grenade: { dmg: 15, type: "ranged", cost: { grenade: 1 } }
+    fists: { verb: "punch", type: "unarmed", damage: 1, cooldown: 2 },
+    bone_spear: { verb: "stab", type: "melee", damage: 2, cooldown: 2 },
+    iron_sword: { verb: "swing", type: "melee", damage: 4, cooldown: 2 },
+    steel_sword: { verb: "slash", type: "melee", damage: 6, cooldown: 2 },
+    bayonet: { verb: "thrust", type: "melee", damage: 8, cooldown: 2 },
+    rifle: { verb: "shoot", type: "ranged", damage: 5, cooldown: 1, cost: { bullets: 1 } },
+    laser_rifle: { verb: "blast", type: "ranged", damage: 8, cooldown: 1, cost: { energy_cell: 1 } },
+    grenade: { verb: "lob", type: "ranged", damage: 15, cooldown: 5, cost: { grenade: 1 } },
+    bolas: { verb: "tangle", type: "ranged", damage: "stun", cooldown: 15, cost: { bolas: 1 } },
+    plasma_rifle: { verb: "disintegrate", type: "ranged", damage: 12, cooldown: 1, cost: { energy_cell: 1 } },
+    energy_blade: { verb: "slice", type: "melee", damage: 10, cooldown: 2 },
+    disruptor: { verb: "stun", type: "ranged", damage: "stun", cooldown: 15 }
   };
-  var WORLD_SIZE = 61;
-  var WORLD_HOME = { x: 30, y: 30 };
-  var DEFAULT_LANDMARKS = {
-    "33,28": "old_house",
-    "35,30": "iron_mine",
-    "30,20": "coal_mine",
-    "30,10": "sulphur_mine",
-    "30,2": "crashed_ship",
-    "45,22": "dungeon",
-    "48,35": "ruined_city",
-    "18,42": "battlefield"
+  /* Faithful copy of script/engine.js Perks (name / desc / notify). */
+  var PERKS = {
+    boxer: { name: "boxer", desc: "punches do more damage", notify: "learned to throw punches with purpose" },
+    martial_artist: { name: "martial artist", desc: "punches do even more damage.", notify: "learned to fight quite effectively without weapons" },
+    unarmed_master: { name: "unarmed master", desc: "punch twice as fast, and with even more force", notify: "learned to strike faster without weapons" },
+    barbarian: { name: "barbarian", desc: "melee weapons deal more damage", notify: "learned to swing weapons with force" },
+    slow_metabolism: { name: "slow metabolism", desc: "go twice as far without eating", notify: "learned how to ignore the hunger" },
+    desert_rat: { name: "desert rat", desc: "go twice as far without drinking", notify: "learned to love the dry air" },
+    evasive: { name: "evasive", desc: "dodge attacks more effectively", notify: "learned to be where they're not" },
+    precise: { name: "precise", desc: "land blows more often", notify: "learned to predict their movement" },
+    scout: { name: "scout", desc: "see farther", notify: "learned to look ahead" },
+    stealthy: { name: "stealthy", desc: "better avoid conflict in the wild", notify: "learned how not to be seen" },
+    gastronome: { name: "gastronome", desc: "restore more health when eating", notify: "learned to make the most of food" }
   };
+  var PERK_KEYS = Object.keys(PERKS);
+
+  function emptyPerks() {
+    var p = {};
+    PERK_KEYS.forEach(function (k) { p[k] = false; });
+    return p;
+  }
   var TOOL_NAMES = ["spawn_event", "give_item", "change_npc_mood", "narrate", "unlock_area", "set_flag"];
 
   var STRINGS = {
@@ -144,7 +235,50 @@
     "the stranger is standing by the fire. she says she can help. says she builds things.": "那名陌生人站在火堆旁。她说她可以帮忙。她说她会建东西",
     "builder just shivers": "建造者还在瑟瑟发抖",
     "build:": "建筑物:",
+    "craft:": "制造:",
+    "buy:": "购买:",
+    "medicine": "药剂",
+    "energy cell": "能量元件",
+    "bolas": "套索",
+    "grenade": "手雷",
+    "bayonet": "刺刀",
+    "alien alloy": "外星合金",
     "stores": "库存",
+    "torch": "火把",
+    "a torch to keep the dark away": "驱散黑暗的火把",
+    "waterskin": "水壶",
+    "this waterskin'll hold a bit of water, at least": "起码能装那么点儿水",
+    "cask": "水桶",
+    "the cask holds enough water for longer expeditions": "为更长的探索之旅提供充足的水源",
+    "water tank": "水罐",
+    "never go thirsty again": "再也不担心口渴",
+    "bone spear": "骨枪",
+    "this spear's not elegant, but it's pretty good at stabbing": "这柄标枪不怎么精致，但用来戳刺手感不错",
+    "rucksack": "双肩包",
+    "carrying more means longer expeditions to the wilds": "荒野旅行时携带更多物资",
+    "wagon": "篷车",
+    "the wagon can carry a lot of supplies": "篷车能够携带许多物资",
+    "convoy": "车队",
+    "the convoy can haul mostly everything": "车队几乎能把所有东西都装下",
+    "l armour": "皮甲",
+    "leather's not strong. better than rags, though.": "皮革不算结实。总比披块破布强",
+    "i armour": "铁甲",
+    "iron's stronger than leather": "铁比皮要结实",
+    "s armour": "钢甲",
+    "steel's stronger than iron": "钢的总比铁的强",
+    "iron sword": "铁剑",
+    "sword is sharp. good protection out in the wilds.": "剑很锋利。能在野外提供不错的防护",
+    "steel sword": "钢剑",
+    "the steel is strong, and the blade true.": "好钢出利刃",
+    "rifle": "步枪",
+    "black powder and bullets, like the old days.": "黑火药和子弹，就像过去那样",
+    "none": "无",
+    "armour": "护甲",
+    "leather": "皮革",
+    "iron": "铁",
+    "steel": "钢",
+    "water": "水",
+    "free {0}/{1}": "余量 {0}/{1}",
     "Room": "房间",
     "Outside": "野外",
     "A Silent Forest": "静寂森林",
@@ -168,6 +302,7 @@
     "the rickety cart will carry more wood from the forest": "摇摇晃晃的货车满载从森林运出的木头",
     "builder says there are more wanderers. says they'll work, too.": "建造者说这里有许多流浪者，他们也会来工作",
     "builder puts up a hut, out in the forest. says word will get around.": "建造者在林中建起一栋小屋，她说消息很快就会流传出去",
+    "no more room for huts.": "再没有可以建小屋的空地了",
     "A Dusty Path": "漫漫尘途",
     "embark": "出发",
     "supplies:": "供应:",
@@ -184,20 +319,149 @@
     "*** EVENT ***": "*** 消息 ***",
     "a stranger arrives in the night": "陌生人在夜里抵达",
     "and": "以及",
+    "lodge": "狩猎小屋",
+    "villagers could help hunt, given the means": "假如工具齐备，村民也能帮忙狩猎",
     "the hunting lodge stands in the forest, a ways out of town": "狩猎小屋已经矗立在林中，距离村子不远",
+    "trading post": "贸易站",
+    "a trading post would make commerce easier": "贸易站让贸易变得更加便捷",
     "now the nomads have a place to set up shop, they might stick around a while": "现在游牧部落有地方安营扎寨设立商铺了，他们也许会多逗留一段时间",
+    "tannery": "制革屋",
+    "builder says leather could be useful. says the villagers could make it.": "建造者说皮革会很有用，而且村民也会做",
     "tannery goes up quick, on the edge of the village": "制革屋很快在村子一角建立了起来",
+    "smokehouse": "熏肉房",
+    "should cure the meat, or it'll spoil. builder says she can fix something up.": "应该把肉熏一下，否则会腐坏掉。建造者说她能搞定这个。",
     "builder finishes the smokehouse. she looks hungry.": "建造者造好了熏肉房。她看起来饥肠辘辘。",
+    "workshop": "工坊",
+    "builder says she could make finer things, if she had the tools": "建造者说如果她有工具的话能做出一些更精良的东西",
     "workshop's finally ready. builder's excited to get to it": "工坊终于建好了，建造者激动不已",
+    "steelworks": "炼钢坊",
+    "builder says the villagers could make steel, given the tools": "建造者说给村民工具的话他们就能帮忙炼钢",
     "a haze falls over the village as the steelworks fires up": "炼钢坊开工后，一缕黑烟飘向村庄上空",
+    "armoury": "军械坊",
+    "builder says it'd be useful to have a steady source of bullets": "建造者说拥有稳定的弹药来源很有必要",
     "armoury's done, welcoming back the weapons of the past.": "军械坊建好了，欢迎使用这些过时的武器",
+    "gatherer": "伐木者",
+    "hunter": "猎人",
+    "trapper": "陷阱师",
+    "tanner": "皮革师",
+    "charcutier": "熏肉师",
+    "iron miner": "铁矿工人",
+    "coal miner": "煤矿工人",
+    "sulphur miner": "硫磺矿工",
+    "steelworker": "炼钢工人",
+    "armourer": "军械工人",
+    "boxer": "拳击手",
+    "punches do more damage": "徒手伤害翻倍",
+    "learned to throw punches with purpose": "学会了有意识地出拳",
+    "martial artist": "武斗家",
+    "punches do even more damage.": "徒手造成更多的伤害",
+    "learned to fight quite effectively without weapons": "学会了高效率的徒手搏击",
+    "unarmed master": "徒手宗师",
+    "punch twice as fast, and with even more force": "出拳速度翻倍，力道也更大",
+    "learned to strike faster without weapons": "学会了如何更快速地出拳",
+    "barbarian": "野蛮人",
+    "melee weapons deal more damage": "近战武器造成更高伤害",
+    "learned to swing weapons with force": "学会了如何发挥劲力，挥舞武器",
+    "slow metabolism": "减缓代谢",
+    "go twice as far without eating": "不吃东西能坚持走的距离翻倍",
+    "learned how to ignore the hunger": "学会如何忍饥挨饿",
+    "desert rat": "荒漠跳鼠",
+    "go twice as far without drinking": "不喝水能坚持走的距离翻倍",
+    "learned to love the dry air": "无畏干燥",
+    "evasive": "避实就虚",
+    "dodge attacks more effectively": "更有效的闪避攻击",
+    "learned to be where they're not": "学会了闪避攻击",
+    "precise": "精密",
+    "land blows more often": "命中率提高",
+    "learned to predict their movement": "学会预判他人的动作",
+    "scout": "侦查术",
+    "see farther": "看得更远",
+    "learned to look ahead": "强化视野",
+    "stealthy": "潜行",
+    "better avoid conflict in the wild": "更好地回避荒野中的冲突",
+    "learned how not to be seen": "学会了隐匿身形",
+    "gastronome": "美食家",
+    "restore more health when eating": "进食恢复更多生命",
+    "learned to make the most of food": "学会充分消化食物",
+    "laser rifle": "激光步枪",
+    "plasma rifle": "等离子步枪",
+    "energy blade": "能量刃",
+    "disruptor": "扰乱器",
+    "A Two-Headed Creature": "双头怪物",
+    "two-headed creature": "双头怪物",
+    "the two creatures are dead": "那两个生物倒下了",
+    "a two-headed creature appears, the smaller head trembling": "一只双头怪物出现了，较小的那颗头在发抖",
+    "Ship": "飞船",
     "An Old Starship": "破旧星舰",
+    "hull:": "外壳:",
+    "engine:": "引擎:",
     "reinforce hull": "加固船身",
     "upgrade engine": "升级引擎",
-    "lift off": "升空",
-    "hull:": "外壳:",
+    "lift off": "点火起飞",
+    "somewhere above the debris cloud, the wanderer fleet hovers. been on this rock too long.": "碎片云上方的某处，流浪者舰队徘徊着。在这块岩石上太久了。",
     "not enough alien alloy": "外星合金不足",
-    "Fabricator": "装配机"
+    "Ready to Leave?": "准备好要离开了吗?",
+    "time to get out of this place. won't be coming back.": "是时候离开这里了。不再回头",
+    "linger": "裹足徘徊",
+    "hull: ": "船身:",
+    "Troposphere": "对流层",
+    "Stratosphere": "平流层",
+    "Mesosphere": "中气层",
+    "Thermosphere": "增温层",
+    "Exosphere": "外逸层",
+    "Space": "太空",
+    "Fabricator": "制造机",
+    "A Whirring Fabricator": "嗡鸣制造机",
+    "fabricate:": "制造:",
+    "blueprints": "蓝图",
+    "energy blade": "能量刃",
+    "fluid recycler": "流体回收器",
+    "cargo drone": "货运无人机",
+    "kinetic armour": "动能护甲",
+    "hypo": "针剂",
+    "stim": "兴奋剂",
+    "glow stone": "辉光石",
+    "fleet beacon": "舰队信标",
+    "hypo blueprint": "针剂蓝图",
+    "kinetic armour blueprint": "动能护甲蓝图",
+    "disruptor blueprint": "扰乱器蓝图",
+    "plasma rifle blueprint": "等离子步枪蓝图",
+    "stim blueprint": "兴奋剂蓝图",
+    "glowstone blueprint": "辉光石蓝图",
+    "the blade hums, charged particles sparking and fizzing.": "刃身嗡鸣，带电微粒噼啪作响",
+    "water out, water in. waste not, want not.": "水出，水进。物尽其用",
+    "the workhorse of the wanderer fleet.": "流浪者舰队的驮马",
+    "wanderer soldiers succeed by subverting the enemy's rage.": "流浪者士兵靠化解敌人的怒火取胜",
+    "somtimes it is best not to fight.": "有时候，不打才是上策",
+    "a handful of hypos. life in a vial.": "几支针剂。小瓶里的性命",
+    "sometimes it is best to fight without restraint.": "有时候，该放手一搏",
+    "the peak of wanderer weapons technology, sleek and deadly.": "流浪者武器技术的巅峰，流畅而致命",
+    "a smooth, perfect sphere. its light is inextinguishable.": "一颗光滑完美的球体。它的光无法熄灭",
+    "the familiar hum of wanderer machinery coming to life. finally, real tools.": "熟悉的流浪者机械嗡鸣苏醒了。终于，真正的工具",
+    "builder knows the strange device when she sees it. takes it for herself real quick. doesn’t ask where it came from.": "建造者一眼认出那件古怪装置。她很快据为己有。也不问从哪来的",
+    "blueprints feed into the fabricator data port. possibilities grow.": "蓝图送进制造机数据口。可能性在增长",
+    "A Ravaged Battleship": "残破战舰",
+    "Engineering Wing": "工程翼",
+    "Martial Wing": "武装翼",
+    "Medical Wing": "医疗翼",
+    "Command Deck": "指挥甲板",
+    "engineering": "工程",
+    "martial": "武装",
+    "medical": "医疗",
+    "command deck": "指挥甲板",
+    "enter": "进入",
+    "continue": "继续",
+    "take device and leave": "带走装置并离开",
+    "score for this game: {0}": "本局得分: {0}",
+    "total score: {0}": "总分: {0}",
+    "expanded story. alternate ending. behind the scenes commentary. get the app.": "扩展故事。另一结局。幕后解说。下载应用。",
+    "the world fades": "世界淡去",
+    "the air is running out.": "空气快用完了。",
+    "the capsule is cold.": "舱体很冷。",
+    "the beacon pulses gently as the ship glides through space.\ncoordinates are locked. nothing to do but wait.": "信标轻轻脉动，飞船滑过太空。坐标已锁定。只能等待。",
+    "wait": "等待",
+    "ending": "终局",
+    "restart.": "重启"
   };
 
   function t(key) {
@@ -222,12 +486,6 @@
     return s;
   }
 
-  function emptyIncomeAcc() {
-    var a = { builder: 0 };
-    Object.keys(WORKER_JOBS).forEach(function (k) { a[k] = 0; });
-    return a;
-  }
-
   function createState() {
     return {
       session_id: (typeof ADRTelemetry !== "undefined" && ADRTelemetry.sessionId) ? ADRTelemetry.sessionId() : uuid(),
@@ -239,57 +497,59 @@
       npc_moods: { builder: "unknown", nomad: "neutral", villagers: "neutral" },
       stores: emptyStores(),
       wood_initialized: false,
-      buildings: {
-        trap: 0, cart: 0, hut: 0, lodge: 0, trading_post: 0,
-        tannery: 0, smokehouse: 0, workshop: 0, steelworks: 0, armoury: 0
-      },
+      buildings: { trap: 0, cart: 0, hut: 0, lodge: 0, trading_post: 0, tannery: 0, smokehouse: 0, workshop: 0, steelworks: 0, armoury: 0, iron_mine: 0, coal_mine: 0, sulphur_mine: 0 },
       population: 0,
-      workers: {
-        gatherer: 0, hunter: 0, trapper: 0, tanner: 0, charcutier: 0,
-        iron_miner: 0, coal_miner: 0, sulphur_miner: 0, steelworker: 0, armourer: 0
-      },
+      workers: { gatherer: 0, hunter: 0, trapper: 0, tanner: 0, charcutier: 0, iron_miner: 0, coal_miner: 0, sulphur_miner: 0, steelworker: 0, armourer: 0 },
+      seen: {},
       unlocked: { room: true, outside: false, path: false, world: false, ship: false, space: false, fabricator: false },
+      blueprints: { hypo: false, kinetic_armour: false, disruptor: false, plasma_rifle: false, stim: false, glowstone: false },
       location: "room",
+      spaceShip: { hull: BASE_HULL, thrusters: BASE_THRUSTERS, seenShip: false, seenWarning: false },
+      space: null,
       phase: "room_dark",
+      goal: null,
       flags: {},
       notifications: [],
       cooldowns: {},
       cooldown_ends_at: {},
-      income_acc: emptyIncomeAcc(),
+      income_acc: { builder: 0, gatherer: 0, hunter: 0, trapper: 0, tanner: 0, charcutier: 0, iron_miner: 0, coal_miner: 0, sulphur_miner: 0, steelworker: 0, armourer: 0 },
       pop_timer: null,
       event_timer: null,
       scheduled: [],
       active_event: null,
       combat: null,
+      perks: emptyPerks(),
+      punches: 0,
       outfit: { meat: 0, cured_meat: 0 },
       world: {
         on_expedition: false,
         size: WORLD_SIZE,
-        x: WORLD_HOME.x,
-        y: WORLD_HOME.y,
-        water: 10,
-        max_water: 10,
-        hp: 10,
-        max_hp: 10,
+        x: VILLAGE_X,
+        y: VILLAGE_Y,
+        water: BASE_WATER,
+        hp: BASE_HEALTH,
+        max_hp: BASE_HEALTH,
         food_moves: 0,
+        water_moves: 0,
+        fight_moves: 0,
         visited: {},
-        landmarks: Object.assign({}, DEFAULT_LANDMARKS),
+        cleared: {},
+        landmarks: { "33,28": "old_house", "27,24": "cave", "42,28": "town", "30,52": "city", "36,33": "outpost", "58,30": "ship", "14,30": "borehole", "30,12": "battlefield", "40,40": "swamp", "20,24": "cache", "2,30": "executioner", "35,30": "ironmine", "30,40": "coalmine", "50,30": "sulphurmine" },
+        outposts_used: {},
         seen_danger: false
       },
-      ship: { hull: 0, thrusters: 1 },
-      space: { altitude: 0, x: 0, hull: 0, max_hull: 0, done: false },
-      prestige: { stores: null, score: 0, runs: 0 },
       slice_complete: false,
-      ending_reached: false,
-      goal: null
+      previous: { stores: null, score: 0 },
+      playStats: { score: 0 },
+      ending: false
     };
   }
 
   var SAVE_KEY = "adr.save.v1";
   var SAVE_VERSION = 1;
-  var OBJECT_KEYS = ["stores", "buildings", "unlocked", "npc_moods", "workers", "outfit", "income_acc", "world", "flags", "cooldowns", "cooldown_ends_at", "ship", "space", "prestige"];
+  var OBJECT_KEYS = ["stores", "buildings", "unlocked", "npc_moods", "workers", "outfit", "income_acc", "world", "flags", "cooldowns", "cooldown_ends_at", "seen", "perks", "spaceShip", "blueprints", "previous", "playStats"];
   var ARRAY_KEYS = ["notifications", "scheduled"];
-  var NUMBER_KEYS = ["fire", "temperature", "game_time_sec", "builder_level", "population"];
+  var NUMBER_KEYS = ["fire", "temperature", "game_time_sec", "builder_level", "population", "punches"];
 
   function isPlainObject(v) {
     return !!v && typeof v === "object" && !Array.isArray(v);
@@ -438,17 +698,9 @@
         base[k] = Object.assign({}, base[k], saved[k]);
         if (k === "world") {
           base.world.visited = (saved.world && saved.world.visited) || {};
-          var lm = (saved.world && saved.world.landmarks) || {};
-          if (!lm["33,28"] && (lm["8,3"] === "old_house" || saved.world.size === 11)) {
-            base.world.size = WORLD_SIZE;
-            base.world.landmarks = Object.assign({}, DEFAULT_LANDMARKS);
-            if (saved.world.x === 5 && saved.world.y === 5) {
-              base.world.x = WORLD_HOME.x;
-              base.world.y = WORLD_HOME.y;
-            }
-          } else {
-            base.world.landmarks = Object.keys(lm).length ? lm : base.world.landmarks;
-          }
+          base.world.cleared = (saved.world && saved.world.cleared) || {};
+          base.world.landmarks = (saved.world && saved.world.landmarks) || base.world.landmarks;
+          base.world.outposts_used = (saved.world && saved.world.outposts_used) || {};
         }
       } else if (ARRAY_KEYS.indexOf(k) >= 0) {
         base[k] = Array.isArray(saved[k]) ? saved[k] : base[k];
@@ -463,7 +715,93 @@
     });
     base.phase = derivePhase(base);
     adoptCooldowns(base, 1);
-    return base;
+    return migrateState(base);
+  }
+
+  function migrateState(state) {
+    if (state.goal === undefined) state.goal = null;
+    if (!isPlainObject(state.seen)) state.seen = {};
+    ITEMS.forEach(function (k) {
+      if (typeof state.stores[k] !== "number" || !isFinite(state.stores[k])) state.stores[k] = 0;
+      if (state.stores[k] > 0) state.seen[k] = true;
+    });
+    if (state.wood_initialized) state.seen.wood = true;
+    BUILDING_KEYS.forEach(function (k) {
+      if (typeof state.buildings[k] !== "number" || !isFinite(state.buildings[k])) state.buildings[k] = 0;
+    });
+    WORKER_KEYS.forEach(function (k) {
+      if (typeof state.workers[k] !== "number" || !isFinite(state.workers[k])) state.workers[k] = 0;
+    });
+    if (typeof state.income_acc.builder !== "number") state.income_acc.builder = 0;
+    if (typeof state.income_acc.thieves !== "number") state.income_acc.thieves = 0;
+    if (state.flags.stolen && !isPlainObject(state.flags.stolen)) state.flags.stolen = {};
+    Object.keys(INCOME).forEach(function (k) {
+      if (typeof state.income_acc[k] !== "number") state.income_acc[k] = 0;
+    });
+    if (!isPlainObject(state.perks)) state.perks = emptyPerks();
+    PERK_KEYS.forEach(function (k) {
+      if (typeof state.perks[k] !== "boolean") state.perks[k] = !!state.perks[k];
+    });
+    ["evasive", "precise", "barbarian", "scout", "stealthy"].forEach(function (k) {
+      if (state.flags["learned_" + k]) state.perks[k] = true;
+    });
+    if (typeof state.punches !== "number") state.punches = 0;
+    if (!isPlainObject(state.world)) state.world = {};
+    if ((state.world.size || 11) !== WORLD_SIZE) {
+      var oldSize = state.world.size || 11;
+      var oldCx = Math.floor(oldSize / 2);
+      var shiftX = VILLAGE_X - oldCx;
+      var shiftY = VILLAGE_Y - oldCx;
+      state.world.x = (typeof state.world.x === "number" ? state.world.x : oldCx) + shiftX;
+      state.world.y = (typeof state.world.y === "number" ? state.world.y : oldCx) + shiftY;
+      var visited = {};
+      Object.keys(state.world.visited || {}).forEach(function (k) {
+        var p = k.split(",");
+        visited[(Number(p[0]) + shiftX) + "," + (Number(p[1]) + shiftY)] = true;
+      });
+      state.world.visited = visited;
+      var lms = {};
+      Object.keys(state.world.landmarks || {}).forEach(function (k) {
+        var p = k.split(",");
+        lms[(Number(p[0]) + shiftX) + "," + (Number(p[1]) + shiftY)] = state.world.landmarks[k];
+      });
+      state.world.landmarks = lms;
+      state.world.size = WORLD_SIZE;
+    }
+    if (!isPlainObject(state.world.landmarks)) state.world.landmarks = {};
+    var defaultLandmarks = { "33,28": "old_house", "27,24": "cave", "42,28": "town", "30,52": "city", "36,33": "outpost", "58,30": "ship", "14,30": "borehole", "30,12": "battlefield", "40,40": "swamp", "20,24": "cache", "2,30": "executioner", "35,30": "ironmine", "30,40": "coalmine", "50,30": "sulphurmine" };
+    Object.keys(defaultLandmarks).forEach(function (k) {
+      if (!state.world.landmarks[k]) state.world.landmarks[k] = defaultLandmarks[k];
+    });
+    if (!isPlainObject(state.world.outposts_used)) state.world.outposts_used = {};
+    if (!isPlainObject(state.world.cleared)) state.world.cleared = {};
+    if (typeof state.world.fight_moves !== "number") state.world.fight_moves = 0;
+    if (typeof state.world.water_moves !== "number") state.world.water_moves = 0;
+    unlockWorkersForBuildings(state);
+    syncGatherers(state);
+    ensureSpaceShip(state);
+    if (state.flags.world_ship && state.world && !state.world.on_expedition) {
+      state.unlocked.ship = true;
+      state.unlocked.space = true;
+    }
+    if (!isPlainObject(state.blueprints)) state.blueprints = {};
+    Object.keys(BLUEPRINT_REDEEM).forEach(function (bp) {
+      var item = BLUEPRINT_REDEEM[bp];
+      if (typeof state.blueprints[item] !== "boolean") state.blueprints[item] = !!state.blueprints[item];
+    });
+    if (typeof state.unlocked.fabricator !== "boolean") state.unlocked.fabricator = !!state.unlocked.fabricator;
+    if (state.flags.world_executioner && state.world && !state.world.on_expedition) {
+      state.unlocked.fabricator = true;
+    }
+    if (!isPlainObject(state.previous)) state.previous = { stores: null, score: 0 };
+    if (typeof state.previous.score !== "number" || !isFinite(state.previous.score)) state.previous.score = 0;
+    if (!isPlainObject(state.playStats)) state.playStats = { score: 0 };
+    if (typeof state.playStats.score !== "number" || !isFinite(state.playStats.score)) state.playStats.score = 0;
+    if (typeof state.ending !== "boolean") state.ending = !!state.ending || !!state.flags.ending;
+    if (state.location === "space" && (!state.space || !state.space.active)) {
+      state.location = state.unlocked.ship ? "ship" : "path";
+    }
+    return state;
   }
 
   function decodeImport(b64) {
@@ -649,6 +987,10 @@
     if (ITEMS.indexOf(item) < 0) return;
     if (item === "wood") state.wood_initialized = true;
     state.stores[item] = Math.max(0, (state.stores[item] || 0) + amount);
+    if (amount > 0) {
+      if (!state.seen) state.seen = {};
+      state.seen[item] = true;
+    }
   }
 
   function visualSig(state) {
@@ -658,6 +1000,16 @@
       state.location, state.fire, state.temperature, state.builder_level,
       state.stores.wood, state.stores.fur, state.stores.meat, state.stores.compass,
       state.buildings.trap, state.buildings.cart, state.buildings.hut,
+      state.buildings.lodge, state.buildings.smokehouse, state.buildings.tannery,
+      state.buildings.trading_post, state.buildings.workshop, state.buildings.steelworks, state.buildings.armoury,
+      JSON.stringify(state.workers),
+      state.stores.leather, state.stores.cured_meat, state.stores.iron, state.stores.coal, state.stores.steel, state.stores.sulphur,
+      state.stores.torch, state.stores.waterskin, state.stores.cask, state.stores.water_tank,
+      state.stores.bone_spear, state.stores.rucksack, state.stores.wagon, state.stores.convoy,
+      state.stores.l_armour, state.stores.i_armour, state.stores.s_armour,
+      state.stores.iron_sword, state.stores.steel_sword, state.stores.rifle,
+      state.stores.medicine, state.stores.energy_cell, state.stores.bolas,
+      state.stores.grenade, state.stores.bayonet, state.stores.alien_alloy,
       state.population, state.unlocked.outside ? 1 : 0, state.unlocked.path ? 1 : 0,
       state.notifications.length, n0 ? n0.text : "", n0 ? (n0.count || 1) : "",
       ev ? ev.id : "", ev ? ev.scene : "",
@@ -666,7 +1018,22 @@
       state.goal ? state.goal.id : "", state.goal ? state.goal.text : "",
       state.world.on_expedition ? 1 : 0, state.world.x, state.world.y,
       state.world.hp, state.world.water,
-      state.outfit.meat, state.outfit.cured_meat
+      state.outfit.meat, state.outfit.cured_meat,
+      state.unlocked.ship ? 1 : 0,
+      state.unlocked.fabricator ? 1 : 0,
+      JSON.stringify(state.blueprints),
+      state.stores.laser_rifle, state.stores.energy_blade, state.stores.disruptor,
+      state.stores.plasma_rifle, state.stores.fluid_recycler, state.stores.cargo_drone,
+      state.stores.kinetic_armour, state.stores.hypo, state.stores.stim, state.stores.glowstone,
+      state.stores.fleet_beacon,
+      state.spaceShip ? state.spaceShip.hull : "",
+      state.spaceShip ? state.spaceShip.thrusters : "",
+      state.space ? state.space.altitude : "",
+      state.space ? state.space.hull : "",
+      state.space ? (state.space.asteroids || []).length : 0,
+      state.flags.space_escaped ? 1 : 0,
+      state.ending ? 1 : 0,
+      state.previous ? state.previous.score : 0
     ].join("|");
   }
 
@@ -679,20 +1046,9 @@
     return t("A Raucous Village");
   }
 
-  function hasLateProgress(state) {
-    return !!(state.buildings.lodge || state.buildings.tannery || state.buildings.smokehouse ||
-      state.buildings.workshop || state.unlocked.ship || state.ending_reached ||
-      (state.stores.leather || 0) > 0 || (state.stores.alien_alloy || 0) > 0);
-  }
-
   function derivePhase(state) {
-    if (state.flags && state.flags.prestige_done) return "prestige";
-    if (state.ending_reached) return "ending";
-    if (state.location === "space") return "space";
-    if (state.location === "ship" || (state.unlocked.ship && state.location === "ship")) return "ship";
-    if (state.location === "fabricator") return "fabricator";
+    if (state.slice_complete) return "slice_complete";
     if (state.world.on_expedition) return "world";
-    if (state.slice_complete && !hasLateProgress(state)) return "slice_complete";
     if (state.unlocked.path) return "path";
     if (state.buildings.hut > 0) return "village";
     if (state.unlocked.outside) return "forest";
@@ -702,17 +1058,19 @@
   }
 
   /* Persistent dark-room one-liner. First matching early gate wins.
-   * Tone matches wake_line / RuleDirector: short, atmospheric Chinese. */
+   * Tone matches wake_line / RuleDirector: short, atmospheric Chinese.
+   * Late gates use main's ship/ending fields (spaceShip, ending, lift_off). */
   function deriveGoal(state) {
     if (!state) return null;
-    if (state.ending_reached) return { id: "prestige", text: "世界尽头。转生？", stage: "ending", action: "prestige" };
+    if (state.ending) return { id: "prestige", text: "世界尽头。转生？", stage: "ending", action: "restart" };
     if (state.world && state.world.on_expedition) return null;
     if (state.location === "space") return { id: "ascent", text: "穿过星尘", stage: "space", action: "space_steer" };
-    if (state.unlocked && state.unlocked.ship && (state.ship.hull || 0) < 1) {
+    var hull = state.spaceShip ? state.spaceShip.hull : 0;
+    if (state.unlocked && state.unlocked.ship && (hull || 0) < 1) {
       return { id: "reinforce_hull", text: "用合金加固船身", stage: "ship", action: "reinforce_hull" };
     }
-    if (state.unlocked && state.unlocked.ship && (state.ship.hull || 0) >= 1 && !state.ending_reached) {
-      return { id: "liftoff", text: "升空", stage: "ship", action: "liftoff" };
+    if (state.unlocked && state.unlocked.ship && (hull || 0) >= 1 && !state.ending) {
+      return { id: "liftoff", text: "升空", stage: "ship", action: "lift_off" };
     }
     var b = state.buildings || {};
     var st = state.stores || {};
@@ -808,6 +1166,12 @@
         if (a.area === "outside" && !state.wood_initialized) {
           addItem(state, "wood", 0);
         }
+        if (a.area === "ship" || a.area === "space") {
+          ensureSpaceShip(state);
+          state.unlocked.ship = true;
+          state.unlocked.space = true;
+        }
+        if (a.area === "fabricator") state.unlocked.fabricator = true;
         break;
       case "set_flag":
         state.flags[a.key] = a.value;
@@ -822,13 +1186,20 @@
         if (state.active_event) return { ok: false, error: "event already open" };
         var spec = events[a.event_id];
         if (!spec) return { ok: false, error: "missing event" };
+        var startName = "start";
+        if (a.event_id === "executioner" && state.flags.executioner_open && spec.scenes && spec.scenes.antechamber) {
+          startName = "antechamber";
+        }
         state.active_event = {
           id: a.event_id,
-          scene: "start",
+          scene: startName,
           spec: spec,
           payload: a.payload || {}
         };
         if (spec.notification) pushNote(state, spec.notification, state.location);
+        var startScene = (spec.scenes && spec.scenes[startName]) ? spec.scenes[startName] : spec;
+        applySceneEffects(state, startScene);
+        if (startScene.combat || spec.combat) beginCombat(state, startScene.combat ? startScene : spec);
         break;
     }
     return { ok: true };
@@ -860,6 +1231,20 @@
     return { drops: drops, msgs: msgs, baitUsed: extra };
   }
 
+  function buildingMax(kind) {
+    if (kind === "trap") return 10;
+    if (kind === "hut") return 20;
+    if (kind === "cart") return 1;
+    if (kind === "lodge") return 1;
+    if (kind === "trading_post") return 1;
+    if (kind === "tannery") return 1;
+    if (kind === "smokehouse") return 1;
+    if (kind === "workshop") return 1;
+    if (kind === "steelworks") return 1;
+    if (kind === "armoury") return 1;
+    return 0;
+  }
+
   function buildingCost(kind, count) {
     // @pacing kind=cost id=trap_base value=10 phase=forest
     // @pacing kind=cost id=trap_step value=10 phase=forest
@@ -869,130 +1254,573 @@
     // @pacing kind=cost id=hut_base value=100 phase=forest min=240s max=900s note=first hut vs gather+builder income
     // @pacing kind=cost id=hut_step value=50 phase=forest
     if (kind === "hut") return { wood: 100 + count * 50 };
-    // @pacing kind=cost id=lodge value=200 phase=village
+    // @pacing kind=cost id=lodge value=200wood+10fur+5meat phase=village
     if (kind === "lodge") return { wood: 200, fur: 10, meat: 5 };
-    // @pacing kind=cost id=trading_post value=400 phase=village
+    // @pacing kind=cost id=trading_post value=400wood+100fur phase=village
     if (kind === "trading_post") return { wood: 400, fur: 100 };
-    // @pacing kind=cost id=tannery value=500 phase=village
+    // @pacing kind=cost id=tannery value=500wood+50fur phase=village
     if (kind === "tannery") return { wood: 500, fur: 50 };
-    // @pacing kind=cost id=smokehouse value=600 phase=village
+    // @pacing kind=cost id=smokehouse value=600wood+50meat phase=village
     if (kind === "smokehouse") return { wood: 600, meat: 50 };
-    // @pacing kind=cost id=workshop value=800 phase=village
+    // @pacing kind=cost id=workshop value=800wood+100leather+10scales phase=village
     if (kind === "workshop") return { wood: 800, leather: 100, scales: 10 };
-    // @pacing kind=cost id=steelworks value=1500 phase=village
+    // @pacing kind=cost id=steelworks value=1500wood+100iron+100coal phase=village
     if (kind === "steelworks") return { wood: 1500, iron: 100, coal: 100 };
-    // @pacing kind=cost id=armoury value=3000 phase=village
+    // @pacing kind=cost id=armoury value=3000wood+100steel+50sulphur phase=village
     if (kind === "armoury") return { wood: 3000, steel: 100, sulphur: 50 };
     return null;
   }
 
-  function jobUnlocked(state, job) {
-    var spec = WORKER_JOBS[job];
+  function needsWorkshop(type) {
+    return type === "weapon" || type === "upgrade" || type === "tool";
+  }
+
+  function craftCost(kind) {
+    var spec = CRAFTABLE[kind];
+    if (!spec || !spec.cost) return null;
+    var out = {};
+    Object.keys(spec.cost).forEach(function (k) { out[k] = spec.cost[k]; });
+    return out;
+  }
+
+  function craftMax(kind) {
+    var spec = CRAFTABLE[kind];
+    if (!spec) return 0;
+    return spec.max || 0;
+  }
+
+  function itemWeight(item) {
+    if (item === "bone_spear") return 2;
+    if (item === "iron_sword") return 3;
+    if (item === "steel_sword") return 5;
+    if (item === "rifle" || item === "laser_rifle" || item === "plasma_rifle") return 5;
+    if (item === "energy_blade") return 2;
+    if (item === "disruptor") return 2;
+    if (item === "bullets") return 0.1;
+    if (item === "energy_cell") return 0.2;
+    if (item === "bolas") return 0.5;
+    return 1;
+  }
+
+  function tradeCost(kind) {
+    var spec = TRADEABLE[kind];
+    if (!spec || !spec.cost) return null;
+    var out = {};
+    Object.keys(spec.cost).forEach(function (k) { out[k] = spec.cost[k]; });
+    return out;
+  }
+
+  function tradeMax(kind) {
+    var spec = TRADEABLE[kind];
+    if (!spec) return 0;
+    return spec.max || 0;
+  }
+
+  function buyVisible(state, kind) {
+    if ((state.buildings.trading_post || 0) <= 0) return false;
+    if (!TRADEABLE[kind]) return false;
+    if (kind === "compass") return true;
+    if (state.flags["buy_unlocked_" + kind] || (state.seen && state.seen[kind])) return true;
+    return false;
+  }
+
+  function checkBuyUnlocks(state) {
+    if ((state.buildings.trading_post || 0) <= 0) return;
+    TRADE_KEYS.forEach(function (kind) {
+      if (state.flags["buy_unlocked_" + kind]) return;
+      if (!buyVisible(state, kind)) return;
+      state.flags["buy_unlocked_" + kind] = true;
+    });
+  }
+
+  function bagCapacity(state) {
+    if ((state.stores.cargo_drone || 0) > 0) return 110;
+    if ((state.stores.convoy || 0) > 0) return 70;
+    if ((state.stores.wagon || 0) > 0) return 40;
+    if ((state.stores.rucksack || 0) > 0) return 20;
+    return 10;
+  }
+
+  function bagUsed(state) {
+    var n = 0;
+    var k;
+    for (k in state.outfit) n += (state.outfit[k] || 0) * itemWeight(k);
+    return n;
+  }
+
+  function getMaxWater(state) {
+    if ((state.stores.fluid_recycler || 0) > 0) return BASE_WATER + 100;
+    if ((state.stores.water_tank || 0) > 0) return BASE_WATER + 50;
+    if ((state.stores.cask || 0) > 0) return BASE_WATER + 20;
+    if ((state.stores.waterskin || 0) > 0) return BASE_WATER + 10;
+    return BASE_WATER;
+  }
+
+  function getMaxHealth(state) {
+    if ((state.stores.kinetic_armour || 0) > 0) return BASE_HEALTH + 75;
+    if ((state.stores.s_armour || 0) > 0) return BASE_HEALTH + 35;
+    if ((state.stores.i_armour || 0) > 0) return BASE_HEALTH + 15;
+    if ((state.stores.l_armour || 0) > 0) return BASE_HEALTH + 5;
+    return BASE_HEALTH;
+  }
+
+  function hasBlueprint(state, item) {
+    return !!(state.blueprints && state.blueprints[item]);
+  }
+
+  function canFabricate(state, kind) {
+    var spec = FABRICABLE[kind];
     if (!spec) return false;
-    if (spec.need && !(state.buildings[spec.need] > 0)) return false;
-    if (spec.needFlag && !state.flags[spec.needFlag]) return false;
+    if (spec.blueprint && !hasBlueprint(state, kind)) return false;
     return true;
+  }
+
+  function fabricateCost(kind) {
+    var spec = FABRICABLE[kind];
+    if (!spec || !spec.cost) return null;
+    var out = {};
+    Object.keys(spec.cost).forEach(function (k) { out[k] = spec.cost[k]; });
+    return out;
+  }
+
+  function redeemBlueprints(state) {
+    var redeemed = false;
+    Object.keys(BLUEPRINT_REDEEM).forEach(function (bp) {
+      if ((state.outfit[bp] || 0) > 0) {
+        if (!state.blueprints) state.blueprints = {};
+        state.blueprints[BLUEPRINT_REDEEM[bp]] = true;
+        state.outfit[bp] = 0;
+        redeemed = true;
+      }
+    });
+    if (redeemed) pushNote(state, t("blueprints feed into the fabricator data port. possibilities grow."), "path");
+    return redeemed;
+  }
+
+  function prestigeRandGen(storeType) {
+    var amount;
+    if (storeType === "g") amount = Math.floor(Math.random() * 10);
+    else if (storeType === "w") amount = Math.floor(Math.floor(Math.random() * 10) / 2);
+    else if (storeType === "a") amount = Math.ceil(Math.random() * 10 * Math.ceil(Math.random() * 10));
+    else return 1;
+    return amount !== 0 ? amount : 1;
+  }
+
+  function prestigeGetStores(state, reduce) {
+    var stores = [];
+    PRESTIGE_STORES.forEach(function (s) {
+      var n = state.stores[s.id] || 0;
+      stores.push(Math.floor(n / (reduce ? prestigeRandGen(s.type) : 1)));
+    });
+    return stores;
+  }
+
+  function getMaxHull(state) {
+    ensureSpaceShip(state);
+    return state.spaceShip.hull || 0;
+  }
+
+  function calculateScore(state) {
+    var scoreUnadded = prestigeGetStores(state, false);
+    var fullScore = 0;
+    var i;
+    for (i = 0; i < SCORE_FACTORS.length; i++) {
+      fullScore += (scoreUnadded[i] || 0) * SCORE_FACTORS[i];
+    }
+    fullScore += (state.stores.alien_alloy || 0) * 10;
+    fullScore += (state.stores.fleet_beacon || 0) * 500;
+    fullScore += getMaxHull(state) * 50;
+    return Math.floor(fullScore);
+  }
+
+  function totalScore(state) {
+    return ((state.previous && state.previous.score) || 0) + calculateScore(state);
+  }
+
+  function prestigeGet(state) {
+    return {
+      stores: state.previous && state.previous.stores,
+      score: state.previous && state.previous.score
+    };
+  }
+
+  function prestigeSet(state, prestige) {
+    if (!state.previous) state.previous = { stores: null, score: 0 };
+    if (prestige && prestige.stores != null) state.previous.stores = prestige.stores;
+    if (prestige && prestige.score != null) state.previous.score = prestige.score;
+    return state.previous;
+  }
+
+  function prestigeSave(state) {
+    if (!state.previous) state.previous = { stores: null, score: 0 };
+    state.previous.stores = prestigeGetStores(state, true);
+    state.previous.score = totalScore(state);
+    if (!state.playStats) state.playStats = { score: 0 };
+    state.playStats.score = calculateScore(state);
+    return state.previous;
+  }
+
+  function prestigeCollect(state) {
+    var prev = state.previous && state.previous.stores;
+    if (!prev || !prev.length) return false;
+    PRESTIGE_STORES.forEach(function (s, i) {
+      var n = prev[i] || 0;
+      if (n) addItem(state, s.id, n);
+    });
+    state.previous.stores = [];
+    return true;
+  }
+
+  function formatScore(template, n) {
+    return t(template).replace("{0}", String(n));
   }
 
   function assignedWorkers(state) {
     var n = 0;
-    Object.keys(state.workers).forEach(function (k) { n += state.workers[k] || 0; });
+    WORKER_KEYS.forEach(function (k) {
+      if (k === "gatherer") return;
+      n += state.workers[k] || 0;
+    });
     return n;
   }
 
-  function waterCapacity(state) {
-    // original World.getMaxWater: tank +100, cask +50, recycler +20, waterskin +10, base 10
-    if ((state.stores.water_tank || 0) > 0) return 10 + 100;
-    if ((state.stores.cask || 0) > 0) return 10 + 50;
-    if ((state.stores.fluid_recycler || 0) > 0) return 10 + 20;
-    if ((state.stores.waterskin || 0) > 0) return 10 + 10;
-    return 10;
+  function syncGatherers(state) {
+    var extra = assignedWorkers(state) - (state.population || 0);
+    if (extra > 0) {
+      Object.keys(JOB_BUILDING).forEach(function (job) {
+        if (extra <= 0) return;
+        var n = state.workers[job] || 0;
+        if (n <= 0) return;
+        var cut = Math.min(n, extra);
+        state.workers[job] = n - cut;
+        extra -= cut;
+      });
+    }
+    state.workers.gatherer = Math.max(0, (state.population || 0) - assignedWorkers(state));
+    return state.workers.gatherer;
   }
 
-  function bagCapacity(state) {
-    if ((state.stores.cargo_drone || 0) > 0) return 10 + 100;
-    if ((state.stores.convoy || 0) > 0) return 10 + 60;
-    if ((state.stores.wagon || 0) > 0) return 10 + 30;
-    if ((state.stores.rucksack || 0) > 0) return 10 + 10;
-    return 10;
-  }
-
-  function outfitWeight(outfit) {
-    var w = 0;
-    Object.keys(outfit || {}).forEach(function (k) { w += outfit[k] || 0; });
-    return w;
-  }
-
-  function armourBonus(state) {
-    if ((state.stores.kinetic_armour || 0) > 0 || (state.outfit.kinetic_armour || 0) > 0) return 15;
-    if ((state.stores.s_armour || 0) > 0 || (state.outfit.s_armour || 0) > 0) return 10;
-    if ((state.stores.i_armour || 0) > 0 || (state.outfit.i_armour || 0) > 0) return 6;
-    if ((state.stores.l_armour || 0) > 0 || (state.outfit.l_armour || 0) > 0) return 3;
-    return 0;
-  }
-
-  function bestWeapon(state, fromOutfit) {
-    var bag = fromOutfit ? state.outfit : state.stores;
-    var order = ["plasma_rifle", "grenade", "energy_blade", "laser_rifle", "bayonet", "steel_sword", "rifle", "iron_sword", "bone_spear"];
-    for (var i = 0; i < order.length; i++) {
-      var id = order[i];
-      if ((bag[id] || 0) > 0 || (state.stores[id] || 0) > 0) {
-        var w = WEAPONS[id];
-        if (w.cost) {
-          var okCost = Object.keys(w.cost).every(function (k) {
-            return (state.outfit[k] || 0) > 0 || (state.stores[k] || 0) > 0;
-          });
-          if (!okCost) continue;
-        }
-        return { id: id, dmg: w.dmg, cost: w.cost || null };
+  function unlockWorkersForBuildings(state) {
+    Object.keys(JOB_BUILDING).forEach(function (job) {
+      var b = JOB_BUILDING[job];
+      if ((state.buildings[b] || 0) > 0) {
+        if (typeof state.workers[job] !== "number") state.workers[job] = 0;
       }
-    }
-    return { id: "fists", dmg: 1, cost: null };
+    });
   }
 
-  function applyWorkerIncome(state, job, count, ticks) {
-    var spec = WORKER_JOBS[job];
-    if (!spec || count <= 0 || ticks <= 0) return;
-    var stores = spec.stores;
-    var keys = Object.keys(stores);
-    var needNeg = keys.filter(function (k) { return stores[k] < 0; });
-    for (var t = 0; t < ticks; t++) {
-      var afford = needNeg.every(function (k) {
-        return (state.stores[k] || 0) >= Math.abs(stores[k]) * count;
-      });
-      if (!afford) break;
-      keys.forEach(function (k) {
-        addItem(state, k, stores[k] * count);
-      });
-    }
+  function workerUnlocked(state, job) {
+    if (job === "gatherer") return (state.population || 0) > 0;
+    var b = JOB_BUILDING[job];
+    return !!(b && (state.buildings[b] || 0) > 0);
   }
 
-  function logMilestone(game, id, extra) {
-    var s = game.state;
-    if (s.flags["ms_" + id]) return;
-    s.flags["ms_" + id] = true;
-    game.analytics.log(s, "late_game_milestone", Object.assign({
-      milestone: id,
-      game_time_sec: Math.round(s.game_time_sec),
-      phase: s.phase,
-      location: s.location
-    }, extra || {}));
+  function visibleJobs(state) {
+    var out = [];
+    if ((state.population || 0) > 0) out.push("gatherer");
+    Object.keys(JOB_BUILDING).forEach(function (job) {
+      if (workerUnlocked(state, job)) out.push(job);
+    });
+    return out;
+  }
+
+  function costSeen(state, cost) {
+    if (!cost) return false;
+    if ((state.stores.wood || 0) < (cost.wood || 0) * 0.5) return false;
+    for (var k in cost) {
+      if (k === "wood") continue;
+      if (!(state.stores[k] > 0)) return false;
+    }
+    return true;
+  }
+
+  function craftVisible(state, kind) {
+    if (CRAFTABLE[kind]) {
+      if ((state.buildings.workshop || 0) <= 0) return false;
+      if (state.flags["craft_unlocked_" + kind]) return true;
+      return costSeen(state, CRAFTABLE[kind].cost);
+    }
+    if (state.flags["craft_unlocked_" + kind] || (state.buildings[kind] || 0) > 0) return true;
+    return costSeen(state, buildingCost(kind, state.buildings[kind] || 0));
+  }
+
+  function checkCraftUnlocks(state) {
+    if (state.builder_level < 4) return;
+    BUILDABLE.forEach(function (kind) {
+      if (state.flags["craft_unlocked_" + kind] || state.flags["craft_hint_" + kind]) return;
+      if (!craftVisible(state, kind)) return;
+      state.flags["craft_unlocked_" + kind] = true;
+      var msg = BUILD_AVAILABLE[kind];
+      if (msg) pushNote(state, t(msg), "room");
+    });
+    if ((state.buildings.workshop || 0) <= 0) return;
+    CRAFT_KEYS.forEach(function (kind) {
+      if (state.flags["craft_unlocked_" + kind] || state.flags["craft_hint_" + kind]) return;
+      if (!craftVisible(state, kind)) return;
+      state.flags["craft_unlocked_" + kind] = true;
+    });
+  }
+
+  function applyWorkerIncome(state, dt, analytics) {
+    var produced = {};
+    Object.keys(INCOME).forEach(function (job) {
+      var spec = INCOME[job];
+      var n = job === "gatherer" ? (state.workers.gatherer || 0) : (state.workers[job] || 0);
+      if (n <= 0) return;
+      if (typeof state.income_acc[job] !== "number") state.income_acc[job] = 0;
+      state.income_acc[job] += dt;
+      if (state.income_acc[job] < spec.delay) return;
+      var ticks = Math.floor(state.income_acc[job] / spec.delay);
+      state.income_acc[job] -= ticks * spec.delay;
+      var t0;
+      for (t0 = 0; t0 < ticks; t0++) {
+        var okApply = true;
+        var k;
+        for (k in spec.stores) {
+          if ((state.stores[k] || 0) + spec.stores[k] * n < 0) {
+            okApply = false;
+            break;
+          }
+        }
+        if (!okApply) continue;
+        for (k in spec.stores) {
+          addItem(state, k, spec.stores[k] * n);
+          produced[k] = (produced[k] || 0) + spec.stores[k] * n;
+        }
+        if (analytics && spec.stores.cured_meat > 0 && !state.flags.cured_meat_produced && (state.stores.cured_meat || 0) > 0) {
+          state.flags.cured_meat_produced = true;
+          analytics.log(state, "cured_meat_first", {
+            workers: n,
+            source: job,
+            cured_meat: state.stores.cured_meat,
+            stores: deepClone(state.stores)
+          });
+        }
+      }
+    });
+    return produced;
+  }
+
+  function bagHave(state, item) {
+    var n = state.stores[item] || 0;
+    if (state.world && state.world.on_expedition) n += state.outfit[item] || 0;
+    return n;
   }
 
   function canAfford(state, cost) {
     for (var k in cost) {
-      if ((state.stores[k] || 0) < cost[k]) return false;
+      if (bagHave(state, k) < cost[k]) return false;
     }
     return true;
   }
 
   function pay(state, cost) {
-    for (var k in cost) addItem(state, k, -cost[k]);
+    for (var k in cost) {
+      var need = cost[k];
+      if (state.world && state.world.on_expedition && (state.outfit[k] || 0) > 0) {
+        var fromBag = Math.min(need, state.outfit[k] || 0);
+        state.outfit[k] = (state.outfit[k] || 0) - fromBag;
+        need -= fromBag;
+      }
+      if (need) addItem(state, k, -need);
+    }
   }
 
   function grant(state, reward) {
     if (!reward) return;
-    for (var k in reward) addItem(state, k, reward[k]);
+    for (var k in reward) {
+      if (state.world && state.world.on_expedition && ITEMS.indexOf(k) >= 0) {
+        state.outfit[k] = (state.outfit[k] || 0) + reward[k];
+        if (reward[k] > 0) {
+          if (!state.seen) state.seen = {};
+          state.seen[k] = true;
+        }
+      } else {
+        addItem(state, k, reward[k]);
+      }
+    }
+  }
+
+  function eventAvailable(state, spec) {
+    var w = spec && spec.when;
+    if (!w) return false;
+    // World encounters live in Events.Encounters and are rolled on world_move.
+    // The village scheduler must not pick them (original EventPool is room/outside only).
+    if (spec.combat || w.terrain || w.min_dist != null || w.max_dist != null) return false;
+    if (w.location) {
+      var locs = Array.isArray(w.location) ? w.location : [w.location];
+      if (locs.indexOf(state.location) < 0) return false;
+    }
+    if (w.store && !(state.stores[w.store] > 0)) return false;
+    if (w.wood_inited && !state.wood_initialized) return false;
+    if (w.min_huts != null && (state.buildings.hut || 0) < w.min_huts) return false;
+    if (w.max_huts != null && (state.buildings.hut || 0) > w.max_huts) return false;
+    if (w.min_traps != null && (state.buildings.trap || 0) < w.min_traps) return false;
+    if (w.world && !state.unlocked.world) return false;
+    if (w.medicine && !(state.stores.medicine > 0)) return false;
+    if (w.pop_gt != null && !(state.population > w.pop_gt)) return false;
+    if (w.pop_lt != null && !(state.population < w.pop_lt)) return false;
+    if (w.thieves != null && state.flags.thieves !== w.thieves) return false;
+    if (w.city_cleared && !state.flags.city_cleared) return false;
+    if (w.penrose_off && state.flags.marketing_penrose) return false;
+    return true;
+  }
+
+  function buttonAvailable(state, btn) {
+    if (!btn) return false;
+    if (btn.require_no && (state.stores[btn.require_no] || 0) > 0) return false;
+    if (btn.require_flag_off && state.flags[btn.require_flag_off]) return false;
+    if (btn.require_flag && !state.flags[btn.require_flag]) return false;
+    if (btn.require_flags) {
+      var need = Array.isArray(btn.require_flags) ? btn.require_flags : [btn.require_flags];
+      for (var i = 0; i < need.length; i++) {
+        if (!state.flags[need[i]]) return false;
+      }
+    }
+    return true;
+  }
+
+  function killVillagers(state, num) {
+    var n = Math.max(0, Math.floor(Number(num) || 0));
+    if (n <= 0) return;
+    state.population = Math.max(0, (state.population || 0) - n);
+    syncGatherers(state);
+  }
+
+  function destroyHuts(state, num) {
+    var left = Math.max(0, Math.floor(Number(num) || 0));
+    while (left > 0 && (state.buildings.hut || 0) > 0) {
+      var pop = state.population || 0;
+      var rate = pop / 4;
+      var full = Math.floor(rate);
+      var huts = Math.ceil(rate);
+      if (!huts) break;
+      var target = Math.floor(Math.random() * huts) + 1;
+      var inhabitants = 0;
+      if (target <= full) inhabitants = 4;
+      else if (target === full + 1) inhabitants = pop % 4;
+      state.buildings.hut -= 1;
+      if (inhabitants) killVillagers(state, inhabitants);
+      left -= 1;
+    }
+  }
+
+  function currentScene(active) {
+    if (!active || !active.spec) return null;
+    var spec = active.spec;
+    var name = active.scene || "start";
+    if (spec.scenes && spec.scenes[name]) return spec.scenes[name];
+    if (name === "start") return spec;
+    return spec;
+  }
+
+  function worldKey(state) {
+    return state.world.x + "," + state.world.y;
+  }
+
+  function applySceneEffects(state, scene) {
+    if (!scene) return;
+    if (scene.reward) grant(state, scene.reward);
+    if (scene.loot && !scene.combat) grant(state, rollLoot(scene.loot));
+    if (scene.notification) pushNote(state, scene.notification, state.location);
+    if (scene.set_flag) state.flags[scene.set_flag] = true;
+    if (scene.water && state.world && state.world.on_expedition) {
+      state.world.water = Math.min(getMaxWater(state), state.world.water + scene.water);
+    }
+    var fx = scene.onload;
+    if (!fx) return;
+    if (fx.destroy_huts) destroyHuts(state, fx.destroy_huts);
+    if (fx.kill_pop) {
+      var lo = fx.kill_pop.min || 1;
+      var hi = fx.kill_pop.max;
+      if (fx.kill_pop.max_frac != null) hi = Math.floor((state.population || 0) * fx.kill_pop.max_frac);
+      if (hi == null || hi < lo) hi = lo;
+      killVillagers(state, Math.floor(Math.random() * (hi - lo + 1)) + lo);
+    }
+    if (fx.add_hut && (state.buildings.hut || 0) < 20) state.buildings.hut += 1;
+    if (fx.give) grant(state, fx.give);
+    if (fx.set_thieves != null) state.flags.thieves = fx.set_thieves;
+    if (fx.return_stolen) {
+      grant(state, state.flags.stolen || {});
+      state.flags.stolen = {};
+    }
+    if (fx.learn) addPerk(state, fx.learn);
+    if (fx.mark_visited && state.world) {
+      state.world.cleared[worldKey(state)] = true;
+      state.world.visited[worldKey(state)] = true;
+    }
+    if (fx.visited_old_house) state.flags.visited_old_house = true;
+    if (fx.set_water && state.world && state.world.on_expedition) {
+      state.world.water = getMaxWater(state);
+      pushNote(state, t("water replenished"), "world");
+    }
+    if (fx.use_outpost && state.world) {
+      state.world.water = getMaxWater(state);
+      if (!state.world.outposts_used) state.world.outposts_used = {};
+      state.world.outposts_used[worldKey(state)] = true;
+      state.world.visited[worldKey(state)] = true;
+      pushNote(state, t("water replenished"), "world");
+    }
+    if (fx.city_cleared) state.flags.city_cleared = true;
+    if (fx.set_flag) state.flags[fx.set_flag] = true;
+    if (fx.world_flag) {
+      state.flags["world_" + fx.world_flag] = true;
+      if (state.world) state.world[fx.world_flag] = true;
+    }
+    if (fx.collect_stores && state.previous && state.previous.stores) {
+      grant(state, state.previous.stores);
+    }
+    if (fx.delay_give && Math.random() < (fx.delay_give.chance == null ? 1 : fx.delay_give.chance)) {
+      var after = fx.delay_give.after || 60;
+      var stores = fx.delay_give.stores || {};
+      Object.keys(stores).forEach(function (item) {
+        state.scheduled.push({
+          at: state.game_time_sec + after,
+          call: { tool: "give_item", args: { item: item, amount: stores[item] } },
+          origin: "event"
+        });
+      });
+      if (fx.delay_give.note) {
+        state.scheduled.push({
+          at: state.game_time_sec + after,
+          call: { tool: "narrate", args: { text: fx.delay_give.note, source: "room" } },
+          origin: "event"
+        });
+      }
+    }
+  }
+
+  function maybeStartThieves(state) {
+    if (state.flags.thieves != null) return;
+    if (!state.unlocked || !state.unlocked.world) return;
+    var k;
+    for (k in state.stores) {
+      if ((state.stores[k] || 0) > 5000) {
+        state.flags.thieves = 1;
+        if (!state.flags.stolen || typeof state.flags.stolen !== "object") state.flags.stolen = {};
+        state.income_acc.thieves = 0;
+        return;
+      }
+    }
+  }
+
+  function applyThiefIncome(state, dt) {
+    if (state.flags.thieves !== 1) return;
+    if (typeof state.income_acc.thieves !== "number") state.income_acc.thieves = 0;
+    if (!state.flags.stolen || typeof state.flags.stolen !== "object") state.flags.stolen = {};
+    state.income_acc.thieves += dt;
+    var take = { wood: 10, fur: 5, meat: 5 };
+    while (state.income_acc.thieves >= 10) {
+      state.income_acc.thieves -= 10;
+      Object.keys(take).forEach(function (k) {
+        var have = state.stores[k] || 0;
+        var n = Math.min(have, take[k]);
+        if (n > 0) {
+          addItem(state, k, -n);
+          state.flags.stolen[k] = (state.flags.stolen[k] || 0) + n;
+        }
+      });
+    }
   }
 
   function nowMs() {
@@ -1072,11 +1900,195 @@
   function cooldownSnapshot(state, timeScale) {
     var remaining = {};
     var ends = {};
-    ["stoke", "gather", "traps"].forEach(function (id) {
+    ["stoke", "gather", "traps", "liftoff"].forEach(function (id) {
       remaining[id] = Math.round(cooldownLeft(state, id, timeScale) * 10) / 10;
       ends[id] = (state.cooldown_ends_at && state.cooldown_ends_at[id]) || 0;
     });
     return { remaining: remaining, ends_at: ends, wall_now: nowMs() };
+  }
+
+  function clearCooldown(state, id) {
+    if (state.cooldowns) delete state.cooldowns[id];
+    if (state.cooldown_ends_at) delete state.cooldown_ends_at[id];
+  }
+
+  function ensureSpaceShip(state) {
+    if (!isPlainObject(state.spaceShip)) {
+      state.spaceShip = { hull: BASE_HULL, thrusters: BASE_THRUSTERS, seenShip: false, seenWarning: false };
+    }
+    if (typeof state.spaceShip.hull !== "number" || !isFinite(state.spaceShip.hull)) state.spaceShip.hull = BASE_HULL;
+    if (typeof state.spaceShip.thrusters !== "number" || !isFinite(state.spaceShip.thrusters)) state.spaceShip.thrusters = BASE_THRUSTERS;
+    if (typeof state.spaceShip.seenShip !== "boolean") state.spaceShip.seenShip = !!state.spaceShip.seenShip;
+    if (typeof state.spaceShip.seenWarning !== "boolean") state.spaceShip.seenWarning = !!state.spaceShip.seenWarning;
+    if (!isPlainObject(state.unlocked)) state.unlocked = {};
+    if (typeof state.unlocked.ship !== "boolean") state.unlocked.ship = !!state.unlocked.ship;
+    if (typeof state.unlocked.space !== "boolean") state.unlocked.space = !!state.unlocked.space;
+    return state.spaceShip;
+  }
+
+  function shipSpeed(state) {
+    var ship = ensureSpaceShip(state);
+    return SHIP_SPEED + (ship.thrusters || 0);
+  }
+
+  function spaceLayerTitle(altitude) {
+    if (altitude < 10) return t("Troposphere");
+    if (altitude < 20) return t("Stratosphere");
+    if (altitude < 30) return t("Mesosphere");
+    if (altitude < 45) return t("Thermosphere");
+    if (altitude < 60) return t("Exosphere");
+    return t("Space");
+  }
+
+  function maybeSeeShip(state) {
+    var ship = ensureSpaceShip(state);
+    if (!ship.seenShip) {
+      pushNote(state, t("somewhere above the debris cloud, the wanderer fleet hovers. been on this rock too long."), "ship");
+      ship.seenShip = true;
+    }
+  }
+
+  function maybeSeeFabricator(state) {
+    if (!state.flags.fabricator_seen) {
+      pushNote(state, t("the familiar hum of wanderer machinery coming to life. finally, real tools."), "fabricator");
+      state.flags.fabricator_seen = true;
+    }
+  }
+
+  function asteroidCountAt(altitude) {
+    var n = 1;
+    if (altitude > 10) n += 1;
+    if (altitude > 20) n += 2;
+    if (altitude > 40) n += 2;
+    return n;
+  }
+
+  function spawnAsteroid(space) {
+    var glyph = ASTEROID_GLYPHS[Math.floor(Math.random() * ASTEROID_GLYPHS.length)];
+    var dur = BASE_ASTEROID_SPEED - Math.floor(Math.random() * (BASE_ASTEROID_SPEED * 0.65));
+    if (dur < 200) dur = 200;
+    space.asteroids.push({
+      x: Math.floor(Math.random() * SPACE_WIDTH),
+      y: 0,
+      w: 14,
+      h: 16,
+      glyph: glyph,
+      vy: SPACE_HEIGHT / (dur / 1000)
+    });
+  }
+
+  function startSpace(state) {
+    var ship = ensureSpaceShip(state);
+    state.space = {
+      active: true,
+      done: false,
+      altitude: 0,
+      hull: ship.hull,
+      maxHull: ship.hull,
+      shipX: SPACE_WIDTH / 2,
+      shipY: SPACE_HEIGHT / 2,
+      up: false,
+      down: false,
+      left: false,
+      right: false,
+      asteroids: [],
+      spawnAcc: 0,
+      startedAt: state.game_time_sec,
+      altAcc: 0
+    };
+    state.location = "space";
+    spawnAsteroid(state.space);
+  }
+
+  function crashSpace(state) {
+    if (!state.space || state.space.done) return;
+    state.space.done = true;
+    state.space.active = false;
+    state.space.asteroids = [];
+    state.location = "ship";
+    setCooldown(state, "liftoff", LIFTOFF_COOLDOWN, 1);
+    pushNote(state, t("the world fades"), "ship");
+  }
+
+  function finishAscent(state) {
+    if (!state.space || state.space.done) return;
+    state.space.done = true;
+    state.space.active = false;
+    state.space.asteroids = [];
+    state.flags.space_escaped = true;
+    state.flags.ending = true;
+    state.ending = true;
+    prestigeSave(state);
+    state.location = "ending";
+    pushNote(state, t("Space"), "space");
+    pushNote(state, formatScore("score for this game: {0}", calculateScore(state)), "ending");
+    pushNote(state, formatScore("total score: {0}", prestigeGet(state).score || 0), "ending");
+    if ((state.stores.fleet_beacon || 0) > 0) {
+      pushNote(state, t("the beacon pulses gently as the ship glides through space.\ncoordinates are locked. nothing to do but wait."), "ending");
+    } else {
+      pushNote(state, t("the air is running out."), "ending");
+      pushNote(state, t("the capsule is cold."), "ending");
+    }
+  }
+
+  function tickSpace(state, dt) {
+    var sp = state.space;
+    if (!sp || !sp.active || sp.done) return;
+    var speed = shipSpeed(state);
+    var dx = 0;
+    var dy = 0;
+    if (sp.up) dy -= speed;
+    else if (sp.down) dy += speed;
+    if (sp.left) dx -= speed;
+    else if (sp.right) dx += speed;
+    if (dx !== 0 && dy !== 0) {
+      dx = dx / Math.sqrt(2);
+      dy = dy / Math.sqrt(2);
+    }
+    var frames = dt / (33 / 1000);
+    sp.shipX += dx * frames;
+    sp.shipY += dy * frames;
+    if (sp.shipX < 10) sp.shipX = 10;
+    else if (sp.shipX > SPACE_WIDTH - 10) sp.shipX = SPACE_WIDTH - 10;
+    if (sp.shipY < 10) sp.shipY = 10;
+    else if (sp.shipY > SPACE_HEIGHT - 10) sp.shipY = SPACE_HEIGHT - 10;
+
+    sp.altAcc += dt;
+    while (sp.altAcc >= 1) {
+      sp.altAcc -= 1;
+      sp.altitude += 1;
+      if (sp.altitude > 60) sp.altAcc = 0;
+    }
+
+    var spawnEvery = Math.max(0.1, (1000 - sp.altitude * 10) / 1000);
+    void BASE_ASTEROID_DELAY;
+    sp.spawnAcc += dt;
+    while (sp.spawnAcc >= spawnEvery && !sp.done) {
+      sp.spawnAcc -= spawnEvery;
+      var extra = asteroidCountAt(sp.altitude);
+      for (var i = 0; i < extra; i++) spawnAsteroid(sp);
+    }
+
+    var next = [];
+    for (var a = 0; a < sp.asteroids.length; a++) {
+      var rock = sp.asteroids[a];
+      rock.y += rock.vy * dt;
+      if (rock.x - rock.w / 2 <= sp.shipX && rock.x + rock.w / 2 >= sp.shipX
+          && rock.y <= sp.shipY && rock.y + rock.h >= sp.shipY) {
+        sp.hull -= 1;
+        if (sp.hull <= 0) {
+          crashSpace(state);
+          return;
+        }
+        continue;
+      }
+      if (rock.y < SPACE_HEIGHT + 20) next.push(rock);
+    }
+    sp.asteroids = next;
+
+    if (state.game_time_sec - sp.startedAt >= FTB_SPEED / 1000) {
+      finishAscent(state);
+    }
   }
 
   function outsideTitle(state) {
@@ -1092,20 +2104,117 @@
   }
 
   function terrainAt(x, y, size) {
-    var dx = x - Math.floor(size / 2);
-    var dy = y - Math.floor(size / 2);
+    var cx = Math.floor((size || WORLD_SIZE) / 2);
+    var dx = x - cx;
+    var dy = y - cx;
     var d = Math.sqrt(dx * dx + dy * dy);
     if (d < 1.2) return "village";
-    if (d < 3) return "forest";
-    if (d < 4.5) return "grass";
-    return "dust";
+    var h = Math.abs(Math.sin((x + 1) * 12.9898 + (y + 1) * 78.233) * 43758.5453) % 1;
+    var roll = h * (1 - STICKINESS) + ((x + y) % 3) / 3 * STICKINESS;
+    if (d < 10) return roll < 0.55 ? "forest" : (roll < 0.85 ? "grass" : "dust");
+    if (d < 20) return roll < 0.25 ? "forest" : (roll < 0.70 ? "grass" : "dust");
+    return roll < 0.15 ? "forest" : (roll < 0.50 ? "grass" : "dust");
+  }
+
+  function worldDistance(state) {
+    return Math.abs(state.world.x - VILLAGE_X) + Math.abs(state.world.y - VILLAGE_Y);
+  }
+
+  function terrainKind(state) {
+    var ter = terrainAt(state.world.x, state.world.y, state.world.size);
+    if (ter === "grass") return "field";
+    if (ter === "dust") return "barrens";
+    return ter;
+  }
+
+  function hasPerk(state, id) {
+    return !!(state.perks && state.perks[id]);
+  }
+
+  function addPerk(state, id) {
+    if (!PERKS[id]) return;
+    if (!state.perks) state.perks = emptyPerks();
+    if (state.perks[id]) return;
+    state.perks[id] = true;
+    state.flags["learned_" + id] = true;
+    if (PERKS[id].notify) pushNote(state, t(PERKS[id].notify), state.location);
+  }
+
+  function meatHeal(state) {
+    return MEAT_HEAL * (hasPerk(state, "gastronome") ? 2 : 1);
+  }
+
+  function getHitChance(state) {
+    return BASE_HIT_CHANCE + (hasPerk(state, "precise") ? 0.1 : 0);
+  }
+
+  function lightRadius(state) {
+    return LIGHT_RADIUS * (hasPerk(state, "scout") ? 2 : 1);
+  }
+
+  function movesPerFood(state) {
+    return MOVES_PER_FOOD * (hasPerk(state, "slow_metabolism") ? 2 : 1);
+  }
+
+  function movesPerWater(state) {
+    return MOVES_PER_WATER * (hasPerk(state, "desert_rat") ? 2 : 1);
+  }
+
+  function fightChance(state) {
+    return FIGHT_CHANCE * (hasPerk(state, "stealthy") ? 0.5 : 1);
+  }
+
+  function rollLoot(loot) {
+    var out = {};
+    if (!loot) return out;
+    Object.keys(loot).forEach(function (k) {
+      var spec = loot[k];
+      if (!spec || Math.random() > (spec.chance == null ? 1 : spec.chance)) return;
+      var lo = spec.min || 1;
+      var hi = spec.max == null ? lo : spec.max;
+      out[k] = Math.floor(Math.random() * (hi - lo + 1)) + lo;
+    });
+    return out;
+  }
+
+  function pickWorldEncounter(state, catalog) {
+    var d = worldDistance(state);
+    var ter = terrainKind(state);
+    var pool = [];
+    Object.keys(catalog || {}).forEach(function (id) {
+      var spec = catalog[id];
+      if (!spec || !spec.combat || !spec.when) return;
+      var w = spec.when;
+      if (w.terrain && w.terrain !== ter) return;
+      if (w.max_dist != null && d > w.max_dist) return;
+      if (w.min_dist != null && d <= w.min_dist) return;
+      pool.push(id);
+    });
+    if (!pool.length) return null;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  function beginCombat(state, spec, catalog) {
+    var ev = spec || {};
+    var c = ev.combat || {};
+    state.combat = {
+      id: ev.id || (state.active_event && state.active_event.id) || "fight",
+      hp: c.hp || 4,
+      dmg: c.dmg || 1,
+      hit: c.hit == null ? BASE_HIT_CHANCE : c.hit,
+      name: c.name || ev.title || "敌人",
+      death: c.death || "",
+      reward: c.reward || null,
+      loot: c.loot || null,
+      stunned: false
+    };
   }
 
   function RuleDirector() {
     this.seen = {};
   }
 
-  RuleDirector.prototype.think = function (state) {
+  RuleDirector.prototype.think = function (state, catalog) {
     var calls = [];
     var f = state.flags;
     var once = function (key, list) {
@@ -1224,10 +2333,10 @@
       calls.push({ tool: "set_flag", args: { key: "next_world_event_at", value: state.game_time_sec + 180 + Math.random() * 180 } });
     } else if (evDue != null && state.game_time_sec >= evDue && !state.active_event && !state.world.on_expedition) {
       var pool = [];
-      if (state.location === "room" && (state.stores.fur || 0) > 0) pool.push("nomad");
-      if (state.location === "room" && state.wood_initialized) pool.push("noises_outside");
-      if (state.location === "outside" && state.buildings.trap > 0) pool.push("ruined_trap");
-      if (state.location === "outside" && state.population > 0) pool.push("beast_attack");
+      Object.keys(catalog || {}).forEach(function (id) {
+        var spec = catalog[id];
+        if (spec && spec.when && spec.when.location && eventAvailable(state, spec)) pool.push(id);
+      });
       if (pool.length) {
         var pick = pool[Math.floor(Math.random() * pool.length)];
         calls.push({ tool: "spawn_event", args: { event_id: pick } });
@@ -1482,6 +2591,7 @@
       this.log(state, "resource_snapshot", {
         stores: deepClone(state.stores),
         buildings: deepClone(state.buildings),
+        workers: deepClone(state.workers),
         fire: state.fire,
         population: state.population,
         temperature: state.temperature,
@@ -1493,6 +2603,7 @@
       this.log(state, "resource_snapshot", {
         stores: deepClone(state.stores),
         buildings: deepClone(state.buildings),
+        workers: deepClone(state.workers),
         fire: state.fire,
         population: state.population,
         temperature: state.temperature,
@@ -1513,7 +2624,7 @@
     this._llmBusy = false;
     this._saveDirty = false;
     this._lastSaveAt = 0;
-    this.state = createState();
+    this.state = migrateState(createState());
     var boot = parseBootQuery();
     var restored = false;
     if (boot.fresh) {
@@ -1740,7 +2851,7 @@
       });
       return;
     }
-    var calls = this.rule.think(this.state);
+    var calls = this.rule.think(this.state, this.events);
     this.analytics.log(this.state, "director_think", {
       director: "rule",
       call_count: calls ? calls.length : 0,
@@ -1764,7 +2875,7 @@
     args = args || {};
     var s = this.state;
     var note = null;
-    if (s.active_event && action !== "event_choice" && action !== "combat" && action !== "export_telemetry" && action !== "set_director" && action !== "set_timescale" && action !== "travel") {
+    if (s.active_event && action !== "event_choice" && action !== "combat" && action !== "export_telemetry" && action !== "set_director" && action !== "set_timescale" && action !== "travel" && action !== "assign_worker") {
       return { ok: false, error: "event_open" };
     }
     switch (action) {
@@ -1851,31 +2962,52 @@
           return { ok: false, error: "too_cold" };
         }
         var kind = args.kind;
-        if (CRAFTABLES[kind]) {
-          var craft = CRAFTABLES[kind];
-          if (s.buildings.workshop < 1 && kind !== "torch") return { ok: false, error: "no_workshop" };
-          if (craft.max && (s.stores[kind] || 0) >= craft.max) return { ok: false, error: "max" };
-          if (!canAfford(s, craft.cost)) return { ok: false, error: "cost" };
-          pay(s, craft.cost);
-          addItem(s, kind, craft.qty || 1);
-          pushNote(s, t(craft.msg), "room");
-          this.analytics.log(s, "build", { kind: kind, cost: craft.cost, have: s.stores[kind], type: "craft" });
-          logMilestone(this, "craft_" + kind);
+        var craftSpec = CRAFTABLE[kind];
+        if (craftSpec) {
+          if (needsWorkshop(craftSpec.type) && (s.buildings.workshop || 0) <= 0) {
+            return { ok: false, error: "no_workshop" };
+          }
+          var haveCraft = s.stores[kind] || 0;
+          var craftCap = craftSpec.max || 0;
+          if (craftCap > 0 && haveCraft >= craftCap) return { ok: false, error: "max" };
+          var craftPay = craftCost(kind);
+          if (!craftPay || !canAfford(s, craftPay)) return { ok: false, error: "cost" };
+          pay(s, craftPay);
+          addItem(s, kind, 1);
+          s.flags["craft_unlocked_" + kind] = true;
+          if (craftSpec.buildMsg) pushNote(s, t(craftSpec.buildMsg), "room");
+          this.analytics.log(s, "build", {
+            kind: kind,
+            type: craftSpec.type,
+            cost: craftPay,
+            have: s.stores[kind],
+            stores: deepClone(s.stores)
+          });
           break;
         }
-        var max = BUILDING_MAX[kind] || 1;
-        if (s.buildings[kind] == null) return { ok: false, error: "unknown_building" };
-        if (s.buildings[kind] >= max) return { ok: false, error: "max" };
-        var cost = buildingCost(kind, s.buildings[kind]);
+        var max = buildingMax(kind);
+        if (!max) return { ok: false, error: "unknown_building" };
+        if ((s.buildings[kind] || 0) >= max) {
+          if (kind === "hut") pushNote(s, t("no more room for huts."), "room");
+          return { ok: false, error: "max" };
+        }
+        var cost = buildingCost(kind, s.buildings[kind] || 0);
         if (!cost || !canAfford(s, cost)) return { ok: false, error: "cost" };
         pay(s, cost);
-        s.buildings[kind] += 1;
-        if (BUILDING_MSG[kind]) pushNote(s, t(BUILDING_MSG[kind]), "room");
+        s.buildings[kind] = (s.buildings[kind] || 0) + 1;
+        s.flags["craft_unlocked_" + kind] = true;
+        if (kind === "trap") pushNote(s, t("more traps to catch more creatures"), "room");
+        if (kind === "cart") pushNote(s, t("the rickety cart will carry more wood from the forest"), "room");
         if (kind === "hut") {
+          pushNote(s, t("builder puts up a hut, out in the forest. says word will get around."), "room");
+          if ((s.buildings.hut || 0) >= max) pushNote(s, t("no more room for huts."), "room");
           // @pacing kind=interval id=pop_timer_min value=30s phase=village
           // @pacing kind=interval id=pop_timer_span value=150s phase=village
           if (s.pop_timer == null) s.pop_timer = s.game_time_sec + 30 + Math.random() * 150;
         }
+        if (BUILD_DONE[kind]) pushNote(s, t(BUILD_DONE[kind]), "room");
+        unlockWorkersForBuildings(s);
+        syncGatherers(s);
         this.analytics.log(s, "build", {
           kind: kind,
           cost: cost,
@@ -1883,13 +3015,65 @@
           buildings: deepClone(s.buildings),
           path: Object.keys(s.buildings).filter(function (k) { return s.buildings[k] > 0; })
         });
-        logMilestone(this, "build_" + kind);
+        break;
+      case "buy":
+        if ((s.buildings.trading_post || 0) <= 0) return { ok: false, error: "no_post" };
+        var buyKind = args.kind;
+        var buySpec = TRADEABLE[buyKind];
+        if (!buySpec) return { ok: false, error: "unknown_good" };
+        if (!buyVisible(s, buyKind)) return { ok: false, error: "locked" };
+        var haveBuy = s.stores[buyKind] || 0;
+        var buyCap = buySpec.max || 0;
+        if (buyCap > 0 && haveBuy >= buyCap) return { ok: false, error: "max" };
+        var buyPay = tradeCost(buyKind);
+        if (!buyPay || !canAfford(s, buyPay)) return { ok: false, error: "cost" };
+        pay(s, buyPay);
+        addItem(s, buyKind, 1);
+        s.flags["buy_unlocked_" + buyKind] = true;
+        this.analytics.log(s, "buy", {
+          kind: buyKind,
+          type: buySpec.type,
+          cost: buyPay,
+          have: s.stores[buyKind],
+          stores: deepClone(s.stores)
+        });
         break;
       case "travel":
+        if (s.location === "space" && s.space && s.space.active) return { ok: false, error: "in_space" };
+        if (args.area === "space") return { ok: false, error: "locked" };
         if (!s.unlocked[args.area] && args.area !== "room") return { ok: false, error: "locked" };
         if (s.world.on_expedition) return { ok: false, error: "away" };
         s.location = args.area;
-        if (args.area === "outside") s.flags.goal_entered_forest = true;
+        if (args.area === "ship") maybeSeeShip(s);
+        if (args.area === "fabricator") maybeSeeFabricator(s);
+        break;
+      case "assign_worker":
+        var job = args.job;
+        var delta = args.delta | 0;
+        if (!job || !INCOME[job] || job === "gatherer") return { ok: false, error: "job" };
+        if (!workerUnlocked(s, job)) return { ok: false, error: "locked" };
+        syncGatherers(s);
+        if (delta > 0) {
+          var free = s.workers.gatherer || 0;
+          var take = Math.min(delta, free);
+          if (take <= 0) return { ok: false, error: "no_gatherers" };
+          s.workers[job] = (s.workers[job] || 0) + take;
+        } else if (delta < 0) {
+          var haveJob = s.workers[job] || 0;
+          var give = Math.min(-delta, haveJob);
+          if (give <= 0) return { ok: false, error: "none" };
+          s.workers[job] = haveJob - give;
+        } else {
+          return { ok: false, error: "delta" };
+        }
+        syncGatherers(s);
+        this.analytics.log(s, "worker_assign", {
+          job: job,
+          delta: delta,
+          workers: deepClone(s.workers),
+          population: s.population,
+          buildings: deepClone(s.buildings)
+        });
         break;
       case "pack":
         var item = args.item;
@@ -1897,9 +3081,11 @@
         if (ITEMS.indexOf(item) < 0) return { ok: false, error: "item" };
         if (n > 0) {
           var have = s.stores[item] || 0;
-          var room = bagCapacity(s) - outfitWeight(s.outfit);
-          var take = Math.min(n, have, Math.max(0, room));
-          if (take <= 0) return { ok: false, error: "bag_full" };
+          var w = itemWeight(item);
+          var free = bagCapacity(s) - bagUsed(s);
+          var bySpace = w > 0 ? Math.floor(free / w + 1e-9) : have;
+          var take = Math.min(n, have, bySpace);
+          if (take <= 0) return { ok: false, error: "space" };
           addItem(s, item, -take);
           s.outfit[item] = (s.outfit[item] || 0) + take;
         } else {
@@ -1911,22 +3097,21 @@
       case "embark":
         if (!s.unlocked.path) return { ok: false, error: "locked" };
         if ((s.outfit.meat || 0) + (s.outfit.cured_meat || 0) <= 0) return { ok: false, error: "no_food" };
-        s.world.on_expedition = true;
-        s.world.size = WORLD_SIZE;
-        s.world.x = WORLD_HOME.x;
-        s.world.y = WORLD_HOME.y;
-        s.world.max_water = waterCapacity(s);
-        s.world.water = s.world.max_water;
-        s.world.max_hp = 10 + armourBonus(s);
-        s.world.hp = s.world.max_hp;
-        s.world.food_moves = 0;
-        s.location = "world";
-        s.world.visited[WORLD_HOME.x + "," + WORLD_HOME.y] = true;
-        if (!s.world.landmarks || !s.world.landmarks["33,28"]) {
-          s.world.landmarks = Object.assign({}, DEFAULT_LANDMARKS, s.world.landmarks || {});
+        if (s.flags.world_death_until != null && s.game_time_sec < s.flags.world_death_until) {
+          return { ok: false, error: "death_cooldown" };
         }
+        s.world.on_expedition = true;
+        s.world.x = VILLAGE_X;
+        s.world.y = VILLAGE_Y;
+        s.world.water = getMaxWater(s);
+        s.world.hp = getMaxHealth(s);
+        s.world.max_hp = getMaxHealth(s);
+        s.world.food_moves = 0;
+        s.world.water_moves = 0;
+        s.world.fight_moves = 0;
+        s.location = "world";
+        s.world.visited[VILLAGE_X + "," + VILLAGE_Y] = true;
         pushNote(s, t("A Barren World"), "world");
-        logMilestone(this, "embark");
         break;
       case "world_move":
         if (!s.world.on_expedition) return { ok: false, error: "home" };
@@ -1936,10 +3121,14 @@
         s.world.x = nx;
         s.world.y = ny;
         s.world.visited[nx + "," + ny] = true;
-        s.world.water -= 1;
+        s.world.water_moves += 1;
+        if (s.world.water_moves >= movesPerWater(s)) {
+          s.world.water_moves = 0;
+          s.world.water -= 1;
+        }
         s.world.food_moves += 1;
         // @pacing kind=consume id=world_food_moves value=2 phase=world
-        if (s.world.food_moves >= 2) {
+        if (s.world.food_moves >= movesPerFood(s)) {
           s.world.food_moves = 0;
           if ((s.outfit.cured_meat || 0) > 0) s.outfit.cured_meat -= 1;
           else if ((s.outfit.meat || 0) > 0) s.outfit.meat -= 1;
@@ -1954,164 +3143,38 @@
           pushNote(s, t("the thirst becomes unbearable"), "world");
           s.world.hp -= 2;
         }
-        if (nx === WORLD_HOME.x && ny === WORLD_HOME.y) {
+        if (nx === VILLAGE_X && ny === VILLAGE_Y) {
           this._goHome(true);
           break;
         }
-        var d = Math.abs(nx - WORLD_HOME.x) + Math.abs(ny - WORLD_HOME.y);
-        if (d >= 4 && !s.world.seen_danger) {
+        var d = worldDistance(s);
+        if (d >= 8 && !s.world.seen_danger && (s.stores.i_armour || 0) <= 0 && (s.stores.s_armour || 0) <= 0) {
           s.world.seen_danger = true;
           pushNote(s, t("dangerous to be this far from the village without proper protection"), "world");
         }
         var lm = s.world.landmarks[nx + "," + ny];
-        if (lm && !s.active_event) {
+        var lmKey = nx + "," + ny;
+        var usedOutpost = lm === "outpost" && s.world.outposts_used && s.world.outposts_used[lmKey];
+        var alreadyCleared = lm && lm !== "outpost" && s.world.cleared && s.world.cleared[lmKey];
+        if (lm && !s.active_event && !usedOutpost && !alreadyCleared) {
           executeTool(s, { tool: "spawn_event", args: { event_id: lm } }, { events: this.events });
-          var evLm = this.events[lm];
-          if (evLm && evLm.combat) {
-            s.combat = { hp: evLm.combat.hp, dmg: evLm.combat.dmg, name: evLm.combat.name, reward: evLm.combat.reward };
-          }
-        } else if (d > 0 && Math.random() < 0.18 && !s.active_event) {
-          executeTool(s, { tool: "spawn_event", args: { event_id: "snarling_beast" }, delay_sec: 0 }, { events: this.events });
-          var ev = this.events.snarling_beast;
-          if (ev && ev.combat) {
-            s.combat = { hp: ev.combat.hp, dmg: ev.combat.dmg, name: ev.combat.name, reward: ev.combat.reward };
+        } else if (d > 0 && !s.active_event && !s.combat) {
+          s.world.fight_moves = (s.world.fight_moves || 0) + 1;
+          if (s.world.fight_moves > FIGHT_DELAY && Math.random() < fightChance(s)) {
+            s.world.fight_moves = 0;
+            var fightId = pickWorldEncounter(s, this.events) || "snarling_beast";
+            executeTool(s, { tool: "spawn_event", args: { event_id: fightId } }, { events: this.events });
+            var ev = this.events[fightId];
+            if (ev && ev.combat) beginCombat(s, ev);
           }
         }
         if (s.world.hp <= 0) {
           this.analytics.log(s, "death", { where: "world" });
           pushNote(s, t("the world fades"), "world");
+          s.flags.world_death_until = s.game_time_sec + DEATH_COOLDOWN;
           this._goHome(false);
         }
         break;
-      case "assign_worker": {
-        var job = args.job;
-        var delta = args.delta | 0;
-        if (!WORKER_JOBS[job] || job === "gatherer") return { ok: false, error: "job" };
-        if (delta > 0 && !jobUnlocked(s, job)) return { ok: false, error: "locked_job" };
-        if (delta > 0) {
-          var idle = s.workers.gatherer || 0;
-          if (idle < delta) return { ok: false, error: "no_idle" };
-          s.workers.gatherer = idle - delta;
-          s.workers[job] = (s.workers[job] || 0) + delta;
-        } else {
-          var haveJob = s.workers[job] || 0;
-          if (haveJob + delta < 0) return { ok: false, error: "none" };
-          s.workers[job] = haveJob + delta;
-          s.workers.gatherer = (s.workers.gatherer || 0) - delta;
-        }
-        break;
-      }
-      case "buy": {
-        if (s.buildings.trading_post < 1) return { ok: false, error: "no_trading_post" };
-        var good = args.item;
-        var buyTable = {
-          scales: { fur: 150 }, teeth: { fur: 300 }, iron: { fur: 150, scales: 50 },
-          coal: { fur: 200, teeth: 50 }, steel: { fur: 300, scales: 50, teeth: 50 },
-          medicine: { scales: 50, teeth: 30 }, bullets: { scales: 10 },
-          energy_cell: { scales: 10, teeth: 10 }
-        };
-        var buyCost = buyTable[good];
-        if (!buyCost || !canAfford(s, buyCost)) return { ok: false, error: "cost" };
-        pay(s, buyCost);
-        addItem(s, good, 1);
-        break;
-      }
-      case "reinforce_hull":
-        if (!s.unlocked.ship) return { ok: false, error: "locked" };
-        if ((s.stores.alien_alloy || 0) < 1) {
-          pushNote(s, t("not enough alien alloy"), "ship");
-          return { ok: false, error: "cost" };
-        }
-        addItem(s, "alien_alloy", -1);
-        s.ship.hull += 1;
-        logMilestone(this, "reinforce_hull", { hull: s.ship.hull });
-        break;
-      case "upgrade_engine":
-        if (!s.unlocked.ship) return { ok: false, error: "locked" };
-        if ((s.stores.alien_alloy || 0) < 1) return { ok: false, error: "cost" };
-        addItem(s, "alien_alloy", -1);
-        s.ship.thrusters += 1;
-        break;
-      case "liftoff":
-        if (!s.unlocked.ship) return { ok: false, error: "locked" };
-        if ((s.ship.hull || 0) < 1) return { ok: false, error: "no_hull" };
-        if (!cooldownReady(s, "liftoff")) return { ok: false, error: "cooldown" };
-        setCooldown(s, "liftoff", 120, this.timeScale);
-        s.unlocked.space = true;
-        s.location = "space";
-        s.space = { altitude: 0, x: 0, hull: s.ship.hull, max_hull: s.ship.hull, done: false };
-        pushNote(s, "船体震颤，尘土世界被抛在后面。", "space");
-        logMilestone(this, "liftoff", { hull: s.ship.hull, thrusters: s.ship.thrusters });
-        break;
-      case "space_steer": {
-        if (s.location !== "space" || s.space.done) return { ok: false, error: "not_space" };
-        var dx = args.dx || 0;
-        s.space.x = Math.max(-2, Math.min(2, s.space.x + dx));
-        var speed = 3 + (s.ship.thrusters || 1);
-        s.space.altitude += speed;
-        var rockX = ((Math.floor(s.space.altitude / speed) * 7 + 3) % 5) - 2;
-        if (rockX === s.space.x) {
-          s.space.hull -= 1;
-          pushNote(s, "陨石擦过船体。", "space");
-        }
-        if (s.space.hull <= 0) {
-          pushNote(s, t("the world fades"), "space");
-          this.analytics.log(s, "death", { where: "space" });
-          s.location = "ship";
-          s.space.done = true;
-          return { ok: true, error: "crashed" };
-        }
-        if (s.space.altitude >= 60) {
-          s.space.done = true;
-          s.ending_reached = true;
-          pushNote(s, "星空吞没了最后一点尘埃。你到了。", "space");
-          this.analytics.log(s, "ending_reached", { game_time_sec: s.game_time_sec, hull: s.space.hull });
-          logMilestone(this, "ending");
-        }
-        break;
-      }
-      case "fabricate": {
-        if (!s.unlocked.fabricator) return { ok: false, error: "locked" };
-        var fid = args.kind;
-        var fspec = FABRICATOR_CRAFTS[fid];
-        if (!fspec) return { ok: false, error: "unknown" };
-        if (fspec.needFlag && !s.flags[fspec.needFlag]) return { ok: false, error: "no_blueprint" };
-        if (fspec.max && (s.stores[fid] || 0) >= fspec.max) return { ok: false, error: "max" };
-        if (!canAfford(s, fspec.cost)) return { ok: false, error: "cost" };
-        pay(s, fspec.cost);
-        addItem(s, fid, fspec.qty || 1);
-        pushNote(s, t(fspec.msg), "fabricator");
-        logMilestone(this, "fabricate_" + fid);
-        break;
-      }
-      case "prestige": {
-        if (!s.ending_reached) return { ok: false, error: "no_ending" };
-        var kept = {};
-        ITEMS.forEach(function (k) {
-          var n = s.stores[k] || 0;
-          kept[k] = Math.floor(n / 8);
-        });
-        var runs = (s.prestige && s.prestige.runs) || 0;
-        this.analytics.log(s, "prestige_start", { game_time_sec: s.game_time_sec, runs: runs + 1, kept: kept });
-        logMilestone(this, "prestige");
-        var oldA2 = this.analytics;
-        oldA2.log(s, "session_end", { reason: "prestige" });
-        clearSave();
-        if (typeof ADRTelemetry !== "undefined" && ADRTelemetry.rotateSession) ADRTelemetry.rotateSession();
-        this.state = createState();
-        this.rule = new RuleDirector();
-        Object.keys(kept).forEach(function (k) {
-          if (kept[k] > 0) this.state.stores[k] = kept[k];
-        }, this);
-        if ((this.state.stores.wood || 0) > 0) this.state.wood_initialized = true;
-        this.state.prestige = { stores: kept, score: Math.round(s.game_time_sec), runs: runs + 1 };
-        this.state.flags.prestige_done = true;
-        if (typeof ADRTelemetry !== "undefined" && ADRTelemetry.bindGame) ADRTelemetry.bindGame(this);
-        this.analytics.syncPhase(this.state);
-        this.analytics.log(this.state, "session_start", { director: this.directorName, prestige: true, run: runs + 1 });
-        this.persistSave();
-        break;
-      }
       case "event_choice":
         this.analytics.log(s, "dialogue_choice", {
           event_id: s.active_event ? s.active_event.id : null,
@@ -2130,8 +3193,7 @@
         if (args.api_key != null) this.config.llm_api_key = args.api_key;
         break;
       case "set_timescale":
-        var cap = this.config.max_time_scale || 100;
-        var nextScale = Math.max(0.25, Math.min(cap, args.scale || 1));
+        var nextScale = Math.max(0.25, Math.min(20, args.scale || 1));
         rescaleCooldownEnds(s, this.timeScale, nextScale);
         this.timeScale = nextScale;
         break;
@@ -2150,9 +3212,13 @@
         if (typeof ADRSaveTelemetry !== "undefined" && ADRSaveTelemetry.onNewGame) {
           ADRSaveTelemetry.onNewGame({ overwritten: true });
         }
+        var keptPrestige = prestigeGet(s);
+        if (s.flags.ending || s.ending) prestigeSave(s), keptPrestige = prestigeGet(s);
         clearSave();
         if (typeof ADRTelemetry !== "undefined" && ADRTelemetry.rotateSession) ADRTelemetry.rotateSession();
-        this.state = createState();
+        this.state = migrateState(createState());
+        prestigeSet(this.state, keptPrestige);
+        prestigeCollect(this.state);
         this.rule = new RuleDirector();
         if (typeof ADRTelemetry !== "undefined" && ADRTelemetry.bindGame) ADRTelemetry.bindGame(this);
         this.analytics.syncPhase(this.state);
@@ -2174,6 +3240,77 @@
         this.analytics.log(s, "quit", {});
         this.analytics.log(s, "session_end", { reason: "quit" });
         break;
+      case "reinforce_hull":
+        if (!s.unlocked.ship) return { ok: false, error: "locked" };
+        ensureSpaceShip(s);
+        if ((s.stores.alien_alloy || 0) < ALLOY_PER_HULL) {
+          pushNote(s, t("not enough alien alloy"), "ship");
+          return { ok: false, error: "cost" };
+        }
+        addItem(s, "alien_alloy", -ALLOY_PER_HULL);
+        s.spaceShip.hull += 1;
+        break;
+      case "upgrade_engine":
+        if (!s.unlocked.ship) return { ok: false, error: "locked" };
+        ensureSpaceShip(s);
+        if ((s.stores.alien_alloy || 0) < ALLOY_PER_THRUSTER) {
+          pushNote(s, t("not enough alien alloy"), "ship");
+          return { ok: false, error: "cost" };
+        }
+        addItem(s, "alien_alloy", -ALLOY_PER_THRUSTER);
+        s.spaceShip.thrusters += 1;
+        break;
+      case "lift_off":
+        if (!s.unlocked.ship) return { ok: false, error: "locked" };
+        if (s.location === "space") return { ok: false, error: "in_space" };
+        ensureSpaceShip(s);
+        if (s.spaceShip.hull <= 0) return { ok: false, error: "no_hull" };
+        if (!cooldownReady(s, "liftoff")) return { ok: false, error: "cooldown" };
+        setCooldown(s, "liftoff", LIFTOFF_COOLDOWN, this.timeScale);
+        if (!s.spaceShip.seenWarning) {
+          var warn = executeTool(s, { tool: "spawn_event", args: { event_id: "liftoff_warning" } }, { events: this.events });
+          if (!warn || !warn.ok) {
+            s.spaceShip.seenWarning = true;
+            startSpace(s);
+          }
+        } else {
+          startSpace(s);
+        }
+        break;
+      case "fabricate":
+        if (!s.unlocked.fabricator) return { ok: false, error: "locked" };
+        var fabKind = args.kind;
+        var fabSpec = FABRICABLE[fabKind];
+        if (!fabSpec) return { ok: false, error: "unknown" };
+        if (!canFabricate(s, fabKind)) return { ok: false, error: "blueprint" };
+        var haveFab = s.stores[fabKind] || 0;
+        var fabCap = fabSpec.max || 0;
+        if (fabCap > 0 && haveFab >= fabCap) return { ok: false, error: "max" };
+        var fabPay = fabricateCost(fabKind);
+        if (!fabPay || !canAfford(s, fabPay)) {
+          pushNote(s, t("not enough alien alloy"), "fabricator");
+          return { ok: false, error: "cost" };
+        }
+        pay(s, fabPay);
+        addItem(s, fabKind, fabSpec.quantity || 1);
+        if (fabSpec.buildMsg) pushNote(s, t(fabSpec.buildMsg), "fabricator");
+        break;
+      case "space_steer":
+        if (s.location !== "space" || !s.space || !s.space.active) return { ok: false, error: "grounded" };
+        var dir = args.dir;
+        var held = args.down !== false;
+        if (dir === "up" || dir === "down" || dir === "left" || dir === "right") {
+          s.space[dir] = held;
+        }
+        if (args.dx || args.dy) {
+          s.space.shipX += (args.dx || 0) * shipSpeed(s);
+          s.space.shipY += (args.dy || 0) * shipSpeed(s);
+          if (s.space.shipX < 10) s.space.shipX = 10;
+          if (s.space.shipX > SPACE_WIDTH - 10) s.space.shipX = SPACE_WIDTH - 10;
+          if (s.space.shipY < 10) s.space.shipY = 10;
+          if (s.space.shipY > SPACE_HEIGHT - 10) s.space.shipY = SPACE_HEIGHT - 10;
+        }
+        break;
       default:
         return { ok: false, error: "unknown_action" };
     }
@@ -2193,15 +3330,27 @@
 
   Game.prototype._goHome = function (success) {
     var s = this.state;
+    redeemBlueprints(s);
     for (var k in s.outfit) {
       if (s.outfit[k] > 0) addItem(s, k, s.outfit[k]);
       s.outfit[k] = 0;
+    }
+    if (s.flags.world_ironmine && !s.buildings.iron_mine) s.buildings.iron_mine = 1;
+    if (s.flags.world_coalmine && !s.buildings.coal_mine) s.buildings.coal_mine = 1;
+    if (s.flags.world_sulphurmine && !s.buildings.sulphur_mine) s.buildings.sulphur_mine = 1;
+    if (s.flags.world_ship) {
+      ensureSpaceShip(s);
+      s.unlocked.ship = true;
+      s.unlocked.space = true;
+    }
+    if (s.flags.world_executioner && !s.unlocked.fabricator) {
+      s.unlocked.fabricator = true;
+      pushNote(s, t("builder knows the strange device when she sees it. takes it for herself real quick. doesn’t ask where it came from."), "path");
     }
     if (s.flags.visited_old_house && success && !s.slice_complete) {
       s.slice_complete = true;
       pushNote(s, "你带回了旧房子里的见闻。尘途的第一段走完了。", "path");
       this.analytics.log(s, "slice_complete", { game_time_sec: s.game_time_sec });
-      logMilestone(this, "slice_complete");
     }
     if (success) pushNote(s, t("water replenished"), "path");
     s.world.on_expedition = false;
@@ -2210,26 +3359,35 @@
     s.combat = null;
   };
 
+  Game.prototype._enterEventScene = function (name) {
+    var s = this.state;
+    if (!s.active_event || !s.active_event.spec) return;
+    var spec = s.active_event.spec;
+    if (!spec.scenes || !spec.scenes[name]) return;
+    s.active_event.scene = name;
+    applySceneEffects(s, spec.scenes[name]);
+    if (spec.scenes[name].combat) beginCombat(s, spec.scenes[name]);
+  };
+
   Game.prototype._resolveEvent = function (buttonId) {
     var s = this.state;
     if (!s.active_event) return;
     var spec = s.active_event.spec;
-    var scene = s.active_event.scene === "start" ? spec : (spec.scenes && spec.scenes[s.active_event.scene]) || spec;
+    var scene = currentScene(s.active_event);
     var btn = (scene.buttons || spec.buttons || []).filter(function (b) { return b.id === buttonId; })[0];
     if (!btn) return;
+    if (!buttonAvailable(s, btn)) return;
     if (btn.cost && !canAfford(s, btn.cost)) return;
     if (btn.cost) pay(s, btn.cost);
     if (btn.reward) grant(s, btn.reward);
     if (btn.note) pushNote(s, btn.note, s.location);
-    if (btn.lose_pop) s.population = Math.max(0, s.population - btn.lose_pop);
+    if (btn.lose_pop) {
+      s.population = Math.max(0, s.population - btn.lose_pop);
+      syncGatherers(s);
+    }
+    if (btn.learn) addPerk(s, btn.learn);
+    if (btn.map_piece) s.flags.map_pieces = (s.flags.map_pieces || 0) + 1;
     if (btn.set_flag) s.flags[btn.set_flag] = true;
-    if (btn.unlock_area) {
-      s.unlocked[btn.unlock_area] = true;
-      this.analytics.log(s, "unlock", { area: btn.unlock_area, origin: "event" });
-    }
-    if (btn.require_no && (s.stores[btn.require_no] || 0) > 0) {
-      /* still allow close */
-    }
     if (btn.random_next) {
       var r = Math.random();
       var acc = 0;
@@ -2239,85 +3397,114 @@
         if (pick == null && r <= acc) pick = k;
       });
       if (pick && spec.scenes && spec.scenes[pick]) {
-        s.active_event.scene = pick;
-        var sc = spec.scenes[pick];
-        if (sc.reward) grant(s, sc.reward);
-        if (sc.set_flag) s.flags[sc.set_flag] = true;
-        if (sc.unlock_area) {
-          s.unlocked[sc.unlock_area] = true;
-          this.analytics.log(s, "unlock", { area: sc.unlock_area, origin: "event" });
-        }
-        if (sc.water && s.world.on_expedition) s.world.water = Math.min(s.world.max_water || 10, s.world.water + sc.water);
+        this._enterEventScene(pick);
         return;
       }
     }
-    if (btn.next && btn.next !== "end" && spec.scenes && spec.scenes[btn.next]) {
-      s.active_event.scene = btn.next;
-      var sc2 = spec.scenes[btn.next];
-      if (sc2.reward) grant(s, sc2.reward);
-      if (sc2.set_flag) s.flags[sc2.set_flag] = true;
-      if (sc2.unlock_area) {
-        s.unlocked[sc2.unlock_area] = true;
-        this.analytics.log(s, "unlock", { area: sc2.unlock_area, origin: "event" });
-      }
-      if (sc2.water && s.world.on_expedition) s.world.water = Math.min(s.world.max_water || 10, s.world.water + sc2.water);
+    if (btn.next_event && this.events && this.events[btn.next_event]) {
+      s.active_event = null;
+      if (s.combat) s.combat = null;
+      executeTool(s, { tool: "spawn_event", args: { event_id: btn.next_event } }, { events: this.events });
       return;
     }
-    if (spec.scenes && scene !== spec && scene.set_flag) s.flags[scene.set_flag] = true;
-    if (spec.scenes && scene !== spec && scene.unlock_area) {
-      s.unlocked[scene.unlock_area] = true;
-      this.analytics.log(s, "unlock", { area: scene.unlock_area, origin: "event" });
+    if (btn.next && btn.next !== "end" && spec.scenes && spec.scenes[btn.next]) {
+      this._enterEventScene(btn.next);
+      return;
     }
+    var evId = s.active_event.id;
     s.active_event = null;
     if (s.combat) s.combat = null;
+    if (evId === "liftoff_warning") {
+      if (buttonId === "fly") {
+        ensureSpaceShip(s);
+        s.spaceShip.seenWarning = true;
+        startSpace(s);
+      } else if (buttonId === "linger") {
+        clearCooldown(s, "liftoff");
+      }
+    }
   };
 
   Game.prototype._combat = function (move) {
     var s = this.state;
     if (!s.combat) return;
-    if (move === "punch" || move === "attack") {
-      var wpn = bestWeapon(s, true);
-      if (wpn.cost) {
-        var paid = false;
-        Object.keys(wpn.cost).forEach(function (k) {
-          if ((s.outfit[k] || 0) > 0) { s.outfit[k] -= wpn.cost[k]; paid = true; }
-          else if ((s.stores[k] || 0) > 0) { addItem(s, k, -wpn.cost[k]); paid = true; }
-        });
-        if (!paid) wpn = { id: "fists", dmg: 1, cost: null };
-      }
-      s.combat.hp -= wpn.dmg + (Math.random() < 0.3 ? 1 : 0);
-      var hitChance = 0.55 - armourBonus(s) * 0.02;
-      if (Math.random() < Math.max(0.15, hitChance)) s.world.hp -= s.combat.dmg;
-      if (s.combat.hp <= 0) {
-        grant(s, s.combat.reward);
-        pushNote(s, (s.combat.name || "野兽") + "倒下了。", "world");
-        if (s.active_event && s.active_event.spec && s.active_event.spec.on_win_flag) {
-          s.flags[s.active_event.spec.on_win_flag] = true;
-        }
-        s.combat = null;
-        s.active_event = null;
-      }
-    } else if (move === "eat") {
-      if ((s.outfit.cured_meat || 0) > 0) {
-        s.outfit.cured_meat -= 1;
-        s.world.hp = Math.min(s.world.max_hp || 10, s.world.hp + 8);
-      } else if ((s.outfit.meat || 0) > 0) {
-        s.outfit.meat -= 1;
-        s.world.hp = Math.min(s.world.max_hp || 10, s.world.hp + 8);
-      } else {
-        return { ok: false, error: "no_food" };
-      }
-    } else if (move === "flee") {
+    if (move === "eat") {
+      var food = (s.outfit.cured_meat || 0) > 0 ? "cured_meat" : ((s.outfit.meat || 0) > 0 ? "meat" : null);
+      if (!food) return;
+      s.outfit[food] -= 1;
+      s.world.hp = Math.min(s.world.max_hp, s.world.hp + meatHeal(s));
+      return;
+    }
+    if (move === "meds") {
+      if ((s.outfit.medicine || 0) <= 0 && (s.stores.medicine || 0) <= 0) return;
+      if ((s.outfit.medicine || 0) > 0) s.outfit.medicine -= 1;
+      else addItem(s, "medicine", -1);
+      s.world.hp = Math.min(s.world.max_hp, s.world.hp + MEDS_HEAL);
+      return;
+    }
+    if (move === "flee") {
       if (Math.random() < 0.5) {
         s.world.hp -= 1;
         pushNote(s, "逃脱时挨了一下。", "world");
       }
       s.combat = null;
       s.active_event = null;
+    } else {
+      var weaponId = move === "punch" ? "fists" : move;
+      var weapon = WEAPONS[weaponId];
+      if (!weapon) return;
+      if (weaponId !== "fists") {
+        var have = (s.outfit[weaponId] || 0) + (s.stores[weaponId] || 0);
+        if (have <= 0 && weaponId !== "fists") return;
+      }
+      if (weapon.cost) {
+        var ck;
+        for (ck in weapon.cost) {
+          var need = weapon.cost[ck];
+          if ((s.outfit[ck] || 0) >= need) s.outfit[ck] -= need;
+          else if ((s.stores[ck] || 0) >= need) addItem(s, ck, -need);
+          else return;
+        }
+      }
+      if (weaponId === "fists") {
+        s.punches = (s.punches || 0) + 1;
+        if (s.punches >= 50) addPerk(s, "boxer");
+        if (s.punches >= 150) addPerk(s, "martial_artist");
+        if (s.punches >= 300) addPerk(s, "unarmed_master");
+      }
+      if (Math.random() <= getHitChance(s)) {
+        var dmg = weapon.damage;
+        if (dmg === "stun") {
+          s.combat.stunned = true;
+        } else if (typeof dmg === "number") {
+          if (weapon.type === "unarmed" && hasPerk(s, "boxer")) dmg *= 2;
+          if (weapon.type === "unarmed" && hasPerk(s, "martial_artist")) dmg *= 3;
+          if (weapon.type === "unarmed" && hasPerk(s, "unarmed_master")) dmg *= 2;
+          if (weapon.type === "melee" && hasPerk(s, "barbarian")) dmg = Math.floor(dmg * 1.5);
+          s.combat.hp -= dmg;
+        }
+      }
+      if (s.combat.hp > 0) {
+        if (s.combat.stunned) {
+          s.combat.stunned = false;
+        } else {
+          var enemyHit = (s.combat.hit == null ? BASE_HIT_CHANCE : s.combat.hit) * (hasPerk(s, "evasive") ? 0.8 : 1);
+          if (Math.random() < enemyHit) s.world.hp -= s.combat.dmg;
+        }
+      }
+      if (s.combat.hp <= 0) {
+        if (s.combat.reward) grant(s, s.combat.reward);
+        grant(s, rollLoot(s.combat.loot));
+        pushNote(s, s.combat.death || "倒下了。", "world");
+        s.combat = null;
+        var won = currentScene(s.active_event);
+        if (!(won && won.buttons && won.buttons.length)) s.active_event = null;
+      }
     }
     if (s.world.hp <= 0) {
       this.analytics.log(s, "death", { where: "combat" });
       pushNote(s, t("the world fades"), "world");
+      s.flags.world_death_until = s.game_time_sec + DEATH_COOLDOWN;
       this._goHome(false);
     }
   };
@@ -2360,21 +3547,16 @@
         addItem(s, "wood", 2 * n);
       }
     }
-    if (!s.income_acc) s.income_acc = emptyIncomeAcc();
-    Object.keys(WORKER_JOBS).forEach(function (job) {
-      var count = s.workers[job] || 0;
-      if (job === "gatherer" && count <= 0 && s.population > 0 && assignedWorkers(s) === 0) {
-        count = s.population;
-      }
-      if (count <= 0 || !jobUnlocked(s, job)) return;
-      s.income_acc[job] = (s.income_acc[job] || 0) + dt;
-      var delay = WORKER_JOBS[job].delay;
-      if (s.income_acc[job] >= delay) {
-        var ticks = Math.floor(s.income_acc[job] / delay);
-        s.income_acc[job] -= ticks * delay;
-        applyWorkerIncome(s, job, count, ticks);
-      }
-    });
+    syncGatherers(s);
+    // @pacing kind=income id=gatherer_wood value=1/10s phase=village note=per worker
+    // @pacing kind=income id=hunter value=0.5fur+0.5meat/10s phase=village
+    // @pacing kind=income id=charcutier value=1cured_meat/10s phase=village note=consumes 5 meat + 5 wood
+    applyWorkerIncome(s, dt, this.analytics);
+    applyThiefIncome(s, dt);
+    maybeStartThieves(s);
+    checkCraftUnlocks(s);
+    checkBuyUnlocks(s);
+    if (s.location === "space") tickSpace(s, dt);
 
     if (s.pop_timer != null && s.game_time_sec >= s.pop_timer) {
       var cap = s.buildings.hut * 4;
@@ -2383,7 +3565,7 @@
         var add = Math.max(1, Math.floor(space / 2) + Math.floor(Math.random() * Math.max(1, space - Math.floor(space / 2))));
         add = Math.min(add, space);
         s.population += add;
-        s.workers.gatherer = (s.workers.gatherer || 0) + add;
+        syncGatherers(s);
         if (add === 1) pushNote(s, t("a stranger arrives in the night"), "outside");
         else if (add <= 3) pushNote(s, "一户饱经风雨的人家住进一栋小屋。", "outside");
         else pushNote(s, "一群瘦骨嶙峋，风尘仆仆的人抵达了。", "outside");
@@ -2434,74 +3616,108 @@
     var s = this.state;
     if (s.builder_level < 4) return [];
     var out = [];
-    var kinds = ["trap", "cart", "hut", "lodge", "trading_post", "tannery", "smokehouse", "workshop", "steelworks", "armoury"];
-    kinds.forEach(function (kind) {
+    BUILDABLE.forEach(function (kind) {
       var n = s.buildings[kind] || 0;
-      var max = BUILDING_MAX[kind] || 1;
+      var max = buildingMax(kind);
       var cost = buildingCost(kind, n);
-      if (!cost) return;
-      var need = cost.wood || cost.fur || cost.leather || cost.iron || 0;
-      var haveMain = cost.wood != null ? (s.stores.wood || 0) : (s.stores[Object.keys(cost)[0]] || 0);
+      if (!cost || !max) return;
       // @pacing kind=threshold id=craft_visible_ratio value=0.5 phase=forest
-      var show = haveMain >= need * 0.5;
-      if (kind === "workshop" && (s.stores.leather || 0) < 50) show = false;
-      if (kind === "steelworks" && !s.flags.cleared_iron_mine) show = false;
-      if (kind === "armoury" && (s.buildings.steelworks || 0) < 1) show = false;
-      if (show) out.push({ kind: kind, cost: cost, have: n, max: max, can: canAfford(s, cost) && n < max && s.temperature > 1, type: "building" });
+      if (!craftVisible(s, kind)) return;
+      out.push({ kind: kind, cost: cost, have: n, max: max, can: canAfford(s, cost) && n < max && s.temperature > 1, section: "build" });
     });
-    if (s.buildings.workshop > 0) {
-      Object.keys(CRAFTABLES).forEach(function (kind) {
-        var spec = CRAFTABLES[kind];
-        var have = s.stores[kind] || 0;
-        if (spec.max && have >= spec.max) return;
-        var c0 = spec.cost[Object.keys(spec.cost)[0]] || 0;
-        var h0 = s.stores[Object.keys(spec.cost)[0]] || 0;
-        if (h0 < c0 * 0.5 && kind !== "torch") return;
-        out.push({ kind: kind, cost: spec.cost, have: have, max: spec.max || 99, can: canAfford(s, spec.cost) && s.temperature > 1, type: "craft" });
+    if ((s.buildings.workshop || 0) > 0) {
+      CRAFT_KEYS.forEach(function (kind) {
+        var spec = CRAFTABLE[kind];
+        var n = s.stores[kind] || 0;
+        var max = spec.max || 0;
+        var cost = craftCost(kind);
+        if (!cost) return;
+        if (!craftVisible(s, kind)) return;
+        var underMax = max <= 0 || n < max;
+        out.push({
+          kind: kind,
+          cost: cost,
+          have: n,
+          max: max,
+          can: canAfford(s, cost) && underMax && s.temperature > 1,
+          section: "craft",
+          type: spec.type
+        });
       });
     }
     return out;
   };
 
-  Game.prototype.visibleWorkers = function () {
+  Game.prototype.visibleTrades = function () {
     var s = this.state;
-    return Object.keys(WORKER_JOBS).filter(function (job) {
-      return job === "gatherer" || jobUnlocked(s, job);
-    }).map(function (job) {
-      return { job: job, name: WORKER_CN[job] || job, count: s.workers[job] || 0 };
+    if ((s.buildings.trading_post || 0) <= 0) return [];
+    var out = [];
+    TRADE_KEYS.forEach(function (kind) {
+      var spec = TRADEABLE[kind];
+      var n = s.stores[kind] || 0;
+      var max = spec.max || 0;
+      var cost = tradeCost(kind);
+      if (!cost) return;
+      if (!buyVisible(s, kind)) return;
+      var underMax = max <= 0 || n < max;
+      out.push({
+        kind: kind,
+        cost: cost,
+        have: n,
+        max: max,
+        can: canAfford(s, cost) && underMax,
+        type: spec.type
+      });
     });
+    return out;
   };
 
-  Game.prototype.visibleFabricator = function () {
+  Game.prototype.visibleFabrications = function () {
     var s = this.state;
     if (!s.unlocked.fabricator) return [];
-    return Object.keys(FABRICATOR_CRAFTS).filter(function (k) {
-      var spec = FABRICATOR_CRAFTS[k];
-      return !spec.needFlag || s.flags[spec.needFlag];
-    }).map(function (k) {
-      var spec = FABRICATOR_CRAFTS[k];
-      return { kind: k, cost: spec.cost, can: canAfford(s, spec.cost), have: s.stores[k] || 0 };
+    var out = [];
+    FABRICATE_KEYS.forEach(function (kind) {
+      var spec = FABRICABLE[kind];
+      if (!canFabricate(s, kind)) return;
+      var n = s.stores[kind] || 0;
+      var max = spec.max || 0;
+      var cost = fabricateCost(kind);
+      var qty = spec.quantity || 1;
+      var underMax = max <= 0 || n < max;
+      out.push({
+        kind: kind,
+        cost: cost,
+        have: n,
+        max: max,
+        quantity: qty,
+        can: canAfford(s, cost) && underMax,
+        type: spec.type
+      });
     });
+    return out;
   };
 
   return {
     ITEMS: ITEMS,
+    AREAS: AREAS,
     ITEM_CN: ITEM_CN,
     BUILDING_CN: BUILDING_CN,
     WORKER_CN: WORKER_CN,
-    BUILDING_MAX: BUILDING_MAX,
-    CRAFTABLES: CRAFTABLES,
-    FABRICATOR_CRAFTS: FABRICATOR_CRAFTS,
-    WORKER_JOBS: WORKER_JOBS,
-    WEAPONS: WEAPONS,
-    WORLD_SIZE: WORLD_SIZE,
-    WORLD_HOME: WORLD_HOME,
-    DEFAULT_LANDMARKS: DEFAULT_LANDMARKS,
+    INCOME: INCOME,
+    BUILDABLE: BUILDABLE,
+    CRAFTABLE: CRAFTABLE,
+    CRAFT_KEYS: CRAFT_KEYS,
+    FABRICABLE: FABRICABLE,
+    FABRICATE_KEYS: FABRICATE_KEYS,
+    fabricateCost: fabricateCost,
+    canFabricate: canFabricate,
+    TRADEABLE: TRADEABLE,
+    TRADE_KEYS: TRADE_KEYS,
+    JOB_BUILDING: JOB_BUILDING,
     FIRE: FIRE,
     TEMP: TEMP,
     TOOL_SCHEMA: TOOL_SCHEMA,
     STRINGS: STRINGS,
-    deriveGoal: deriveGoal,
     t: t,
     createState: createState,
     directorState: directorState,
@@ -2518,6 +3734,58 @@
     writeSave: writeSave,
     clearSave: clearSave,
     buildingCost: buildingCost,
+    buildingMax: buildingMax,
+    craftCost: craftCost,
+    craftMax: craftMax,
+    needsWorkshop: needsWorkshop,
+    itemWeight: itemWeight,
+    bagCapacity: bagCapacity,
+    bagUsed: bagUsed,
+    getMaxWater: getMaxWater,
+    getMaxHealth: getMaxHealth,
+    tradeCost: tradeCost,
+    tradeMax: tradeMax,
+    buyVisible: buyVisible,
+    eventAvailable: eventAvailable,
+    buttonAvailable: buttonAvailable,
+    WEAPONS: WEAPONS,
+    PERKS: PERKS,
+    RADIUS: RADIUS,
+    STICKINESS: STICKINESS,
+    LIGHT_RADIUS: LIGHT_RADIUS,
+    BASE_WATER: BASE_WATER,
+    MOVES_PER_FOOD: MOVES_PER_FOOD,
+    MOVES_PER_WATER: MOVES_PER_WATER,
+    DEATH_COOLDOWN: DEATH_COOLDOWN,
+    FIGHT_CHANCE: FIGHT_CHANCE,
+    BASE_HEALTH: BASE_HEALTH,
+    BASE_HIT_CHANCE: BASE_HIT_CHANCE,
+    MEAT_HEAL: MEAT_HEAL,
+    MEDS_HEAL: MEDS_HEAL,
+    HYPO_HEAL: HYPO_HEAL,
+    FIGHT_DELAY: FIGHT_DELAY,
+    LIFTOFF_COOLDOWN: LIFTOFF_COOLDOWN,
+    ALLOY_PER_HULL: ALLOY_PER_HULL,
+    ALLOY_PER_THRUSTER: ALLOY_PER_THRUSTER,
+    BASE_HULL: BASE_HULL,
+    BASE_THRUSTERS: BASE_THRUSTERS,
+    SHIP_SPEED: SHIP_SPEED,
+    BASE_ASTEROID_DELAY: BASE_ASTEROID_DELAY,
+    BASE_ASTEROID_SPEED: BASE_ASTEROID_SPEED,
+    FTB_SPEED: FTB_SPEED,
+    spaceLayerTitle: spaceLayerTitle,
+    shipSpeed: shipSpeed,
+    hasPerk: hasPerk,
+    addPerk: addPerk,
+    worldDistance: worldDistance,
+    applySceneEffects: applySceneEffects,
+    currentScene: currentScene,
+    rollLoot: rollLoot,
+    applyWorkerIncome: applyWorkerIncome,
+    visibleJobs: visibleJobs,
+    workerUnlocked: workerUnlocked,
+    syncGatherers: syncGatherers,
+    migrateState: migrateState,
     terrainAt: terrainAt,
     hutTitle: hutTitle,
     roomTitle: roomTitle,
@@ -2527,6 +3795,16 @@
     cooldownReady: cooldownReady,
     setCooldown: setCooldown,
     syncCooldowns: syncCooldowns,
-    adoptCooldowns: adoptCooldowns
+    adoptCooldowns: adoptCooldowns,
+    PRESTIGE_STORES: PRESTIGE_STORES,
+    SCORE_FACTORS: SCORE_FACTORS,
+    prestigeGetStores: prestigeGetStores,
+    prestigeGet: prestigeGet,
+    prestigeSet: prestigeSet,
+    prestigeSave: prestigeSave,
+    prestigeCollect: prestigeCollect,
+    calculateScore: calculateScore,
+    totalScore: totalScore,
+    getMaxHull: getMaxHull
   };
 });
