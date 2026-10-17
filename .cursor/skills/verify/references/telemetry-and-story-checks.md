@@ -59,6 +59,17 @@ Worker incomes (`tools/verify/income.mjs`) tick `INCOME` in isolation and assert
 
 ## Full playthrough (`tools/verify/playthrough.mjs`)
 
-Drives the remake engine from a fresh save through village economy (lodge / tannery / smokehouse / 熏肉 / 皮革), world map, combat, mines, dungeon, ship, fabricator, space ending, and prestige. Time scale 50×. Each stage records game-time and wall-clock. Exit 1 if any stage in `STAGES` is missing. Stuck report includes room, event id, last action, and missing flags.
+Drives the remake engine from a fresh save through village economy (lodge / tannery / smokehouse / 熏肉 / 皮革), world map, combat, mines, the executioner wreck, ship, fabricator, space ending, and prestige. Included in the default `run.mjs` list. Time scale is clamped by the engine (max 20). Each stage records game-time and wall-clock. Exit 1 if any stage in `STAGES` is missing. Stuck report includes room, event id, last action, and missing flags.
+
+Landmark ids and ending state are the migrated world, not the pre-#36 names:
+
+| stage | id / flag |
+|---|---|
+| mines | landmarks `ironmine`, `coalmine`, `sulphurmine`; flags `world_ironmine`, `world_coalmine`, `world_sulphurmine` |
+| dungeon | landmark `executioner`; flag `world_executioner` (or `executioner_open` / `command_cleared`) |
+| ship | landmark `ship`; flag `world_ship` unlocks `unlocked.ship` on return; liftoff action is `lift_off` |
+| fabricator | `world_executioner` unlocks it on return; blueprints redeem into `state.blueprints` |
+| ending | `state.ending` (also `flags.ending`) |
+| prestige | `restart` after ending; `state.previous.score` |
 
 Classic comparison: `classic-playthrough.mjs` uses the original cost/income/delay constants (cited `file:line`) for the same milestones.

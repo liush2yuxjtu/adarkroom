@@ -17,7 +17,7 @@ node screenshot-diff.mjs --update --url <url>   # rewrite committed baselines
 | `extremes.mjs` | Long text, stores=0, 1e9, corrupt saves (invalid JSON, missing fields, wrong types). |
 | `telemetry.mjs` | Headless engine + telemetry.js with mocked sink: phase re-sync after load, failed actions reported, stuck detector, dedup/event_id, session_start first, `is_automation`, `client_version` on every event, cap keeps milestones, `save_snapshot`, `worker_assign`, `cured_meat_first`. No network. |
 | `story.mjs` | Seeded headless playthrough of every phase to `slice_complete`; per-node trigger/actual table. Also lodge/smokehouse, charcutier, cured meat packed for embark. |
-| `playthrough.mjs` | Opt-in (`--only playthrough`). Full run still uses pre-migration landmark ids (`iron_mine`, `cleared_iron_mine`, `ending_reached`). Migrated world is `ironmine` / `world_ironmine` / `state.ending`. Village-to-`slice_complete` is covered by `story.mjs`. |
+| `playthrough.mjs` | Default suite. Full run on the migrated world: landmarks `ironmine` / `coalmine` / `sulphurmine` / `ship` / `executioner`, flags `world_ironmine` / `world_coalmine` / `world_sulphurmine` / `world_ship` / `world_executioner`, ending `state.ending`, prestige via `restart`. |
 | `classic-playthrough.mjs` | Same milestones timed from original JS constants (`script/room.js` / `outside.js` / `world.js`). |
 | `onboarding.mjs` | New save shows the persistent goal line; it updates fire → forest; telemetry carries `client_version`. |
 | `income.mjs` | Worker incomes over time (hunter/trapper/tanner/charcutier/miners/steelworker/armourer) against `script/outside.js` `_INCOME`. |
