@@ -100,7 +100,11 @@ export function parseArgs(argv = process.argv.slice(2)) {
     outDir: path.join(VERIFY_ROOT, "artifacts"),
     updateBaselines: false,
     only: null,
-    json: true
+    json: true,
+    // Each part in its own child process (fresh Node + Chromium) so one run never
+    // holds every browser part's memory at once. --no-split = old single process.
+    split: true,
+    childReport: null
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -121,6 +125,13 @@ export function parseArgs(argv = process.argv.slice(2)) {
       out.updateBaselines = true;
     } else if (a === "--only" && next) {
       out.only = next.split(",").map((s) => s.trim()).filter(Boolean);
+      i++;
+    } else if (a === "--split") {
+      out.split = true;
+    } else if (a === "--no-split") {
+      out.split = false;
+    } else if (a === "--child-report" && next) {
+      out.childReport = path.resolve(next);
       i++;
     } else if (a === "--no-json") {
       out.json = false;

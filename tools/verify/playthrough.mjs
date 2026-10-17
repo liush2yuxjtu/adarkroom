@@ -19,29 +19,7 @@ import { makeSandbox, loadEvents } from "./lib/engine-sandbox.mjs";
 import { emptySuite, ok, fail, summarize } from "./lib/report.mjs";
 import { STAGES, landmarkKey, parseXY, stepToward, pathHome } from "./lib/playthrough-policy.mjs";
 
-/** Village / room events. Leave stays ahead of unlisted landmark buttons. */
-const EVENT_PREFER = [
-  "take", "enter", "scavenge", "search", "clear", "buy_compass",
-  "goodbye", "leave", "back", "home", "ignore", "wait", "mourn"
-];
-
-/**
- * World landmarks after the #36 migration. Ids are events.json / world.landmarks
- * values (`ironmine`, not `iron_mine`). `attack`/`continue` must beat `leave`
- * or the mine scenes exit before `world_*` is set.
- */
-const LANDMARK_IDS = new Set([
-  "old_house", "cave", "town", "city", "outpost", "ship", "borehole",
-  "battlefield", "swamp", "cache", "executioner", "ironmine", "coalmine", "sulphurmine",
-  "engineering_wing", "martial_wing", "medical_wing", "command_deck", "liftoff_warning"
-]);
-const LANDMARK_PREFER = [
-  "attack", "take", "take_device", "search", "enter", "continue", "talk",
-  "fly", "leavel", "leave"
-];
-
 export function playFull({ seed = 7, maxGameSec = 120000, timeScale = 50 } = {}) {
-  const wall0 = performance.now();
   const sb = makeSandbox({ seed });
   const events = loadEvents();
   const g = new sb.ADR.Game({
@@ -50,6 +28,50 @@ export function playFull({ seed = 7, maxGameSec = 120000, timeScale = 50 } = {})
     max_time_scale: 100,
     stuck_minutes: 99
   }, events);
+  return playWith({
+    g,
+    events,
+    advance: (ms) => sb.advance(ms),
+    now: () => performance.now(),
+    maxGameSec,
+    timeScale,
+    policy: { STAGES, landmarkKey, parseXY, stepToward, pathHome }
+  });
+}
+
+/**
+ * The playthrough policy against any engine Game `g`. Self-contained on purpose
+ * (no module-scope references): browser-ending.mjs ships it into the real web
+ * page via playWith.toString() and drives window.__ADR_GAME with it.
+ *   advance(ms)  move the clock Date.now() reads (cooldowns)
+ *   now()        wall clock in ms for reporting
+ *   onMark(id, stage)  called once per STAGES milestone
+ *   restartAfterEnding  false keeps the ending screen up (browser check)
+ */
+export function playWith({ g, events, advance, now, maxGameSec = 120000, timeScale = 50, policy, onMark = null, restartAfterEnding = true }) {
+  const { STAGES, landmarkKey, parseXY, stepToward, pathHome } = policy;
+  /** Village / room events. Leave stays ahead of unlisted landmark buttons. */
+  const EVENT_PREFER = [
+    "take", "enter", "scavenge", "search", "clear", "buy_compass",
+    "goodbye", "leave", "back", "home", "ignore", "wait", "mourn"
+  ];
+
+  /**
+   * World landmarks after the #36 migration. Ids are events.json / world.landmarks
+   * values (`ironmine`, not `iron_mine`). `attack`/`continue` must beat `leave`
+   * or the mine scenes exit before `world_*` is set.
+   */
+  const LANDMARK_IDS = new Set([
+    "old_house", "cave", "town", "city", "outpost", "ship", "borehole",
+    "battlefield", "swamp", "cache", "executioner", "ironmine", "coalmine", "sulphurmine",
+    "engineering_wing", "martial_wing", "medical_wing", "command_deck", "liftoff_warning"
+  ]);
+  const LANDMARK_PREFER = [
+    "attack", "take", "take_device", "search", "enter", "continue", "talk",
+    "fly", "leavel", "leave"
+  ];
+
+  const wall0 = now();
   const S = () => g.state;
   const stages = {};
   const stuck = { room: S().location, event: null, action: null, missing: [] };
@@ -60,11 +82,12 @@ export function playFull({ seed = 7, maxGameSec = 120000, timeScale = 50 } = {})
     if (!stages[id]) {
       stages[id] = {
         t: Math.round(S().game_time_sec * 10) / 10,
-        wall_ms: Math.round(performance.now() - wall0),
+        wall_ms: Math.round(now() - wall0),
         via: why,
         location: S().location,
         phase: S().phase
       };
+      if (onMark) onMark(id, stages[id]);
     }
   };
 
@@ -131,7 +154,7 @@ export function playFull({ seed = 7, maxGameSec = 120000, timeScale = 50 } = {})
     const step = 0.25;
     const n = Math.ceil(sec / step);
     for (let i = 0; i < n; i++) {
-      sb.advance(step * 1000);
+      advance(step * 1000);
       g.tick(step);
       if (S().active_event && !S().world.on_expedition) resolveEvent();
       if (S().combat) fight();
@@ -472,7 +495,7 @@ export function playFull({ seed = 7, maxGameSec = 120000, timeScale = 50 } = {})
   }
   if (S().unlocked.ship && (S().spaceShip.hull || 0) >= 1) ascend();
 
-  if (S().ending || S().flags.ending) A("restart");
+  if (restartAfterEnding && (S().ending || S().flags.ending)) A("restart");
 
   const missing = STAGES.filter((id) => !stages[id]);
   stuck.missing = stuck.missing.concat(missing.map((id) => "stage:" + id));
@@ -502,7 +525,7 @@ export function playFull({ seed = 7, maxGameSec = 120000, timeScale = 50 } = {})
     prestige_runs: (S().previous && (S().previous.score || 0) > 0 && !S().ending) ? 1 : 0,
     slice_complete: !!S().slice_complete,
     game_time_sec: Math.round(S().game_time_sec),
-    wall_ms: Math.round(performance.now() - wall0),
+    wall_ms: Math.round(now() - wall0),
     time_scale: g.timeScale,
     unexpected_errors: errors,
     landmarks: S().world.landmarks
