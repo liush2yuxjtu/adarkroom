@@ -39,10 +39,8 @@ async function main() {
     process.exit(0);
   }
   fs.mkdirSync(args.outDir, { recursive: true });
-  // playthrough stays opt-in: it still walks the pre-migration landmark ids
-  // (iron_mine / cleared_iron_mine / ending_reached). The migrated world uses
-  // ironmine / world_ironmine / state.ending. story.mjs covers slice_complete.
-  const only = args.only && args.only.length ? args.only : ["cdp", "screenshots", "a11y", "extremes", "telemetry", "story", "onboarding", "classic-playthrough", "income"];
+  // playthrough walks the migrated world (ironmine / world_ironmine / state.ending).
+  const only = args.only && args.only.length ? args.only : ["cdp", "screenshots", "a11y", "extremes", "telemetry", "story", "onboarding", "playthrough", "classic-playthrough", "income"];
   const headless = ["telemetry", "story", "onboarding", "playthrough", "classic-playthrough", "income", "parity", "migration"];
   const needsBrowser = only.some((k) => !headless.includes(k));
   let browser = null;
