@@ -430,12 +430,17 @@
     };
     /* no keepalive: Chromium reports keepalive POSTs as requestfailed/ERR_ABORTED */
     fetch(T.url, fetchOpts).then(function (r) {
-      if (!r.ok) {
-        var err = new Error(String(r.status));
-        err.status = r.status;
-        throw err;
-      }
-      onOk({ status: r.status, via: "fetch" });
+      var status = r.status;
+      var ok = r.ok;
+      /* Drain body: empty 201 + unread body → Chromium requestfailed net::ERR_ABORTED after success. */
+      return r.text().then(function () {
+        if (!ok) {
+          var err = new Error(String(status));
+          err.status = status;
+          throw err;
+        }
+        onOk({ status: status, via: "fetch" });
+      });
     }).catch(function (err) {
       var status = err && err.status ? err.status : (sink && sink.failStatus ? sink.failStatus(err) : "network");
       if (unloading && typeof navigator !== "undefined" && navigator.sendBeacon) {

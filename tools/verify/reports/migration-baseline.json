@@ -1,0 +1,332 @@
+{
+  "pass": true,
+  "gate": {
+    "missing": 0,
+    "no_producer": 0,
+    "numeric_mismatch": 0,
+    "allowlist": 0
+  },
+  "counts": {
+    "present": 299,
+    "missing": 0,
+    "no_producer": 0,
+    "mismatch": 0,
+    "no_zh": 0,
+    "no_save": 0
+  },
+  "byCategory": {
+    "building": {
+      "present": 10,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 10
+    },
+    "tool/weapon/upgrade": {
+      "present": 15,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 15
+    },
+    "worker/income": {
+      "present": 10,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 10
+    },
+    "trade good": {
+      "present": 13,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 13
+    },
+    "item/resource": {
+      "present": 16,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 16
+    },
+    "event:room": {
+      "present": 8,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 8
+    },
+    "event:outside": {
+      "present": 6,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 6
+    },
+    "event:global": {
+      "present": 1,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 1
+    },
+    "event:marketing": {
+      "present": 1,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 1
+    },
+    "event:encounters": {
+      "present": 11,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 11
+    },
+    "landmark/setpiece": {
+      "present": 14,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 14
+    },
+    "setpiece event": {
+      "present": 12,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 12
+    },
+    "fabricator": {
+      "present": 9,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 9
+    },
+    "executioner": {
+      "present": 5,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 5
+    },
+    "later phase": {
+      "present": 5,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 5
+    },
+    "perk": {
+      "present": 11,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 11
+    },
+    "weapon": {
+      "present": 11,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 11
+    },
+    "world tile": {
+      "present": 5,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 5
+    },
+    "world mechanic": {
+      "present": 14,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 14
+    },
+    "ship": {
+      "present": 5,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 5
+    },
+    "space": {
+      "present": 4,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 4
+    },
+    "prestige": {
+      "present": 1,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 1
+    },
+    "score": {
+      "present": 1,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 1
+    },
+    "notification": {
+      "present": 111,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 111
+    }
+  },
+  "byBatch": {
+    "1": {
+      "present": 41,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 41
+    },
+    "2": {
+      "present": 42,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 42
+    },
+    "3": {
+      "present": 12,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 12
+    },
+    "4": {
+      "present": 12,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 12
+    },
+    "5": {
+      "present": 84,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 84
+    },
+    "6": {
+      "present": 26,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 26
+    },
+    "7": {
+      "present": 11,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 11
+    },
+    "8": {
+      "present": 36,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 36
+    },
+    "9": {
+      "present": 8,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 8
+    },
+    "core": {
+      "present": 27,
+      "missing": 0,
+      "no_producer": 0,
+      "mismatch": 0,
+      "total": 27
+    }
+  },
+  "reachability": [
+    {
+      "batch": 1,
+      "title": "Village economy (buildings, workers, leather, cured meat)",
+      "pass": true,
+      "kind": "story",
+      "detail": "lodge/smokehouse/charcutier/cured_meat packed (cured=1)"
+    },
+    {
+      "batch": 2,
+      "title": "Workshop crafts, water, bags, armour, crafted weapons",
+      "pass": true,
+      "kind": "story",
+      "detail": "workshop crafts + water/bag/armour + buildMsg"
+    },
+    {
+      "batch": 3,
+      "title": "Trading-post buy menu",
+      "pass": true,
+      "kind": "story",
+      "detail": "trading post buy menu + seen-unlock + compass max 1"
+    },
+    {
+      "batch": 4,
+      "title": "Room / outside / global / marketing events",
+      "pass": true,
+      "kind": "story",
+      "detail": "room/outside/global/marketing events + triggers + persist"
+    },
+    {
+      "batch": 5,
+      "title": "World combat: encounters, weapons, perks, map rules",
+      "pass": true,
+      "kind": "story",
+      "detail": "world RADIUS 30 + weapons/perks/encounters + persist"
+    },
+    {
+      "batch": 6,
+      "title": "Landmarks and setpieces (including mines)",
+      "pass": true,
+      "kind": "story",
+      "detail": "landmarks placed + setpiece scenes + mine/city/ship flags + persist"
+    },
+    {
+      "batch": 7,
+      "title": "Ship and space",
+      "pass": true,
+      "kind": "story",
+      "detail": "ship unlock-on-return + hull/engine + lift-off warning + space crash/ascent + persist"
+    },
+    {
+      "batch": 8,
+      "title": "Fabricator and blueprints",
+      "pass": true,
+      "kind": "story",
+      "detail": "executioner salvage + blueprint redeem + fabricator unlock/crafts + persist"
+    },
+    {
+      "batch": 9,
+      "title": "Executioner, ending, prestige, score",
+      "pass": true,
+      "kind": "story",
+      "detail": "executioner wings + ending score + prestige save/collect + persist"
+    },
+    {
+      "batch": "core",
+      "title": "Early room / forest slice already in the remake",
+      "pass": true,
+      "kind": "inventory",
+      "detail": "early slice present"
+    }
+  ],
+  "gaps": []
+}

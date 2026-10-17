@@ -446,9 +446,27 @@ Any change to `godot/build/web/engine.js`, `telemetry.js`, `save-telemetry.js`, 
 ```bash
 node tools/verify/telemetry.mjs
 node tools/verify/story.mjs --runs 5
+node tools/verify/income.mjs
+node tools/verify/onboarding.mjs
 ```
 
-Both must exit 0. `telemetry.mjs` includes `client-version-on-every-event` (feeds `telemetry-event-version`). Details and the bug each check guards: [`telemetry-and-story-checks.md`](telemetry-and-story-checks.md).
+All four must exit 0. `telemetry.mjs` includes `client-version-on-every-event` (feeds `telemetry-event-version`). Details and the bug each check guards: [`telemetry-and-story-checks.md`](telemetry-and-story-checks.md).
+
+Content parity (`tools/verify/parity.mjs`) is **opt-in** while original-content gaps remain:
+
+```bash
+node tools/verify/run.mjs --only parity
+```
+
+See [`content-parity.md`](content-parity.md). Do not add it to the default `run.mjs` list until green.
+
+The full original→remake **review** gate (skill `.cursor/skills/migration/`):
+
+```bash
+node tools/verify/run.mjs --only migration
+```
+
+Exit 0 only when missing=0, no_producer=0, numeric mismatch=0, and every batch reachability run passes. Expected FAIL until batches 2–9 land. Baseline: `tools/verify/reports/migration-baseline.md`.
 
 ## Worked example: 2026-10-12 12-issue audit
 
